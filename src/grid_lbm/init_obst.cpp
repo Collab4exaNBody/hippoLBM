@@ -32,7 +32,7 @@ namespace hipoLBM
 			{
         auto& data = *GridDataQ;
         auto& domain = *DomainQ;
-				init_obst<Q> func = {onika::cuda::vector_data(data.obst)};
+				init_obst func = {onika::cuda::vector_data(data.obst)};
 				constexpr Area A = Area::Local;
 				constexpr Traversal Tr = Traversal::All;
 		    parallel_for_id<A,Tr>(domain.m_grid, func, parallel_execution_context());       

@@ -44,9 +44,8 @@ namespace hipoLBM
 			inside.resize(bi.number_of_points());
 			ghost_edge.resize(all.size() - inside.size());
 			extend.resize(ex.number_of_points());
-			int idx = 0;
 
-			int shift_a(0), shift_r(0), shift_i(0), shift_ge(0), shift_ex(0);
+			size_t shift_a(0), shift_r(0), shift_i(0), shift_ge(0), shift_ex(0);
 			for (int z = ba.start(2); z <= ba.end(2); z++) {
 				for (int y = ba.start(1); y <= ba.end(1); y++) {
 					for (int x = ba.start(0); x <= ba.end(0); x++) {
@@ -76,7 +75,6 @@ namespace hipoLBM
 			assert(shift_ge == ghost_edge.size());
 
 			// used by neumann z functors
-			const int ghost_layer = G.ghost_layer;
 			int plan_size = ba.get_length(0) * ba.get_length(1);
 			int idx_xy0(0), idx_xyl(0);
 

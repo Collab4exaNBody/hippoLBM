@@ -16,23 +16,12 @@ namespace hipoLBM
 
 	struct write_vec3d
 	{
+		box<3> b;
 		inline void operator()(const int x, const int y, const int z, std::ofstream& output, onika::math::Vec3d* const ptr) const
 		{
 			const int idx = b(x,y,z);
 			onika::math::Vec3d& tmp = ptr[idx];
 			output << (float)tmp.x << " " << (float)tmp.y << " " << (float)tmp.z << " ";
 		}
-		box<3> b;
 	};
-
-  template<> struct ParallelForIdDataFunctorTraits<write_file>
-  {
-    static inline constexpr bool OpenMPCompatible = false;
-  };
-
-/*
-  template<> struct ParallelForIdDataFunctorTraits<write_vec3d>
-  {
-    static inline constexpr bool OpenMPCompatible = false;
-  };*/
 }
