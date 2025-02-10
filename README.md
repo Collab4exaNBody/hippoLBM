@@ -17,4 +17,6 @@ spack install yaml-cpp@0.6.3
 spack load yaml-cpp@0.6.3
 ```
 
-   
+## pour moi
+
+export ONIKA_CONFIG_PATH=/home/rp269144/codes/hipoLBM/data/config
