@@ -1,5 +1,7 @@
 #pragma once
 
+#include <grid_lbm/parallel_for_core.hpp>
+
 namespace hipoLBM
 {
 	struct write_file
@@ -14,12 +16,23 @@ namespace hipoLBM
 
 	struct write_vec3d
 	{
-		inline void operator()(const int x, const int y, const int z, std::ofstream& output, vec3d* const ptr) const
+		inline void operator()(const int x, const int y, const int z, std::ofstream& output, onika::math::Vec3d* const ptr) const
 		{
 			const int idx = b(x,y,z);
-			vec3d& tmp = ptr[idx];
-			output << (float)tmp.x1 << " " << (float)tmp.x2 << " " << (float)tmp.x3 << " ";
+			onika::math::Vec3d& tmp = ptr[idx];
+			output << (float)tmp.x << " " << (float)tmp.y << " " << (float)tmp.z << " ";
 		}
 		box<3> b;
-	}
+	};
+
+  template<> struct ParallelForIdDataFunctorTraits<write_file>
+  {
+    static inline constexpr bool OpenMPCompatible = false;
+  };
+
+/*
+  template<> struct ParallelForIdDataFunctorTraits<write_vec3d>
+  {
+    static inline constexpr bool OpenMPCompatible = false;
+  };*/
 }
