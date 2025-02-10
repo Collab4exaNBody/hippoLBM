@@ -6,7 +6,7 @@ namespace hipoLBM
 {
 
 	//number of unknowns fi in 3DQ19
-	int const static Un = 5;
+  using namespace onika::math;
 
   template <typename T> using vector_t = onika::memory::CudaMMVector<T>;
 
@@ -20,27 +20,20 @@ namespace hipoLBM
 	  const vector_t<int> ey = {0, 0, 0, 1, -1, 0, 0, 1, -1, -1, 1, 0, 0, 0, 0, 1, -1, 1, -1};
 	  const vector_t<int> ez = {0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 1, -1, -1, 1, 1, -1, -1, 1};
     const vector_t<int> iopp = {0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15, 18, 17};
-  }
+  };
 
-  template<int Q, int Un>
+  template<int Q>
 	struct grid_data_lbm 
   {
-    IJK MPI_coord;
-    IJK MPI_grid;
-    
     scheme_lbm<Q> scheme;
-
-    // reduced values
-    double m0_min, m0_max;
-    double m1_min, m1_max;
-
-    // variables
-    double dtLB, dx, c, tau;
-    double nuth, nu, rho_moy;
 
     // fields
     vector_t<double> f; // fi
     vector_t<double> m0; // densities
-    vector_t<double> m1; // flux
+    vector_t<Vec3d> m1; // flux
+    vector_t<int> obst; // obstacles
+
+    // dunno
+    vector_t<double> fi_x_0, fi_x_l, fi_y_0, fi_y_l, fi_z_0, fi_z_l;
 	};
 }
