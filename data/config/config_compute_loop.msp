@@ -1,0 +1,26 @@
+compute_loop_stop:
+  profiling: false
+  rebind: { end_at: simulation_end_iteration , result: compute_loop_continue }
+  body:
+    - sim_continue
+
+boundary_conditions: nop
+
+end_iteration:
+  - write_paraview:
+     distributions: true
+  - next_time_step
+  - log
+
+compute_loop:
+  loop: true
+  name: loop
+  condition: compute_loop_continue
+  body:
+  - macro_variables
+  - collision_bgk
+  - streaming:
+     asynchrone: false
+  - boundary_conditions
+  - end_iteration
+  - compute_loop_stop

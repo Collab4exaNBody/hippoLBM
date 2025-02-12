@@ -2,6 +2,10 @@ configuration:
   logging:
     debug: false
 
+includes:
+  - config_compute_loop.msp
+  - config_initialize.msp
+
 simulation:
   - message: |
      
@@ -14,5 +18,6 @@ simulation:
 
   - mpi_comm_world
   - init_cuda
-  - init
+  - initialize
+  - compute_loop
   - finalize_cuda

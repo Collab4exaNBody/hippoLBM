@@ -1,0 +1,20 @@
+do_domain:
+  - domain:
+     bounds: [[0,0,0],[0.1,0.1,0.1]]
+     resolution: 30
+     periodic: [true, true, false]
+
+set_lbm_parameters:
+  - lbm_parameters:
+     Fext: [0,0,0]
+     nuth: 1e-2
+
+boundary_conditions:
+  - neumann_z_l:
+     U: [0.001,0,0]
+
+global:
+   timestep: 0
+   physical_time: 0.
+   compute_loop_continue: true
+   simulation_end_iteration: 100
