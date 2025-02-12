@@ -7,7 +7,7 @@
 namespace hipoLBM
 {
 	template<typename DomainQ>
-		inline void write_pvtr( std::string basedir,  std::string basename, size_t number_of_files, DomainQ& domain)
+		inline void write_pvtr( std::string basedir,  std::string basename, size_t number_of_files, DomainQ& domain, bool print_distributions)
 		{
 			grid<3>& Grid = domain.m_grid;
 			auto [lx, ly, lz] = domain.domain_size;
@@ -50,6 +50,10 @@ namespace hipoLBM
 				outFile << "       <PDataArray Name=\"P\" type=\"Float32\" NumberOfComponents=\"1\"/>" << std::endl;
 				outFile << "       <PDataArray Name=\"OBST\" type=\"Float32\" NumberOfComponents=\"1\"/>" << std::endl;
 				outFile << "       <PDataArray Name=\"U\" type=\"Float32\" NumberOfComponents=\"3\"/>" << std::endl;
+        if(print_distributions) 
+        {
+				  outFile << "       <PDataArray Name=\"Fi\" type=\"Float32\" NumberOfComponents=\"19\"/>" << std::endl;
+        }
 				outFile << "     </PPointData> " << std::endl;
 				outFile << "   </PRectilinearGrid>" << std::endl;
 				outFile << " </VTKFile>" << std::endl;
@@ -58,7 +62,7 @@ namespace hipoLBM
 
 
 	template<typename DomainQ, typename GridDataQ>
-		inline void write_vtr(std::string name, DomainQ& domain, GridDataQ& data, traversal_lbm& traversals)
+		inline void write_vtr(std::string name, DomainQ& domain, GridDataQ& data, traversal_lbm& traversals, bool print_distributions)
 		{
 			grid<3>& Grid = domain.m_grid;
 			auto [lx, ly, lz] = domain.domain_size;
@@ -73,13 +77,16 @@ namespace hipoLBM
 			constexpr Area L = Area::Local;
 			constexpr Area G = Area::Global;
 			constexpr Traversal Tr = Traversal::Extend;
+			//constexpr Traversal Tr = Traversal::Extend;
 			auto local = Grid.build_box<L,Tr>();
 			auto global = Grid.build_box<G,Tr>();
 
 			auto [traversal_ptr, traversal_size] = traversals.get_data<Tr>();
 
-			write_file writter;
-			write_vec3d writter_vec3d = {local};
+			write_file<double,1> writer_double;
+			write_file<int,1> writer_int;
+			write_file<double, 19> writer_Q;
+			write_vec3d writer_vec3d = {local};
 
 			assert( local.get_length(0) == global.get_length(0) );
 			assert( local.get_length(1) == global.get_length(1) );
@@ -104,17 +111,26 @@ namespace hipoLBM
 			outFile << "      </Coordinates>" << std::endl;
 			outFile << "      <PointData>"  << std::endl;
 			outFile << "          <DataArray type=\"Float32\" Name=\"P\" format=\"ascii\">" << std::endl;
-			for_all(traversal_ptr, traversal_size, writter, outFile, onika::cuda::vector_data(data.m0));
+			for_all(traversal_ptr, traversal_size, writer_double, outFile, onika::cuda::vector_data(data.m0));
 			outFile << std::endl;
 			outFile << "          </DataArray>"  << std::endl;
 			outFile << "          <DataArray type=\"Float32\" Name=\"U\" format=\"ascii\" NumberOfComponents=\"3\">" << std::endl;
-			for_all<L, Tr>(Grid, writter_vec3d, outFile, onika::cuda::vector_data(data.m1));
+			for_all<L, Tr>(Grid, writer_vec3d, outFile, onika::cuda::vector_data(data.m1));
 			outFile << std::endl;
 			outFile << "          </DataArray>"  << std::endl;
 			outFile << "          <DataArray type=\"Float32\" Name=\"OBST\" format=\"ascii\">" << std::endl;
-			for_all(traversal_ptr, traversal_size, writter, outFile, onika::cuda::vector_data(data.obst));
+			for_all(traversal_ptr, traversal_size, writer_int, outFile, onika::cuda::vector_data(data.obst));
 			outFile << std::endl;
 			outFile << "          </DataArray>"  << std::endl;
+
+			if(print_distributions)
+			{
+				outFile << "          <DataArray type=\"Float32\" Name=\"Fi\" format=\"ascii\" NumberOfComponents=\"19\">" << std::endl;
+				for_all(traversal_ptr, traversal_size, writer_Q, outFile, data.distributions());
+				outFile << std::endl;
+				outFile << "          </DataArray>"  << std::endl;
+			}
+
 			outFile << "      </PointData>"  << std::endl;
 			outFile << "      </Piece>" << std::endl;
 			outFile << " </RectilinearGrid>"  << std::endl;

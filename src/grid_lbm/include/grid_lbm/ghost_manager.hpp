@@ -29,6 +29,13 @@ namespace hipoLBM
 			std::vector<ghost_comm<N, DIM>> m_data; ///< Vector of ghost communications.
 			std::vector<MPI_Request> m_request; ///< Vector of MPI requests.
 
+      
+      void debug_print_comm()
+      {
+        onika::lout << "Debug Print Comms, number of comms" << m_data.size() << " N: " << N << " DIM: " << DIM << std::endl;
+        for(auto it: m_data) it.debug_print_comm();
+      }
+
 			/**
 			 * @brief Get the number of ghost communications.
 			 *

@@ -18,6 +18,14 @@ namespace hipoLBM
 			box<DIM> m_box;
 			std::vector<double> m_data; ///< The communication buffer.
 
+      // used for debuging
+      void debug_print_comm()
+      {
+        onika::lout << "Dest: " << m_dest << " Tag: " << m_tag << " Data Size: " << m_data.size() << std::endl;
+        onika::lout << "Box: " << std::endl; 
+        m_box.print();
+      }
+
 			/**
 			 * @brief Constructor for the comm struct.
 			 *
@@ -100,5 +108,15 @@ namespace hipoLBM
 			 * @param r The receive communication.
 			 */
 			ghost_comm(comm<N, DIM>& s, comm<N, DIM>& r) : send(s), recv(r) {}
+
+			// used for debuging
+			void debug_print_comm()
+			{
+        onika::lout << " Ghost Comm[Send]" << std::endl;
+        send.debug_print_comm();
+        onika::lout << " Ghost Comm[Recv]" << std::endl;
+        recv.debug_print_comm();
+			}
+
 		};
 }

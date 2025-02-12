@@ -32,6 +32,7 @@ namespace hipoLBM
 			ADD_SLOT( std::string, filename, INPUT, "hipoLBM_%010d");
 			ADD_SLOT( std::string, basedir, INPUT, "hipoLBMOutputDir/ParaviewOutput/");
 			ADD_SLOT( long, timestep, INPUT, 0);
+			ADD_SLOT( bool, distributions, INPUT, false);
 			inline void execute () override final
 			{
 				auto& comm = *mpi;
@@ -55,15 +56,15 @@ namespace hipoLBM
 				auto& traversals = *Traversals;
 
 				MPI_Barrier(comm);
-				write_pvtr(*basedir, file_name, size, domain);
-        write_vtr( fullname, domain, data, traversals);
+				write_pvtr(*basedir, file_name, size, domain, *distributions);
+        write_vtr( fullname, domain, data, traversals, *distributions);
 			}
 	};
 
 	using WriteParaviewLBM3D19Q = WriteParaviewLBM<19>;
 
 	// === register factories ===  
-	ONIKA_AUTORUN_INIT(parallel_for_benchmark)
+	ONIKA_AUTORUN_INIT()
 	{
 		OperatorNodeFactory::instance()->register_factory( "write_paraview", make_compatible_operator<WriteParaviewLBM3D19Q>);
 	}

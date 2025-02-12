@@ -80,6 +80,7 @@ namespace hipoLBM
 							const int dst_idx = compute_idx(mesh_box, x , y , z) * N;
 							const int src_idx = compute_idx(src_box, x - inf[0], y - inf[1], z - inf[2]) * N;
 							std::memcpy(&dst[dst_idx], &src[src_idx], nb_bytes);
+							std::memcpy(&dst[dst_idx], &src[src_idx], nb_bytes);
 						}
 			}
 		};

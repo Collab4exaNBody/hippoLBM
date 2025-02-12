@@ -15,7 +15,8 @@
 #include <grid_lbm/grid_data_lbm.hpp>
 #include <grid_lbm/parallel_for_core.hpp>
 #include <grid_lbm/traversal_lbm.hpp>
-#include <grid_lbm/init_densities.hpp>
+#include <grid_lbm/init_distributions.hpp>
+#include <grid_lbm/update_ghost.hpp>
 
 namespace hipoLBM
 {
@@ -23,43 +24,44 @@ namespace hipoLBM
 	using namespace scg;
 
 	template<int Q>
-		class InitDensitiesLBM : public OperatorNode
+		class InitDistributionsLBM : public OperatorNode
 	{
 		public:
 			ADD_SLOT( grid_data_lbm<Q>, GridDataQ, INPUT_OUTPUT);
-			ADD_SLOT( traversal_lbm, Traversals, INPUT);
+      ADD_SLOT( domain_lbm<Q>, DomainQ, INPUT, REQUIRED);
+			ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED);
       ADD_SLOT( bool, do_update, INPUT, false);
 
 			inline void execute () override final
 			{
+        auto& domain = *DomainQ;
         auto& data = *GridDataQ;
         auto& traversals = *Traversals;
 
-        double * const ptr_f = onika::cuda::vector_data(data.f);
-        const double * const ptr_w = onika::cuda::vector_data(data.scheme.w);
+        double * const pf = data.distributions();
+        const double * const pw = data.weights();
 
-        init_densities<Q> func = {};
+        init_distributions<Q> func = {};
 
         if( *do_update )
         {
           auto [ptr, size] = traversals.get_data<Traversal::Real>();
-          parallel_for_id(ptr, size, func, parallel_execution_context(), ptr_f, ptr_w);
-          // update_ghost()
+          parallel_for_id(ptr, size, func, parallel_execution_context(), pf, pw);
+          update_ghost(domain, pf);
         }
         else
         {
           auto [ptr, size] = traversals.get_data<Traversal::All>();
-          parallel_for_id(ptr, size, func, parallel_execution_context(), ptr_f, ptr_w);
+          parallel_for_id(ptr, size, func, parallel_execution_context(), pf, pw);
         }
 			}
 	};
 
-	using InitDensitiesLBM3D19Q = InitDensitiesLBM<19>;
+	using InitDistributionsLBM3D19Q = InitDistributionsLBM<19>;
 
 	// === register factories ===  
 	ONIKA_AUTORUN_INIT(parallel_for_benchmark)
 	{
-		OperatorNodeFactory::instance()->register_factory( "init_densities", make_compatible_operator<InitDensitiesLBM3D19Q>);
+		OperatorNodeFactory::instance()->register_factory( "init_distributions", make_compatible_operator<InitDistributionsLBM3D19Q>);
 	}
 }
-

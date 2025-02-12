@@ -34,6 +34,20 @@ namespace hipoLBM
     vector_t<int> obst; // obstacles
 
     // dunno
-    vector_t<double> fi_x_0, fi_x_l, fi_y_0, fi_y_l, fi_z_0, fi_z_l;
+		vector_t<double> fi_x_0, fi_x_l, fi_y_0, fi_y_l, fi_z_0, fi_z_l;
+
+		// accessors
+		double * const distributions() { return onika::cuda::vector_data(f); }
+		double * const densities() { return onika::cuda::vector_data(m0); }
+		Vec3d * const flux() { return onika::cuda::vector_data(m1); }
+		int * const obstacles() { return onika::cuda::vector_data(obst); }
+		const double * const weights() { return onika::cuda::vector_data(scheme.w); }
+		std::tuple<const int *, const int * , const int *> exyz() 
+		{
+			const int * ex = onika::cuda::vector_data(scheme.ex); 
+			const int * ey = onika::cuda::vector_data(scheme.ey); 
+			const int * ez = onika::cuda::vector_data(scheme.ez); 
+			return {ex,ey,ez}; 
+		}
 	};
 }

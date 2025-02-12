@@ -166,6 +166,8 @@ namespace hipoLBM
 
 				domain_lbm<Q> domain = {manager, local_box, g, bx, domain_size, MPI_coord, MPI_grid_size};
 				*DomainQ = domain;
+
+        //domain.m_ghost_manager.debug_print_comm();
 			}
 	};
 

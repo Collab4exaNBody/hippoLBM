@@ -81,6 +81,7 @@ namespace hipoLBM
 			int plan_0z = br.start(2);
 			int plan_lz = br.end(2);
 
+      onika::lout << "PLANE LZ "<< plan_lz << std::endl;
 			if (MPI_coord.k == 0)
 				plan_xy_0.resize(plan_size);
 			if (MPI_coord.k == MPI_grid.k - 1)

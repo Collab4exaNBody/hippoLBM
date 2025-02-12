@@ -3,24 +3,25 @@
 namespace hipoLBM
 {
 	/**
-	 * @brief Initializes the densities in a lattice Boltzmann model.
+	 * @brief Initializes the distributions in a lattice Boltzmann model.
 	 */
 	template<int Q>
-		struct init_densities
+		struct init_distributions
 		{
 			/**
-			 * @brief Operator to initialize densities at a given index.
+			 * @brief Operator to initialize distributions at a given index.
 			 *
-			 * @param idx The index to initialize densities.
+			 * @param idx The index to initialize distributions.
 			 * @param f Pointer to the distribution function.
 			 * @param w Pointer to the weight coefficients.
 			 */
 			ONIKA_HOST_DEVICE_FUNC void operator()(const int idx, double* const f, const double* const w) const
 			{
-        int i = idx * Q;
+        int idxQ = idx * Q;
 				for (int iLB = 0; iLB < Q; iLB++)
 				{
-					f[i+iLB]=w[iLB];
+					f[idxQ+iLB]=w[iLB];
+//          std::cout << "f " << f[idxQ+iLB] << std::endl; 
 				}
 			};
 		};
@@ -30,7 +31,7 @@ namespace onika
 {
   namespace parallel
   {
-    template <int Q> struct ParallelForFunctorTraits<hipoLBM::init_densities<Q>>
+    template <int Q> struct ParallelForFunctorTraits<hipoLBM::init_distributions<Q>>
     {
       static inline constexpr bool RequiresBlockSynchronousCall = false;
       static inline constexpr bool CudaCompatible = true;

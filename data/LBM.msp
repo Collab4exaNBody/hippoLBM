@@ -1,0 +1,50 @@
+init:
+  - global
+  - domain:
+     bounds: [[0,0,0],[0.1,0.1,0.1]]
+     resolution: 30
+     periodic: [true, true, false]
+  - lbm_parameters:
+     Fext: [0,0,0]
+     nuth: 1e-4
+  - print_domain
+  - build_traversal
+  - reset_grid_data
+  - init_obst
+  - init_distributions:
+     do_update: true
+  - macro_variables
+  - write_paraview:
+     distributions: true
+  - log
+  - compute_loop
+
+compute_loop_stop:
+  profiling: false
+  rebind: { end_at: simulation_end_iteration , result: compute_loop_continue }
+  body:
+    - sim_continue
+
+compute_loop:
+  loop: true
+  name: loop
+  condition: compute_loop_continue
+  body:
+  - macro_variables
+  - collision_bgk
+  - streaming:
+     asynchrone: false
+  - neumann_z_l:
+     U: [0.001,0,0]
+  - next_time_step
+  - write_paraview:
+     distributions: true
+  - log
+  - compute_loop_stop
+
+
+global:
+   timestep: 0
+   physical_time: 0.
+   compute_loop_continue: true
+   simulation_end_iteration: 100

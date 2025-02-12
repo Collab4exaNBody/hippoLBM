@@ -4,15 +4,19 @@
 
 namespace hipoLBM
 {
-	struct write_file
-	{
-		template<typename T>
+	template<typename T, int Q>
+		struct write_file
+		{
 			inline void operator()(int idx, std::ofstream& output, T* const ptr) const
 			{
-				T tmp = ptr[idx];
-				output << (float)tmp << " ";
+				int idxQ = idx * Q;
+				for(int i = 0 ; i < Q ; i ++) 
+				{
+					T tmp = ptr[idxQ+i];
+					output << (float)tmp << " ";
+				}
 			}
-	};
+		};
 
 	struct write_vec3d
 	{
