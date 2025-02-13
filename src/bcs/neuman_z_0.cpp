@@ -35,7 +35,7 @@ namespace hipoLBM
 		{
 			return R"EOF( This operator enforces a Neumann boundary condition at z = 0 in an LBM simulation. 
                       The Neumann boundary condition ensures that the gradient of the distribution function 
-                      follows a prescribed value
+                      follows a prescribed value.
         )EOF";
 		}
 

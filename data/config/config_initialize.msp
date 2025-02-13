@@ -12,12 +12,11 @@ initialize:
   - init_distributions:
      do_update: true
   - macro_variables
-  - write_paraview:
-     distributions: true
-  - log
+  - end_iteration
 
 global:
    timestep: 0
    physical_time: 0.
    compute_loop_continue: true
+   simulation_paraview_freq: -1
    simulation_end_iteration: 100

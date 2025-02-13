@@ -3,8 +3,9 @@ configuration:
     debug: false
 
 includes:
-  - config_compute_loop.msp
   - config_initialize.msp
+  - config_compute_loop.msp
+  - config_io.msp
 
 simulation:
   - message: |

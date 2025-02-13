@@ -7,8 +7,8 @@ compute_loop_stop:
 boundary_conditions: nop
 
 end_iteration:
-  - write_paraview:
-     distributions: true
+  - trigger_dump_paraview
+  - dump_paraview_if_triggered
   - next_time_step
   - log
 

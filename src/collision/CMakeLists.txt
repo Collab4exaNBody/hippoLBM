@@ -1,0 +1,2 @@
+set(hipo_collision_LINK_LIBRARIES hipo_grid_lbm)
+onika_add_plugin(hipo_collision ${CMAKE_CURRENT_SOURCE_DIR})

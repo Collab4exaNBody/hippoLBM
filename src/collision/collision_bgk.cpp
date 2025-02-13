@@ -17,7 +17,7 @@
 #include <grid_lbm/parallel_for_core.hpp>
 #include <grid_lbm/traversal_lbm.hpp>
 #include <grid_lbm/lbm_parameters.hpp>
-#include <grid_lbm/collision_bgk.hpp>
+#include <hipoLBM/collision/collision_bgk.hpp>
 
 namespace hipoLBM
 {
@@ -29,9 +29,15 @@ namespace hipoLBM
 		class CollisionBGQ : public OperatorNode
 	{
 		public:
-			ADD_SLOT( grid_data_lbm<Q>, GridDataQ, INPUT_OUTPUT, REQUIRED);
-			ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED);
-			ADD_SLOT( LBMParameters, Params, INPUT, REQUIRED);
+			ADD_SLOT( grid_data_lbm<Q>, GridDataQ, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+			ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
+			ADD_SLOT( LBMParameters, Params, INPUT, REQUIRED, DocString{"Contains global LBM simulation parameters"});
+
+			inline std::string documentation() const override final
+			{
+				return R"EOF( The `CollisionBGQ` operator implements the Bhatnagar-Gross-Krook (BGK) collision model for the Lattice Boltzmann Method (LBM). This model assumes a single relaxation time approach  to approximate the collision process, driving the distribution functions toward equilibrium.
+        )EOF";
+			}
 
 			inline void execute () override final
 			{

@@ -1,0 +1,11 @@
+trigger_dump_paraview:
+  rebind: { freq: simulation_paraview_freq , result: trigger_dump_paraview }
+  body:
+    - nth_timestep: { first: true }	
+
+dump_paraview_if_triggered:
+  condition: trigger_dump_paraview
+  body:
+    - write_paraview:
+       distributions: true
+

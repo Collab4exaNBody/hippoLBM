@@ -6,17 +6,15 @@ do_domain:
 
 set_lbm_parameters:
   - lbm_parameters:
-     Fext: [0,0,0]
+     Fext: [9.512485e-05,0.000000e+00,0.000000e+00]
      nuth: 1e-3
 
 boundary_conditions:
   - neumann_z_l:
-     U: [0.001,0,0]
+     U: [0.0,0,0]
   - neumann_z_0:
-     U: [0.001,0,0]
+     U: [0.0,0,0]
 
 global:
-   timestep: 0
-   physical_time: 0.
-   compute_loop_continue: true
-   simulation_end_iteration: 100
+   simulation_paraview_freq: 100
+   simulation_end_iteration: 3000
