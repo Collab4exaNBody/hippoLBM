@@ -39,11 +39,11 @@ namespace hipoLBM
     grid_data_lbm() {}
 
 		// accessors
-		double * const distributions() { return onika::cuda::vector_data(f); }
-		double * const densities() { return onika::cuda::vector_data(m0); }
-		Vec3d * const flux() { return onika::cuda::vector_data(m1); }
-		int * const obstacles() { return onika::cuda::vector_data(obst); }
-		const double * const weights() { return onika::cuda::vector_data(scheme.w); }
+		double * distributions() { return onika::cuda::vector_data(f); }
+		double * densities() { return onika::cuda::vector_data(m0); }
+		Vec3d * flux() { return onika::cuda::vector_data(m1); }
+		int * obstacles() { return onika::cuda::vector_data(obst); }
+		const double * weights() { return onika::cuda::vector_data(scheme.w); }
 		std::tuple<const int *, const int * , const int *> exyz() 
 		{
 			const int * ex = onika::cuda::vector_data(scheme.ex); 

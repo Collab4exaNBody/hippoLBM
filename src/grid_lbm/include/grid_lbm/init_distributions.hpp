@@ -34,7 +34,8 @@ namespace onika
     template <int Q> struct ParallelForFunctorTraits<hipoLBM::init_distributions<Q>>
     {
       static inline constexpr bool RequiresBlockSynchronousCall = false;
-      static inline constexpr bool CudaCompatible = true;
+      static inline constexpr bool CudaCompatible = true
+;
     };
   }
 }

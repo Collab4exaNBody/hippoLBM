@@ -10,7 +10,7 @@ initialize:
   - reset_grid_data
   - init_obst
   - init_distributions:
-     do_update: true
+     do_update: false
   - macro_variables
   - end_iteration
 

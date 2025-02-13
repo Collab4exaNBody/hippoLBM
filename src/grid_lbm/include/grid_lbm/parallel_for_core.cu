@@ -116,3 +116,15 @@ namespace hipoLBM
 			return parallel_for(size, runner, exec_ctx, opts);
 		}
 }
+
+namespace onika
+{
+  namespace parallel
+  {
+    template<typename Func, typename... Args> struct ParallelForFunctorTraits<hipoLBM::parallel_for_id_traversal_runner<Func,Args...>>
+    {
+      static inline constexpr bool RequiresBlockSynchronousCall = false;
+      static inline constexpr bool CudaCompatible = ParallelForFunctorTraits<Func>::CudaCompatible;
+    };
+  }
+}

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <grid_lbm/parallel_for_core.hpp>
-
 namespace hipoLBM
 {
 	template<typename T, int Q>

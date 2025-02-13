@@ -13,7 +13,7 @@
 #include <grid_lbm/comm.hpp>
 #include <grid_lbm/enum.hpp>
 #include <grid_lbm/grid_data_lbm.hpp>
-#include <grid_lbm/parallel_for_core.hpp>
+#include <grid_lbm/parallel_for_core.cu>
 #include <grid_lbm/init_obst.hpp>
 
 namespace hipoLBM

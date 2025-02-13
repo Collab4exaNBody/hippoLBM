@@ -2,6 +2,7 @@
 
 #include <hipoLBM/io/writer.hpp>
 #include <onika/string_utils.h>
+#include <grid_lbm/parallel_for_core.cu>
 
 
 namespace hipoLBM
