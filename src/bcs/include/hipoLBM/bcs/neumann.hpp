@@ -4,12 +4,16 @@
 
 namespace hipoLBM
 {
+	template<int Q> struct neumann_z_0 {};
+	template<int Q> struct neumann_z_l {};
+
 	/**
 	 * @brief A functor for handling Neumann boundary conditions at z=lz in the lattice Boltzmann method.
 	 */
-	template<int Q>
-		struct neumann_z_l
+	template<>
+		struct neumann_z_l<19>
 		{
+      static constexpr int Q = 19;
 			/**
 			 * @brief Operator for applying Neumann boundary conditions at z=0.
 			 *
@@ -46,9 +50,10 @@ namespace hipoLBM
 	/**
 	 * @brief A functor for handling Neumann boundary conditions at z=0 in the lattice Boltzmann method.
 	 */
-	template<int Q>
-		struct neumann_z_0
+	template<>
+		struct neumann_z_0<19>
 		{
+			static constexpr int Q = 19;
 			/**
 			 * @brief Operator for applying Neumann boundary conditions at z=0.
 			 *
