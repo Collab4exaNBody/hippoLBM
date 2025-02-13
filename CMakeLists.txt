@@ -9,10 +9,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ## Onika
+find_package(OpenMP REQUIRED)
 find_package(onika REQUIRED)
 
 add_subdirectory(src)
-#add_subdirectory(data)
+
+set( CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS}" "--expt-relaxed-constexpr" )
 
 add_executable(hipoLBM hipoLBM.cpp)
 target_compile_options(hipoLBM PUBLIC ${ONIKA_COMPILE_OPTIONS})

@@ -36,6 +36,8 @@ namespace hipoLBM
     // dunno
 		vector_t<double> fi_x_0, fi_x_l, fi_y_0, fi_y_l, fi_z_0, fi_z_l;
 
+    grid_data_lbm() {}
+
 		// accessors
 		double * const distributions() { return onika::cuda::vector_data(f); }
 		double * const densities() { return onika::cuda::vector_data(m0); }

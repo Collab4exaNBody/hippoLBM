@@ -25,6 +25,8 @@ namespace hipoLBM
 		vector_t<int> extend;
 		vector_t<int> plan_xy_0, plan_xy_l;
 
+    traversal_lbm() {};
+
     template<Traversal Tr> traversal_data get_data();
  
 

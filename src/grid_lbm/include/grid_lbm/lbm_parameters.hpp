@@ -14,6 +14,8 @@ namespace hipoLBM
     double tau;     // relexation time
     double avg_rho;  // Average density in real unit, 1 in LB unit 
 
+    LBMParameters() {}
+
     void print()
     {
       lout << "=================================" << std::endl;
