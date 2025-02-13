@@ -14,17 +14,6 @@ namespace hipoLBM
 			const Vec3d m_Fext;
 			/**
 			 * @brief Operator for performing collision operations at a given index.
-			 *
-			 * @param idx The index.
-			 * @param m1 Pointer to a vec3d.
-			 * @param obst Pointer to an array of ints.
-			 * @param f Pointer to an array of doubles.
-			 * @param m0 Pointer to an array of doubles.
-			 * @param ex Pointer to an array of ints.
-			 * @param ey Pointer to an array of ints.
-			 * @param ez Pointer to an array of ints.
-			 * @param w Pointer to an array of doubles.
-			 * @param tau The relaxation time.
 			 */
 			ONIKA_HOST_DEVICE_FUNC inline void operator()(
 					int idx, 
