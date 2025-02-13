@@ -52,7 +52,7 @@ namespace hipoLBM
 					const int next_x = x + ex[iLB];
 					const int next_y = y + ey[iLB];
 					const int next_z = z + ez[iLB];
-					point<3> next = {next_x, next_y, next_z};
+					point<3> next(next_x, next_y, next_z);
 
 					if(g.is_defined(next))
 					{
@@ -64,4 +64,17 @@ namespace hipoLBM
 				}
 			}
 		};
+}
+
+
+namespace onika
+{
+  namespace parallel
+  {
+    template<int Q> struct ParallelForFunctorTraits<hipoLBM::streaming_step1<Q>>
+    {
+      static inline constexpr bool RequiresBlockSynchronousCall = false;
+      static inline constexpr bool CudaCompatible = true;
+    };
+  }
 }

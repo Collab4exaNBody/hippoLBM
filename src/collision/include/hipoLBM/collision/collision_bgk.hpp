@@ -49,3 +49,14 @@ namespace hipoLBM
 		};
 }
 
+namespace onika
+{
+  namespace parallel
+  {
+    template<int Q> struct ParallelForFunctorTraits<hipoLBM::collision_bgk<Q>>
+    {
+      static inline constexpr bool RequiresBlockSynchronousCall = false;
+      static inline constexpr bool CudaCompatible = true;
+    };
+  }
+}
