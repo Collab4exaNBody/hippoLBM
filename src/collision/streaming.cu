@@ -25,71 +25,101 @@ namespace hipoLBM
   using namespace scg;
   using namespace onika::cuda;
 
+  template<typename Func, typename... Args>
+  __global__
+  void apply_grid(box<3> bx, Func func, Args ...args)
+  {
+    const int x = threadIdx.x + (blockDim.x*blockIdx.x) + bx.start(0);
+    const int y = threadIdx.y + (blockDim.y*blockIdx.y) + bx.start(1);
+    const int z = blockIdx.z + bx.start(2);
+    if( x <= bx.end(0))
+    {
+      func(x, y, z, args...);
+    }
+  }
+
+  template<typename Func, typename... Args>
+    static inline void cuda_parallel_for_box(box<3>& bx, Func& func, Args&& ...args)
+    {
+      const int size_block = 32;
+      const int size_x = bx.end(0) - bx.start(0) + 1;
+      const int size_y = bx.end(1) - bx.start(1) + 1;
+      const int size_z = bx.end(2) - bx.start(2) + 1;
+      const int nBlockX = (size_y + 31) / size_block;
+      const int nBlockY = (size_y + 31) / size_block;
+      dim3 dimBlock(nBlockX, nBlockY, size_z + 1);
+      dim3 BlockSize(size_block, size_block, 1);
+      //apply_grid<<<dimBlock, size_block>>>(bx, func, args...);
+      apply_grid<<<dimBlock, BlockSize>>>(bx, func, args...);
+    }
+
+
   template<int Q>
     class StreamingLBM : public OperatorNode
   {
     public:
-			ADD_SLOT( grid_data_lbm<Q>, GridDataQ, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
-			ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
+      ADD_SLOT( grid_data_lbm<Q>, GridDataQ, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+      ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
       ADD_SLOT( domain_lbm<Q>, DomainQ, INPUT, REQUIRED);
       ADD_SLOT( bool, asynchrone, INPUT, false, DocString{"The asynchrone option controls the execution style: when true, it allows asynchronous operations with overlapping computation and communication, improving parallel performance. When false, it runs synchronously, ensuring sequential execution of operations and data updates."});
 
       inline std::string documentation() const override final
       {
-        return R"EOF(  The StreamingLBM class is described as part of the Lattice Boltzmann Method (LBM) implementation, specifically the streaming steps.)EOF";
+	return R"EOF(  The StreamingLBM class is described as part of the Lattice Boltzmann Method (LBM) implementation, specifically the streaming steps.)EOF";
       }
 
 
       inline void execute () override final
       {
-        auto& data = *GridDataQ;
-        auto& domain = *DomainQ;
-        auto& traversals = *Traversals;
-        grid<3>& Grid = domain.m_grid;
+	auto& data = *GridDataQ;
+	auto& domain = *DomainQ;
+	auto& traversals = *Traversals;
+	grid<3>& Grid = domain.m_grid;
 
-        // define functors
-        streaming_step1<Q> step1 = {};
-        streaming_step2<Q> step2 = {Grid};
+	// define functors
+	streaming_step1<Q> step1 = {};
+	streaming_step2<Q> step2 = {Grid};
 
-        // get fields
-        double * const pf = data.distributions();
-        auto [pex, pey, pez] = data.exyz();
+	// get fields
+	WrapperF pf = data.distributions();
+	auto [pex, pey, pez] = data.exyz();
 
-        if( *asynchrone )
-        {
-/*
-          constexpr Traversal Inside = Traversal::Inside;
-          constexpr Traversal Rest = Traversal::Ghost_Edge;
+	if( *asynchrone )
+	{
+	  /*
+	     constexpr Traversal Inside = Traversal::Inside;
+	     constexpr Traversal Rest = Traversal::Ghost_Edge;
 
-          domain.m_ghost_manager.resize_request();
-          domain.m_ghost_manager.do_recv();
-          domain.m_ghost_manager.do_pack_send(pf, Grid.bx);
+	     domain.m_ghost_manager.resize_request();
+	     domain.m_ghost_manager.do_recv();
+	     domain.m_ghost_manager.do_pack_send(pf, Grid.bx);
 
-          auto [ptr, size] = traversals.get_data<Inside>();
-          box<3> inside = Grid.build_box<Area::Local, Inside>();
+	     auto [ptr, size] = traversals.get_data<Inside>();
+	     box<3> inside = Grid.build_box<Area::Local, Inside>();
 
-          parallel_for_id(ptr, size, step1, parallel_execution_context(), pf);
-          parallel_for_box(inside, step2, pf, pex, pey, pez);
+	     parallel_for_id(ptr, size, step1, parallel_execution_context(), pf);
+	     parallel_for_box(inside, step2, pf, pex, pey, pez);
 
-          domain.m_ghost_manager.wait_all();
-          domain.m_ghost_manager.do_unpack(pf, Grid.bx);
+	     domain.m_ghost_manager.wait_all();
+	     domain.m_ghost_manager.do_unpack(pf, Grid.bx);
 
-          auto [ptr2, size2] = traversals.get_data<Rest>();
+	     auto [ptr2, size2] = traversals.get_data<Rest>();
 
-          parallel_for_id(ptr2, size2, step1, parallel_execution_context(), pf);
-          parallel_for_ghost_edge(Grid, step2, pf, pex, pey, pez);
-*/
-        }
-        else
-        {
-          // get traversal
-          auto [ptr, size] = traversals.get_data<Traversal::Real>();
-          // run kernel
-          parallel_for_id(ptr, size, step1, parallel_execution_context(), pf);
-          update_ghost(domain, pf);
-          box<3> extend = Grid.build_box<Area::Local, Traversal::Extend>();
-          parallel_for_box(extend, step2, pf, pex, pey, pez);
-        }
+	     parallel_for_id(ptr2, size2, step1, parallel_execution_context(), pf);
+	     parallel_for_ghost_edge(Grid, step2, pf, pex, pey, pez);
+	   */
+	}
+	else
+	{
+	  // get traversal
+	  auto [ptr, size] = traversals.get_data<Traversal::Real>();
+	  // run kernel
+	  parallel_for_id(ptr, size, step1, parallel_execution_context(), pf);
+	  update_ghost(domain, pf);
+	  box<3> extend = Grid.build_box<Area::Local, Traversal::Extend>();
+	  //parallel_for_box(extend, step2, pf, pex, pey, pez);
+	  cuda_parallel_for_box(extend, step2, pf, pex, pey, pez);
+	}
       }
   };
 

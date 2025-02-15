@@ -32,7 +32,7 @@ namespace hipoLBM
 			 * @param dim  The dimension for which to compute the length.
 			 * @return     The length of the box along the specified dimension.
 			 */
-			inline int get_length(int dim) { 
+			ONIKA_HOST_DEVICE_FUNC inline int get_length(int dim) { 
 				assert(sup[dim] >= inf[dim]) ;
 				return (sup[dim] - inf[dim]) + 1; 
 			}
@@ -43,17 +43,17 @@ namespace hipoLBM
 			 * @param dim  The dimension for which to compute the length.
 			 * @return     The length of the box along the specified dimension.
 			 */
-			inline int get_length(int dim) const { 
+			ONIKA_HOST_DEVICE_FUNC inline int get_length(int dim) const { 
 				assert(sup[dim] >= inf[dim]) ;
 				return (sup[dim] - inf[dim]) + 1; 
 			}
 
-			inline int start(int dim) const
+			ONIKA_HOST_DEVICE_FUNC inline int start(int dim) const
 			{
 				return inf[dim];
 			}
 
-			inline int end(int dim) const
+			ONIKA_HOST_DEVICE_FUNC inline int end(int dim) const
 			{
 				return sup[dim];
 			}
@@ -63,13 +63,13 @@ namespace hipoLBM
 			 *
 			 * @return The total number of points within the box.
 			 */
-			inline int number_of_points() const {
+			ONIKA_HOST_DEVICE_FUNC inline int number_of_points() const {
 				int res = 1;
 				for(int dim = 0 ; dim < DIM ; dim++) res *= (this->get_length(dim)); // sup is included (+1)
 				return res;
 			}
 
-			inline bool contains(point<3>& p)
+			ONIKA_HOST_DEVICE_FUNC inline bool contains(point<3>& p)
 			{
 				for( int dim = 0 ; dim < DIM ; dim++ )
 				{
@@ -78,7 +78,7 @@ namespace hipoLBM
 				return true;
 			}
 
-			inline bool contains(point<3>&& p)
+			ONIKA_HOST_DEVICE_FUNC inline bool contains(point<3>&& p)
 			{
 				for( int dim = 0 ; dim < DIM ; dim++ )
 				{
@@ -106,7 +106,7 @@ namespace hipoLBM
 			 * @param z  The z-coordinate of the point.
 			 * @return   The index of the point within the box.
 			 */
-			inline int operator()(const int x, const int y, const int z)
+			ONIKA_HOST_DEVICE_FUNC inline int operator()(const int x, const int y, const int z)
 			{
 				int idx = z * (this->get_length(1)) + y;
 				idx *= this->get_length(0);
@@ -122,7 +122,7 @@ namespace hipoLBM
 			 * @param z  The z-coordinate of the point.
 			 * @return   The index of the point within the box.
 			 */
-			inline int operator()(const int x, const int y, const int z) const
+			ONIKA_HOST_DEVICE_FUNC inline int operator()(const int x, const int y, const int z) const
 			{
 				int idx = z * (this->get_length(1)) + y;
 				idx *= this->get_length(0);
@@ -136,7 +136,7 @@ namespace hipoLBM
 			 * @param dim  The dimension for which to compute the length.
 			 * @return     The length of the box along the specified dimension.
 			 */
-			inline int operator[](int dim) { return get_length(dim); }
+			ONIKA_HOST_DEVICE_FUNC inline int operator[](int dim) { return get_length(dim); }
 
 			/**
 			 * @brief compute the length of the box along a specified dimension.
@@ -144,24 +144,24 @@ namespace hipoLBM
 			 * @param dim  The dimension for which to compute the length.
 			 * @return     The length of the box along the specified dimension.
 			 */
-			inline int operator[](int dim) const { return get_length(dim); }
+			ONIKA_HOST_DEVICE_FUNC inline int operator[](int dim) const { return get_length(dim); }
 
 			/** 
 			 * @brief accessor to the `inf` member
 			 */
-			inline point<DIM>& lower() { return inf;} 
+			ONIKA_HOST_DEVICE_FUNC inline point<DIM>& lower() { return inf;} 
 			/** 
 			 * @brief accessor to the `inf` member
 			 */
-			inline point<DIM> lower() const { return inf;} 
+			ONIKA_HOST_DEVICE_FUNC inline point<DIM> lower() const { return inf;} 
 			/** 
 			 * @brief accessor to the `sup` member
 			 */
-			inline point<DIM>& upper() { return sup;} 
+			ONIKA_HOST_DEVICE_FUNC inline point<DIM>& upper() { return sup;} 
 			/** 
 			 * @brief accessor to the `sup` member
 			 */
-			inline point<DIM> upper() const { return sup;} 
+			ONIKA_HOST_DEVICE_FUNC inline point<DIM> upper() const { return sup;} 
 
 		};
 
@@ -181,14 +181,14 @@ namespace hipoLBM
 	 * @return     The index of the point within the box.
 	 */
 	template<int DIM>
-		inline int compute_idx(const box<DIM>& b, const int x, const int y, const int z)
+		ONIKA_HOST_DEVICE_FUNC inline int compute_idx(const box<DIM>& b, const int x, const int y, const int z)
 		{
 			return b(x,y,z);
 		}
 
 
 	template<int DIM>
-		inline bool intersect(box<DIM>& a, box<DIM>& b)
+		ONIKA_HOST_DEVICE_FUNC inline bool intersect(box<DIM>& a, box<DIM>& b)
 		{
 			// Vérifier les conditions de non-intersection sur l'axe x
 			for(int dim = 0 ; dim < DIM ; dim++)

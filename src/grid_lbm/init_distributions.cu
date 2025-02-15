@@ -34,26 +34,26 @@ namespace hipoLBM
 
       inline void execute () override final
       {
-  auto& domain = *DomainQ;
-  auto& data = *GridDataQ;
-  auto& traversals = *Traversals;
+	auto& domain = *DomainQ;
+	auto& data = *GridDataQ;
+	auto& traversals = *Traversals;
 
-  double * const pf = data.distributions();
-  const double * const pw = data.weights();
+	WrapperF pf = data.distributions();
+	const double * const pw = data.weights();
 
-  init_distributions<Q> func = {};
+	init_distributions<Q> func = {};
 
-  if( *do_update )
-  {
-    auto [ptr, size] = traversals.get_data<Traversal::Real>();
-    parallel_for_id(ptr, size, func, parallel_execution_context(), pf, pw);
-    update_ghost(domain, pf);
-  }
-  else
-  {
-    auto [ptr, size] = traversals.get_data<Traversal::All>();
-    parallel_for_id(ptr, size, func, parallel_execution_context(), pf, pw);
-  }
+	if( *do_update )
+	{
+	  auto [ptr, size] = traversals.get_data<Traversal::Real>();
+	  parallel_for_id(ptr, size, func, parallel_execution_context(), pf, pw);
+	//  update_ghost(domain, pf);
+	}
+	else
+	{
+	  auto [ptr, size] = traversals.get_data<Traversal::All>();
+	  parallel_for_id(ptr, size, func, parallel_execution_context(), pf, pw);
+	}
       }
   };
 

@@ -52,7 +52,7 @@ namespace hipoLBM
         // get fields
         math::Vec3d * const pm1 = data.flux();
         int * const pobst = data.obstacles();
-        double * const pf = data.distributions();
+        WrapperF pf = data.distributions();
         double * const pm0 = data.densities();
         auto [pex, pey, pez] = data.exyz();
 

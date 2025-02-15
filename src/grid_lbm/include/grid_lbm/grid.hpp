@@ -34,7 +34,7 @@ namespace hipoLBM
 			inline void set_dx(const double d) {dx = d;}
 
 			template<Area A, Traversal Tr>
-				inline int start(const int dim)
+				ONIKA_HOST_DEVICE_FUNC inline int start(const int dim)
 				{
 					//static_assert(A == Area::Local);
 					int res = 0;
@@ -48,7 +48,7 @@ namespace hipoLBM
 				}
 
 			template<Area A, Traversal Tr>
-				inline int end(const int dim)
+				ONIKA_HOST_DEVICE_FUNC inline int end(const int dim)
 				{
 					//static_assert(A == Area::Local);
 					static_assert(Tr == Traversal::All || Tr == Traversal::Real || Tr == Traversal::Inside ||  Tr == Traversal::Extend );
@@ -64,7 +64,7 @@ namespace hipoLBM
 
 
 			template<Area A, Traversal Tr>
-				box<3> build_box()
+				ONIKA_HOST_DEVICE_FUNC box<3> build_box()
 				{
 					if constexpr (A == Area::Local && Tr == Traversal::All) return bx;
 					if constexpr (A == Area::Local && Tr == Traversal::Extend) return ext;
@@ -81,7 +81,7 @@ namespace hipoLBM
 
 			/*** check is the point is in the grid */
 			template<Area A, Traversal Tr>
-				inline bool contains(point<DIM>& p)
+				ONIKA_HOST_DEVICE_FUNC inline bool contains(point<DIM>& p)
 				{
 					for (int dim = 0; dim < DIM ; dim++)
 					{
@@ -94,7 +94,7 @@ namespace hipoLBM
 				}
 
 			/*** check if the point is defined */
-			inline bool is_defined(point<DIM>& p)
+			ONIKA_HOST_DEVICE_FUNC inline bool is_defined(point<DIM>& p)
 			{
 				for (int dim = 0; dim < DIM ; dim++)
 				{
@@ -106,8 +106,16 @@ namespace hipoLBM
 				return true;
 			}
 
+			ONIKA_HOST_DEVICE_FUNC inline bool is_defined(int i, int j, int k)
+			{
+                                if( i < ext.start(0) || i > ext.end(0) ) return false;
+                                if( j < ext.start(1) || j > ext.end(1) ) return false;
+                                if( k < ext.start(2) || k > ext.end(2) ) return false;
+				return true;
+			}
+
 			/*** @brief Check if the point is in the local grid */ 
-			inline bool is_local(point<DIM>& p)
+			ONIKA_HOST_DEVICE_FUNC inline bool is_local(point<DIM>& p)
 			{
 				for(int dim = 0 ; dim < DIM ; dim++)
 				{
@@ -116,7 +124,7 @@ namespace hipoLBM
 				return true;
 			}
 
-			inline bool is_global(point<DIM>& p)
+			ONIKA_HOST_DEVICE_FUNC inline bool is_global(point<DIM>& p)
 			{
 				point<DIM> local = p + offset;
 				return is_local(local);
@@ -124,7 +132,7 @@ namespace hipoLBM
 
 			/*** @brief convert a point to A area. */
 			template<Area A, bool Check=false>
-				inline point<DIM> convert(int x, int y, int z)
+				ONIKA_HOST_DEVICE_FUNC inline point<DIM> convert(int x, int y, int z)
 				{
 					point<DIM> res = {x, y, z};
 					static_assert ( A == Area::Local || A == Area::Global);
@@ -149,14 +157,14 @@ namespace hipoLBM
 			// could be optimized
 			/*** convert a point to A area. */
 			template<Area A, bool Check=false>
-				inline point<DIM> convert(point<3> p)
+				ONIKA_HOST_DEVICE_FUNC inline point<DIM> convert(point<3> p)
 				{
 					return convert<A,Check>(p[0], p[1], p[2]);
 				}
 
 			/*** @brief convert a point to A area. */
 			template<Area A>
-				inline int convert(int in, int dim)
+				ONIKA_HOST_DEVICE_FUNC inline int convert(int in, int dim)
 				{
 					int res = in;
 					static_assert ( A == Area::Local || A == Area::Global);
@@ -175,7 +183,7 @@ namespace hipoLBM
 				}
 
 			template<Area A>
-				onika::math::Vec3d compute_position(int x, int y, int z)
+				ONIKA_HOST_DEVICE_FUNC onika::math::Vec3d compute_position(int x, int y, int z)
 				{
 					static_assert(A == Area::Global);
 					onika::math::Vec3d res = {(double)(x + offset[0]),(double)(y + offset[1]),(double)(z + offset[2])};
@@ -183,17 +191,17 @@ namespace hipoLBM
 					return res;
 				}
 
-			int operator()(point<3>& p)
+			ONIKA_HOST_DEVICE_FUNC int operator()(point<3>& p)
 			{
 				return bx(p[0], p[1], p[2]);
 			}	
 
-			int operator()(point<3>&& p)
+			ONIKA_HOST_DEVICE_FUNC int operator()(point<3>&& p)
 			{
 				return bx(p[0], p[1], p[2]);
 			}	
 
-			int operator()(int x, int y, int z)
+			ONIKA_HOST_DEVICE_FUNC int operator()(int x, int y, int z)
 			{
 				return bx(x, y, z);
 			}	
