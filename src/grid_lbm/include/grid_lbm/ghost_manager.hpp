@@ -14,7 +14,7 @@
 #include <grid_lbm/operator_ghost_manager.hpp>
 #include <grid_lbm/packers.hpp>
 
-namespace hipoLBM
+namespace hippoLBM
 {
 
   /**

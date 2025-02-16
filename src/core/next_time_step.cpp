@@ -24,7 +24,7 @@ under the License.
 #include <memory>
 
 
-namespace hipoLBM
+namespace hippoLBM
 {
 	using namespace onika;
 	using namespace onika::scg;

@@ -2,7 +2,7 @@
 
 #include <grid_lbm/wrapper_f.hpp>
 
-namespace hipoLBM
+namespace hippoLBM
 {
   template<int Q>
     struct streaming_step1
@@ -71,7 +71,7 @@ namespace onika
 {
   namespace parallel
   {
-    template<int Q> struct ParallelForFunctorTraits<hipoLBM::streaming_step1<Q>>
+    template<int Q> struct ParallelForFunctorTraits<hippoLBM::streaming_step1<Q>>
     {
       static inline constexpr bool RequiresBlockSynchronousCall = true;
       static inline constexpr bool CudaCompatible = true;

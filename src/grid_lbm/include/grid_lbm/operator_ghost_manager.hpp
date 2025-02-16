@@ -3,7 +3,7 @@
 #include <grid_lbm/box.hpp>
 #include <grid_lbm/grid.hpp>
 
-namespace hipoLBM
+namespace hippoLBM
 {
 	typedef std::array<int,3> int3d;
 	/**

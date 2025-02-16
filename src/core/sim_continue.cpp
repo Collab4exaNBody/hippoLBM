@@ -31,7 +31,7 @@ under the License.
 #include "ccc_user.h"
 #endif
 
-namespace hipoLBM
+namespace hippoLBM
 {
 	using namespace onika;
 	using namespace onika::scg;

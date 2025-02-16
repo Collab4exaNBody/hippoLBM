@@ -1,2 +1,2 @@
-set(hipo_bcs_LINK_LIBRARIES hipo_grid_lbm)
-onika_add_plugin(hipo_bcs ${CMAKE_CURRENT_SOURCE_DIR})
+set(hippo_bcs_LINK_LIBRARIES hippo_grid_lbm)
+onika_add_plugin(hippo_bcs ${CMAKE_CURRENT_SOURCE_DIR})

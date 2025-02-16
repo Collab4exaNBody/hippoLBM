@@ -15,7 +15,7 @@
 #include <grid_lbm/traversal_lbm.hpp>
 
 
-namespace hipoLBM
+namespace hippoLBM
 {
 	using namespace onika;
 	using namespace scg;

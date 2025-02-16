@@ -13,7 +13,7 @@
 #include <grid_lbm/enum.hpp>
 #include <onika/string_utils.h>
 
-namespace hipoLBM
+namespace hippoLBM
 {
 	using namespace onika;
 	using namespace scg;

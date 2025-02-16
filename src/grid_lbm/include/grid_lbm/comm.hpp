@@ -2,7 +2,7 @@
 
 #include <grid_lbm/box.hpp>
 
-namespace hipoLBM
+namespace hippoLBM
 {
   template <typename T> using vector_t = onika::memory::CudaMMVector<T>;
 

@@ -18,7 +18,7 @@
 #include <grid_lbm/init_distributions.hpp>
 #include <grid_lbm/update_ghost.hpp>
 
-namespace hipoLBM
+namespace hippoLBM
 {
   using namespace onika;
   using namespace scg;

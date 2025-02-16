@@ -1,6 +1,6 @@
 #pragma once
 
-namespace hipoLBM
+namespace hippoLBM
 {
   using namespace onika;
 

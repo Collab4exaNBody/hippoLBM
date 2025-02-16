@@ -2,7 +2,7 @@
 
 #include <grid_lbm/point.hpp>
 
-namespace hipoLBM
+namespace hippoLBM
 {
 	/**
 	 * @brief A geometric box in a multi-dimensional space.

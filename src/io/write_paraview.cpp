@@ -12,11 +12,11 @@
 #include <grid_lbm/enum.hpp>
 #include <grid_lbm/grid_data_lbm.hpp>
 #include <grid_lbm/traversal_lbm.hpp>
-#include <hipoLBM/io/write_paraview.hpp>
+#include <hippoLBM/io/write_paraview.hpp>
 
 #include <onika/string_utils.h>
 
-namespace hipoLBM
+namespace hippoLBM
 {
   using namespace onika;
   using namespace scg;
@@ -29,8 +29,8 @@ namespace hipoLBM
       ADD_SLOT( grid_data_lbm<Q>, GridDataQ, INPUT);
       ADD_SLOT( traversal_lbm, Traversals, INPUT);
       ADD_SLOT( MPI_Comm, mpi, INPUT , MPI_COMM_WORLD);
-      ADD_SLOT( std::string, filename, INPUT, "hipoLBM_%010d");
-      ADD_SLOT( std::string, basedir, INPUT, "hipoLBMOutputDir/ParaviewOutput/");
+      ADD_SLOT( std::string, filename, INPUT, "hippoLBM_%010d");
+      ADD_SLOT( std::string, basedir, INPUT, "hippoLBMOutputDir/ParaviewOutput/");
       ADD_SLOT( long, timestep, INPUT, 0);
       ADD_SLOT( bool, distributions, INPUT, false);
       inline void execute () override final

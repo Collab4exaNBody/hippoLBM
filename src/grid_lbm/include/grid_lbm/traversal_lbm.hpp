@@ -3,7 +3,7 @@
 #include <onika/math/basic_types_def.h>
 #include <grid_lbm/grid.hpp>
 
-namespace hipoLBM
+namespace hippoLBM
 {
   template <typename T> using vector_t = onika::memory::CudaMMVector<T>;
   using ::onika::math::IJK;

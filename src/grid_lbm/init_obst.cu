@@ -16,7 +16,7 @@
 #include <grid_lbm/parallel_for_core.cu>
 #include <grid_lbm/init_obst.hpp>
 
-namespace hipoLBM
+namespace hippoLBM
 {
 	using namespace onika;
 	using namespace scg;

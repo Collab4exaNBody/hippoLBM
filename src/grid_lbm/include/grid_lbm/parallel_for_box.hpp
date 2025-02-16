@@ -5,7 +5,7 @@
 #include <onika/parallel/parallel_for.h>
 
 
-namespace hipoLBM
+namespace hippoLBM
 {
   using namespace onika::parallel;
 

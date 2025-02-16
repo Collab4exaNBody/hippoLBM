@@ -3,7 +3,7 @@
 #include <grid_lbm/wrapper_f.hpp>
 #define FLUIDE_ -1
 
-namespace hipoLBM
+namespace hippoLBM
 {
   template<int Q> struct neumann_z_0 {};
   template<int Q> struct neumann_z_l {};
@@ -91,12 +91,12 @@ namespace onika
 {
   namespace parallel
   {
-    template<int Q> struct ParallelForFunctorTraits<hipoLBM::neumann_z_0<Q>>
+    template<int Q> struct ParallelForFunctorTraits<hippoLBM::neumann_z_0<Q>>
     {
       static inline constexpr bool RequiresBlockSynchronousCall = false;
       static inline constexpr bool CudaCompatible = true;
     };
-    template<int Q> struct ParallelForFunctorTraits<hipoLBM::neumann_z_l<Q>>
+    template<int Q> struct ParallelForFunctorTraits<hippoLBM::neumann_z_l<Q>>
     {
       static inline constexpr bool RequiresBlockSynchronousCall = false;
       static inline constexpr bool CudaCompatible = true;

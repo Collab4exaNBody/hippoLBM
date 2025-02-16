@@ -1,6 +1,6 @@
 #pragma once
 
-namespace hipoLBM
+namespace hippoLBM
 {
   template<typename T>
     struct write_file

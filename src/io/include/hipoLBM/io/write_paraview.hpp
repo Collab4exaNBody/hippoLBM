@@ -1,11 +1,11 @@
 #pragma once
 
-#include <hipoLBM/io/writer.hpp>
+#include <hippoLBM/io/writer.hpp>
 #include <onika/string_utils.h>
 #include <grid_lbm/parallel_for_core.cu>
 
 
-namespace hipoLBM
+namespace hippoLBM
 {
   template<typename DomainQ>
     inline void write_pvtr( std::string basedir,  std::string basename, size_t number_of_files, DomainQ& domain, bool print_distributions)

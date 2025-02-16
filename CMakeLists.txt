@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 
 project(
-  hipoLBM
+  hippoLBM
   VERSION 0.0.1
   LANGUAGES CXX)
 
@@ -37,9 +37,9 @@ endif()
 
 set( CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS}" "--expt-relaxed-constexpr" )
 
-add_executable(hipoLBM hipoLBM.cpp)
-target_compile_options(hipoLBM PUBLIC ${ONIKA_COMPILE_OPTIONS})
-target_compile_definitions(hipoLBM PUBLIC ${ONIKA_COMPILE_DEFINITIONS})
-target_include_directories(hipoLBM PUBLIC ${ONIKA_INCLUDE_DIRS})
-target_link_directories(hipoLBM PUBLIC ${ONIKA_LIBRARY_DIRS})
-target_link_libraries(hipoLBM PUBLIC ${ONIKA_LIBRARIES})
+add_executable(hippoLBM hippoLBM.cpp)
+target_compile_options(hippoLBM PUBLIC ${ONIKA_COMPILE_OPTIONS})
+target_compile_definitions(hippoLBM PUBLIC ${ONIKA_COMPILE_DEFINITIONS})
+target_include_directories(hippoLBM PUBLIC ${ONIKA_INCLUDE_DIRS})
+target_link_directories(hippoLBM PUBLIC ${ONIKA_LIBRARY_DIRS})
+target_link_libraries(hippoLBM PUBLIC ${ONIKA_LIBRARIES})

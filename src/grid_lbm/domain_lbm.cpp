@@ -12,7 +12,7 @@
 #include <grid_lbm/comm.hpp>
 
 
-namespace hipoLBM
+namespace hippoLBM
 {
 	using namespace onika;
 	using namespace scg;
@@ -145,8 +145,8 @@ namespace hipoLBM
 						send_box = fix_box_with_periodicity<DIM>(relative_position, g);
 						int send_tag = (relative_position[0] + 1) + 3 * (relative_position[1] + 1) * 3 + (relative_position[2] + 1) * 9;
 						int recv_tag = (relative_position[0] + 1) + 3 * (relative_position[1] + 1) * 3 + (relative_position[2] + 1) * 9;
-						hipoLBM::comm<Q, DIM> send(neig, default_tag + neig * 27 + send_tag, send_box);
-						hipoLBM::comm<Q, DIM> recv(neig, default_tag + mpi_rank * 27 + recv_tag, recv_box);
+						hippoLBM::comm<Q, DIM> send(neig, default_tag + neig * 27 + send_tag, send_box);
+						hippoLBM::comm<Q, DIM> recv(neig, default_tag + mpi_rank * 27 + recv_tag, recv_box);
 						assert(recv.get_size() == send.get_size());
 						if (recv.get_size() != 0)
 							manager.add_comm(send, recv);
@@ -156,8 +156,8 @@ namespace hipoLBM
 
 						int send_tag = (relative_position[0] + 1) + 3 * (relative_position[1] + 1) * 3 + (relative_position[2] + 1) * 9;
 						int recv_tag = (2 - (relative_position[0] + 1)) + 3 * (2 - (relative_position[1] + 1)) * 3 + (2 - (relative_position[2] + 1)) * 9;
-						hipoLBM::comm<Q, DIM> send(neig, default_tag + neig * 27 + send_tag, send_box);
-						hipoLBM::comm<Q, DIM> recv(neig, default_tag + mpi_rank * 27 + recv_tag, recv_box);
+						hippoLBM::comm<Q, DIM> send(neig, default_tag + neig * 27 + send_tag, send_box);
+						hippoLBM::comm<Q, DIM> recv(neig, default_tag + mpi_rank * 27 + recv_tag, recv_box);
 						assert(recv.get_size() == send.get_size());
 						if (recv.get_size() != 0)
 							manager.add_comm(send, recv);

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace hipoLBM
+namespace hippoLBM
 {
 	typedef std::array<int,3> int3d;
 

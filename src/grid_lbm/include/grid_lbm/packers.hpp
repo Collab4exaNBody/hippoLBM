@@ -3,7 +3,7 @@
 #include <grid_lbm/box.hpp>
 #include <grid_lbm/wrapper_f.hpp>
 
-namespace hipoLBM
+namespace hippoLBM
 {
   template<int Components, int DIM>
     struct packer

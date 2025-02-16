@@ -4,7 +4,7 @@
 #include <grid_lbm/ghost_manager.hpp>
 #include <grid_lbm/grid.hpp>
 
-namespace hipoLBM
+namespace hippoLBM
 {
 	constexpr int DIM = 3;
 

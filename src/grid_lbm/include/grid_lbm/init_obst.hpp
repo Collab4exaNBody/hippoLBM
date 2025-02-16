@@ -2,7 +2,7 @@
 
 #define FLUIDE_ -1
 
-namespace hipoLBM
+namespace hippoLBM
 {
 	/**
 	 * @brief Initializes the obst in a lattice Boltzmann model.
@@ -21,7 +21,7 @@ namespace onika
 {
 	namespace parallel
 	{
-		template<> struct ParallelForFunctorTraits<hipoLBM::init_obst>
+		template<> struct ParallelForFunctorTraits<hippoLBM::init_obst>
 		{
 			static inline constexpr bool RequiresBlockSynchronousCall = false;
 			static inline constexpr bool CudaCompatible = true;

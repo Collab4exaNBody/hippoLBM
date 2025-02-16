@@ -12,7 +12,7 @@
 #include <grid_lbm/lbm_parameters.hpp>
 
 
-namespace hipoLBM
+namespace hippoLBM
 {
 	using namespace onika;
 	using namespace scg;

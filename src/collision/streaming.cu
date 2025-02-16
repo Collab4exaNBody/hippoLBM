@@ -17,10 +17,10 @@
 #include <grid_lbm/parallel_for_core.cu>
 #include <grid_lbm/parallel_for_box.hpp>
 #include <grid_lbm/traversal_lbm.hpp>
-#include <hipoLBM/collision/streaming.hpp>
+#include <hippoLBM/collision/streaming.hpp>
 #include <grid_lbm/update_ghost.hpp>
 
-namespace hipoLBM
+namespace hippoLBM
 {
   using namespace onika;
   using namespace scg;

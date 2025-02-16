@@ -2,7 +2,7 @@
 
 #include<grid_lbm/wrapper_f.hpp>
 
-namespace hipoLBM
+namespace hippoLBM
 {
   /**
    * @brief Initializes the distributions in a lattice Boltzmann model.
@@ -32,7 +32,7 @@ namespace onika
 {
   namespace parallel
   {
-    template <int Q> struct ParallelForFunctorTraits<hipoLBM::init_distributions<Q>>
+    template <int Q> struct ParallelForFunctorTraits<hippoLBM::init_distributions<Q>>
     {
       static inline constexpr bool RequiresBlockSynchronousCall = false;
       static inline constexpr bool CudaCompatible = true

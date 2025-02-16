@@ -3,7 +3,7 @@
 #include <grid_lbm/wrapper_f.hpp>
 using namespace std;
 
-namespace hipoLBM
+namespace hippoLBM
 {
 
   //number of unknowns fi in 3DQ19

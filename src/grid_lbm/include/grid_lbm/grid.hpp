@@ -6,7 +6,7 @@
 #include <grid_lbm/box.hpp>
 #include <cassert>
 
-namespace hipoLBM
+namespace hippoLBM
 {
 
 	template<int DIM/*, bool perX, bool perY, bool perZ*/>

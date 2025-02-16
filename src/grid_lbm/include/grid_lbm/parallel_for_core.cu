@@ -5,7 +5,7 @@
 #include <onika/parallel/parallel_for.h>
 
 
-namespace hipoLBM
+namespace hippoLBM
 {
   using namespace onika::parallel;
 
@@ -103,7 +103,7 @@ namespace onika
 {
   namespace parallel
   {
-    template<typename Func, typename... Args> struct ParallelForFunctorTraits<hipoLBM::parallel_for_id_traversal_runner<Func,Args...>>
+    template<typename Func, typename... Args> struct ParallelForFunctorTraits<hippoLBM::parallel_for_id_traversal_runner<Func,Args...>>
     {
       static inline constexpr bool RequiresBlockSynchronousCall = false;
       static inline constexpr bool CudaCompatible = ParallelForFunctorTraits<Func>::CudaCompatible;

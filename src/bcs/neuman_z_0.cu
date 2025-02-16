@@ -14,9 +14,9 @@
 #include <grid_lbm/grid_data_lbm.hpp>
 #include <grid_lbm/parallel_for_core.cu>
 #include <grid_lbm/traversal_lbm.hpp>
-#include <hipoLBM/bcs/neumann.hpp>
+#include <hippoLBM/bcs/neumann.hpp>
 
-namespace hipoLBM
+namespace hippoLBM
 {
   using namespace onika;
   using namespace scg;

@@ -15,7 +15,7 @@
 #include <grid_lbm/grid_data_lbm.hpp>
 
 
-namespace hipoLBM
+namespace hippoLBM
 {
   using namespace onika;
   using namespace scg;

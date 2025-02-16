@@ -17,9 +17,9 @@
 #include <grid_lbm/parallel_for_core.cu>
 #include <grid_lbm/traversal_lbm.hpp>
 #include <grid_lbm/lbm_parameters.hpp>
-#include <hipoLBM/collision/collision_bgk.hpp>
+#include <hippoLBM/collision/collision_bgk.hpp>
 
-namespace hipoLBM
+namespace hippoLBM
 {
   using namespace onika;
   using namespace scg;

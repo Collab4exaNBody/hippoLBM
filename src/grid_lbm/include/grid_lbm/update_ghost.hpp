@@ -2,7 +2,7 @@
 
 #include<grid_lbm/wrapper_f.hpp>
 
-namespace hipoLBM
+namespace hippoLBM
 {
   template<int Q>
     inline void update_ghost(domain_lbm<Q>& domain, double * const data)
