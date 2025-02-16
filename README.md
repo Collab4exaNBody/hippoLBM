@@ -1,3 +1,5 @@
+![](docs/img/logo_hippoLBM.png)
+
 # hippoLBM
 
 ## Installation guidelines
