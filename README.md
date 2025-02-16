@@ -1,4 +1,4 @@
-# hipoLBM
+# hippoLBM
 
 ## Installation guidelines
 
