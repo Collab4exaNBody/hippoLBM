@@ -1,4 +1,4 @@
-![](docs/img/logo_hippoLBM.png)
+![](docs/logo_hippoLBM.png)
 
 # hippoLBM
 
