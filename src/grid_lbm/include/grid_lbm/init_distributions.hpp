@@ -17,7 +17,7 @@ namespace hipoLBM
        * @param f Pointer to the distribution function.
        * @param w Pointer to the weight coefficients.
        */
-      ONIKA_HOST_DEVICE_FUNC void operator()(const int idx, const WrapperF& f, const double* const w) const
+      ONIKA_HOST_DEVICE_FUNC void operator()(const int idx, const WrapperF<Q>& f, const double* const w) const
       {
 	for (int iLB = 0; iLB < Q; iLB++)
 	{

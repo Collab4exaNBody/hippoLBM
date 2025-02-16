@@ -28,12 +28,11 @@ namespace hipoLBM
       ONIKA_HOST_DEVICE_FUNC inline void operator()(
 	  int idx, 
 	  int * const obst, 
-	  const WrapperF& f,
+	  const WrapperF<Q>& f,
 	  const double ux, 
 	  const double uy, 
 	  const double uz) const
       {
-	const int idxQ=idx*Q;
 	if (obst[idx] == FLUIDE_) {
 	  const double rho = (f(idx,0) + f(idx,1) + f(idx,2) + f(idx,3) + f(idx,4) + f(idx,7) + f(idx,9) + f(idx,10) + f(idx,8) + 2. * (f(idx,5) + f(idx,11) + f(idx,14) + f(idx,15) + f(idx,18))) / (1. + uz);
 	  const double nxz = (1. / 2.) * (f(idx,1) + f(idx,7) + f(idx,9) - (f(idx,2) + f(idx,10) + f(idx,8))) - (1. / 3.) * rho * ux;
@@ -68,7 +67,7 @@ namespace hipoLBM
       ONIKA_HOST_DEVICE_FUNC inline void operator()(
 	  int idx, 
 	  int * const obst, 
-	  const WrapperF& f,
+	  const WrapperF<Q>& f,
 	  const double &ux, 
 	  const double &uy, 
 	  const double &uz) const

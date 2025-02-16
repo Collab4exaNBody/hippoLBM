@@ -112,15 +112,20 @@ namespace hipoLBM
 	  unpack(mesh, recv.get_data(), recv.get_box(), mesh_box);
 	}
       }
-      void do_unpack(WrapperF& mesh, box<DIM>& mesh_box)
+      void do_unpack(WrapperF<N>& mesh, box<DIM>& mesh_box)
       {
 	unpacker<N, DIM> unpack;
 	for (auto& it : this->m_data)
 	{
 	  auto& recv = it.recv;
-          WrapperF wrecv = {recv.get_data() , recv.get_size() / N};
+          WrapperF<N> wrecv = {recv.get_data() , recv.get_size() / N};
+#ifdef ONIKA_CUDA_VERSION
+          cuda_parallel_for_box(recv.get_box(), unpack, mesh, wrecv, recv.get_box(), mesh_box);
+#else
 	  unpack(mesh, wrecv, recv.get_box(), mesh_box);
+#endif
 	}
+        ONIKA_CU_DEVICE_SYNCHRONIZE();
       }
 
       /**
@@ -146,7 +151,7 @@ namespace hipoLBM
 	}
       }
 
-      void do_pack_send(WrapperF& mesh, box<DIM>& mesh_box)
+      void do_pack_send(WrapperF<N>& mesh, box<DIM>& mesh_box)
       {
 	packer<N, DIM> pack;
 	const int size = this->get_size();
@@ -154,8 +159,17 @@ namespace hipoLBM
 	for (auto& it : this->m_data)
 	{
 	  auto& send = it.send;
-          WrapperF wsend = {send.get_data() , send.get_size() / N};
+          WrapperF<N> wsend = {send.get_data() , send.get_size() / N};
+#ifdef ONIKA_CUDA_VERSION
+          cuda_parallel_for_box(send.get_box(), pack, wsend, mesh, send.get_box(), mesh_box);
+#else
 	  pack(wsend, mesh, send.get_box(), mesh_box);
+#endif
+        }
+        ONIKA_CU_DEVICE_SYNCHRONIZE();
+        for (auto& it : this->m_data)
+        {
+	  auto& send = it.send;
 	  int nb_bytes = send.get_size() * sizeof(double);
 	  MPI_Isend(send.get_data(), nb_bytes, MPI_CHAR, send.get_dest(), send.get_tag(), MPI_COMM_WORLD, &(this->m_request[acc++]));
 	}

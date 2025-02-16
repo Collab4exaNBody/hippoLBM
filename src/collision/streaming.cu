@@ -15,6 +15,7 @@
 #include <grid_lbm/enum.hpp>
 #include <grid_lbm/grid_data_lbm.hpp>
 #include <grid_lbm/parallel_for_core.cu>
+#include <grid_lbm/parallel_for_box.hpp>
 #include <grid_lbm/traversal_lbm.hpp>
 #include <hipoLBM/collision/streaming.hpp>
 #include <grid_lbm/update_ghost.hpp>
@@ -25,33 +26,6 @@ namespace hipoLBM
   using namespace scg;
   using namespace onika::cuda;
 
-  template<typename Func, typename... Args>
-  __global__
-  void apply_grid(box<3> bx, Func func, Args ...args)
-  {
-    const int x = threadIdx.x + (blockDim.x*blockIdx.x) + bx.start(0);
-    const int y = threadIdx.y + (blockDim.y*blockIdx.y) + bx.start(1);
-    const int z = blockIdx.z + bx.start(2);
-    if( x <= bx.end(0))
-    {
-      func(x, y, z, args...);
-    }
-  }
-
-  template<typename Func, typename... Args>
-    static inline void cuda_parallel_for_box(box<3>& bx, Func& func, Args&& ...args)
-    {
-      const int size_block = 32;
-      const int size_x = bx.end(0) - bx.start(0) + 1;
-      const int size_y = bx.end(1) - bx.start(1) + 1;
-      const int size_z = bx.end(2) - bx.start(2) + 1;
-      const int nBlockX = (size_y + 31) / size_block;
-      const int nBlockY = (size_y + 31) / size_block;
-      dim3 dimBlock(nBlockX, nBlockY, size_z + 1);
-      dim3 BlockSize(size_block, size_block, 1);
-      //apply_grid<<<dimBlock, size_block>>>(bx, func, args...);
-      apply_grid<<<dimBlock, BlockSize>>>(bx, func, args...);
-    }
 
 
   template<int Q>
@@ -81,7 +55,7 @@ namespace hipoLBM
 	streaming_step2<Q> step2 = {Grid};
 
 	// get fields
-	WrapperF pf = data.distributions();
+	WrapperF<Q> pf = data.distributions();
 	auto [pex, pey, pez] = data.exyz();
 
 	if( *asynchrone )
@@ -117,8 +91,11 @@ namespace hipoLBM
 	  parallel_for_id(ptr, size, step1, parallel_execution_context(), pf);
 	  update_ghost(domain, pf);
 	  box<3> extend = Grid.build_box<Area::Local, Traversal::Extend>();
-	  //parallel_for_box(extend, step2, pf, pex, pey, pez);
+#ifdef ONIKA_CUDA_VERSION
 	  cuda_parallel_for_box(extend, step2, pf, pex, pey, pez);
+#else
+	  parallel_for_box(extend, step2, pf, pex, pey, pez);
+#endif
 	}
       }
   };

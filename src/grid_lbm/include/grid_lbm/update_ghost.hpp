@@ -20,7 +20,7 @@ namespace hipoLBM
       manager.do_unpack(data, bx);
     }
   template<int Q>
-    inline void update_ghost(domain_lbm<Q>& domain, WrapperF& data)
+    inline void update_ghost(domain_lbm<Q>& domain, WrapperF<Q>& data)
     {
       grid<3>& Grid = domain.m_grid;
       constexpr Area L = Area::Local;

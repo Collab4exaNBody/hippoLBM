@@ -15,7 +15,7 @@ namespace hipoLBM
   template<int Q>
     struct write_distributions
     {
-      inline void operator()(int idx, std::ofstream& output, const WrapperF& ptr) const
+      inline void operator()(int idx, std::ofstream& output, const WrapperF<Q>& ptr) const
       {
 	for(int i = 0 ; i < Q ; i ++) 
 	{

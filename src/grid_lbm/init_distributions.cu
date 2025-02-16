@@ -28,13 +28,11 @@ namespace hipoLBM
   {
     public:
       ADD_SLOT( grid_data_lbm<Q>, GridDataQ, INPUT_OUTPUT);
-      ADD_SLOT( domain_lbm<Q>, DomainQ, INPUT, REQUIRED);
       ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED);
       ADD_SLOT( bool, do_update, INPUT, false);
 
       inline void execute () override final
       {
-	auto& domain = *DomainQ;
 	auto& data = *GridDataQ;
 	auto& traversals = *Traversals;
 

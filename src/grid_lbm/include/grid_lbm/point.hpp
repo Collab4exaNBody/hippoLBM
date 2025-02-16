@@ -18,8 +18,8 @@ namespace hipoLBM
 		{
 			int3d position;
 
-      point() {};
-      point(int x, int y, int z) { position[0] = x; position[1] = y; position[2] = z; }
+      ONIKA_HOST_DEVICE_FUNC point() {};
+      ONIKA_HOST_DEVICE_FUNC point(int x, int y, int z) { position[0] = x; position[1] = y; position[2] = z; }
 			ONIKA_HOST_DEVICE_FUNC inline int get_val(int dim) {return position[dim];}
 			ONIKA_HOST_DEVICE_FUNC inline void set_val(int dim, int val) { position[dim] = val;}
 			ONIKA_HOST_DEVICE_FUNC inline int& operator[](int dim) {return position[dim];}

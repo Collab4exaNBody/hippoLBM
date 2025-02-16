@@ -13,7 +13,7 @@ namespace hipoLBM
        * @param idx The index.
        * @param f Pointer to an array of doubles representing distribution functions.
        */
-      ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, const WrapperF& f) const
+      ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, const WrapperF<Q>& f) const
       {
 	for (int iLB = 1; iLB < Q; iLB += 2)
 	{
@@ -45,7 +45,7 @@ namespace hipoLBM
        * @param ez Pointer to an array of integers for Z-direction.
        */
       ONIKA_HOST_DEVICE_FUNC inline void operator()(int x, int y, int z,
-	  const WrapperF& f, const int* ex, const int* ey, const int* ez) 
+	  const WrapperF<Q>& f, const int* ex, const int* ey, const int* ez) 
       {
 	const int idx = g(x,y,z);
 	for (int iLB = 1; iLB < Q; iLB += 2)

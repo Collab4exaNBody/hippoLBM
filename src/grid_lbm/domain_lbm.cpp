@@ -59,7 +59,7 @@ namespace hipoLBM
 
 				// init periodic conditions 
 				int * periods = new int[DIM];
-				for(int dim = 0 ; dim < pbc.size() ; dim++) 
+				for(size_t dim = 0 ; dim < pbc.size() ; dim++) 
 				{ 
 					if(pbc[dim]) periods[dim] = 1; 
 					else periods[dim] = 0; 

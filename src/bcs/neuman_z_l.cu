@@ -53,7 +53,7 @@ namespace hipoLBM
       auto [ux,uy,uz] = *U;
 
       // get fields
-      WrapperF pf = data.distributions();
+      WrapperF<Q> pf = data.distributions();
       int * const pobst = data.obstacles();
 
       // get traversal

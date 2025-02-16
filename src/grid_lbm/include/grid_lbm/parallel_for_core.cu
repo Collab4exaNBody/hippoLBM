@@ -56,11 +56,11 @@ namespace hipoLBM
       auto bx = Grid.build_box<A,Tr>();
 
       for(int k = bx.start(2) ; k <= bx.end(2) ; k++)
-	for(int j = bx.start(1) ; j <= bx.end(1) ; j++)
-	  for(int i = bx.start(0) ; i <= bx.end(0) ; i++)
-	  {
-	    a_func(i, j , k, std::forward<Args>(a_args)...);
-	  }
+        for(int j = bx.start(1) ; j <= bx.end(1) ; j++)
+          for(int i = bx.start(0) ; i <= bx.end(0) ; i++)
+          {
+            a_func(i, j , k, std::forward<Args>(a_args)...);
+          }
     }
 
   template<typename Func, typename... Args>
@@ -68,7 +68,7 @@ namespace hipoLBM
     {
       for(int i = 0 ; i < size ; i++)
       {
-	func(i, args...);
+        func(i, args...);
       }
     }
 
@@ -78,32 +78,14 @@ namespace hipoLBM
       static_assert(A == Area::Local && Tr == Traversal::All);
       if constexpr (A == Area::Local && Tr == Traversal::All)
       {
-	ParallelForOptions opts;
-	opts.omp_scheduling = OMP_SCHED_STATIC;
-	auto bx = g.build_box<A, Tr>();
-	uint64_t size = bx.number_of_points();
-	parallel_for_id_runner runner= {func, args...};
-	assert(size > 0);
-	return parallel_for(size, runner, exec_ctx, opts);
+        ParallelForOptions opts;
+        opts.omp_scheduling = OMP_SCHED_STATIC;
+        auto bx = g.build_box<A, Tr>();
+        uint64_t size = bx.number_of_points();
+        parallel_for_id_runner runner= {func, args...};
+        assert(size > 0);
+        return parallel_for(size, runner, exec_ctx, opts);
       } 
-    }
-
-  template<typename Func, typename... Args>
-    static inline void parallel_for_box(box<3>& bx, Func& func, Args &&...args)
-    //static inline void parallel_for_box(box<3>& bx, Func& func, ParallelExecutionContext *exec_ctx, Args &&...args)
-    {
-      //ParallelForOptions opts;
-      //opts.omp_scheduling = OMP_SCHED_STATIC;
-      //wrapper_parallel_for_ijk WrapperForAllIJK = {func, args...};
-
-#pragma omp parallel for collapse(3)
-      for(int k = bx.start(2) ; k <= bx.end(2) ; k++)
-	for(int j = bx.start(1) ; j <= bx.end(1) ; j++)
-	  for(int i = bx.start(0) ; i <= bx.end(0) ; i++)
-	  {
-	    func(i, j, k, args...);
-	    //WrapperForAllIJK(i, j, k);
-	  }
     }
 
   template<typename Func, typename... Args>
@@ -112,7 +94,7 @@ namespace hipoLBM
       ParallelForOptions opts;
       opts.omp_scheduling = OMP_SCHED_STATIC;
       parallel_for_id_traversal_runner runner(traversal, func, args...);
-      //assert(size > 0);
+      assert(size > 0);
       return parallel_for(size, runner, exec_ctx, opts);
     }
 }

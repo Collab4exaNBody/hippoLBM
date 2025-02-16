@@ -21,4 +21,5 @@ simulation:
   - init_cuda
   - initialize
   - compute_loop
+  - write_paraview
   - finalize_cuda

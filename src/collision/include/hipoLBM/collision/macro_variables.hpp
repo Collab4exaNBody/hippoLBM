@@ -17,7 +17,7 @@ namespace hipoLBM
 	  const int idx, 
 	  Vec3d * pm1, 
 	  int * const pobst, 
-	  const WrapperF& pf,
+	  const WrapperF<Q>& pf,
 	  double * const pm0,
 	  const int* pex, 
 	  const int* pey, 

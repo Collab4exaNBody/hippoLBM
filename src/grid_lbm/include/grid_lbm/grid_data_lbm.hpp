@@ -41,8 +41,8 @@ namespace hipoLBM
       grid_data_lbm() {}
 
       // accessors
-      WrapperF distributions() { 
-        return WrapperF{onika::cuda::vector_data(f), grid_size}; 
+      WrapperF<Q> distributions() { 
+        return WrapperF<Q>{onika::cuda::vector_data(f), grid_size}; 
       }
       //double * distributions() { return onika::cuda::vector_data(f); }
       double * densities() { return onika::cuda::vector_data(m0); }
