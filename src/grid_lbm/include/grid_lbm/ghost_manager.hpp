@@ -8,6 +8,7 @@
 
 #pragma once
 #include <cstring>
+#include <onika/cuda/cuda_context.h>
 #include <grid_lbm/point.hpp>
 #include <grid_lbm/box.hpp>
 #include <grid_lbm/comm.hpp>
@@ -32,8 +33,8 @@ namespace hippoLBM
 
       void debug_print_comm()
       {
-	onika::lout << "Debug Print Comms, number of comms" << m_data.size() << " N: " << N << " DIM: " << DIM << std::endl;
-	for(auto it: m_data) it.debug_print_comm();
+        onika::lout << "Debug Print Comms, number of comms" << m_data.size() << " N: " << N << " DIM: " << DIM << std::endl;
+        for(auto it: m_data) it.debug_print_comm();
       }
 
       /**
@@ -51,13 +52,13 @@ namespace hippoLBM
        */
       void add_comm(comm<N, DIM>& s, comm<N, DIM>& r)
       {
-	m_data.push_back(ghost_comm(s, r));
+        m_data.push_back(ghost_comm(s, r));
       }
 
       void reset()
       {
-	m_data.resize(0);
-	resize_request();
+        m_data.resize(0);
+        resize_request();
       }
 
       /**
@@ -65,8 +66,8 @@ namespace hippoLBM
        */
       void resize_request()
       {
-	const int nb_request = this->get_size() * 2;
-	m_request.resize(nb_request);
+        const int nb_request = this->get_size() * 2;
+        m_request.resize(nb_request);
       }
 
       /**
@@ -74,7 +75,7 @@ namespace hippoLBM
        */
       void wait_all()
       {
-	MPI_Waitall(m_request.size(), m_request.data(), MPI_STATUSES_IGNORE);
+        MPI_Waitall(m_request.size(), m_request.data(), MPI_STATUSES_IGNORE);
       }
 
       /**
@@ -82,19 +83,19 @@ namespace hippoLBM
        */
       void do_recv()
       {
-	int acc = 0;
+        int acc = 0;
 #ifdef PRINT_DEBUG_MPI
-	std::cout << "Number of messages " << this->m_data.size() << std::endl;
+        std::cout << "Number of messages " << this->m_data.size() << std::endl;
 #endif
-	for (auto& it : this->m_data)
-	{
-	  auto& recv = it.recv;
-	  int nb_bytes = recv.get_size() * sizeof(double);
+        for (auto& it : this->m_data)
+        {
+          auto& recv = it.recv;
+          int nb_bytes = recv.get_size() * sizeof(double);
 #ifdef PRINT_DEBUG_MPI
-	  std::cout << "I recv " << nb_bytes << " bytes from " << recv.get_dest() << " with tag " << recv.get_tag() << std::endl;
+          std::cout << "I recv " << nb_bytes << " bytes from " << recv.get_dest() << " with tag " << recv.get_tag() << std::endl;
 #endif
-	  MPI_Irecv(recv.get_data(), nb_bytes, MPI_CHAR, recv.get_dest(), recv.get_tag(), MPI_COMM_WORLD, &(this->m_request[acc++]));
-	}
+          MPI_Irecv(recv.get_data(), nb_bytes, MPI_CHAR, recv.get_dest(), recv.get_tag(), MPI_COMM_WORLD, &(this->m_request[acc++]));
+        }
       }
 
       /**
@@ -105,26 +106,26 @@ namespace hippoLBM
        */
       void do_unpack(double* mesh, box<DIM>& mesh_box)
       {
-	unpacker<N, DIM> unpack;
-	for (auto& it : this->m_data)
-	{
-	  auto& recv = it.recv;
-	  unpack(mesh, recv.get_data(), recv.get_box(), mesh_box);
-	}
+        unpacker<N, DIM> unpack;
+        for (auto& it : this->m_data)
+        {
+          auto& recv = it.recv;
+          unpack(mesh, recv.get_data(), recv.get_box(), mesh_box);
+        }
       }
       void do_unpack(WrapperF<N>& mesh, box<DIM>& mesh_box)
       {
-	unpacker<N, DIM> unpack;
-	for (auto& it : this->m_data)
-	{
-	  auto& recv = it.recv;
+        unpacker<N, DIM> unpack;
+        for (auto& it : this->m_data)
+        {
+          auto& recv = it.recv;
           WrapperF<N> wrecv = {recv.get_data() , recv.get_size() / N};
 #ifdef ONIKA_CUDA_VERSION
           cuda_parallel_for_box(recv.get_box(), unpack, mesh, wrecv, recv.get_box(), mesh_box);
 #else
-	  unpack(mesh, wrecv, recv.get_box(), mesh_box);
+          unpack(mesh, wrecv, recv.get_box(), mesh_box);
 #endif
-	}
+        }
         ONIKA_CU_DEVICE_SYNCHRONIZE();
       }
 
@@ -136,43 +137,43 @@ namespace hippoLBM
        */
       void do_pack_send(double* mesh, box<DIM>& mesh_box)
       {
-	packer<N, DIM> pack;
-	const int size = this->get_size();
-	int acc = size;
-	for (auto& it : this->m_data)
-	{
-	  auto& send = it.send;
-	  pack(send.get_data(), mesh, send.get_box(), mesh_box);
-	  int nb_bytes = send.get_size() * sizeof(double);
+        packer<N, DIM> pack;
+        const int size = this->get_size();
+        int acc = size;
+        for (auto& it : this->m_data)
+        {
+          auto& send = it.send;
+          pack(send.get_data(), mesh, send.get_box(), mesh_box);
+          int nb_bytes = send.get_size() * sizeof(double);
 #ifdef PRINT_DEBUG_MPI
-	  std::cout << "I send " << nb_bytes << " bytes to " << send.get_dest() << " with tag " << send.get_tag() << std::endl;
+          std::cout << "I send " << nb_bytes << " bytes to " << send.get_dest() << " with tag " << send.get_tag() << std::endl;
 #endif
-	  MPI_Isend(send.get_data(), nb_bytes, MPI_CHAR, send.get_dest(), send.get_tag(), MPI_COMM_WORLD, &(this->m_request[acc++]));
-	}
+          MPI_Isend(send.get_data(), nb_bytes, MPI_CHAR, send.get_dest(), send.get_tag(), MPI_COMM_WORLD, &(this->m_request[acc++]));
+        }
       }
 
       void do_pack_send(WrapperF<N>& mesh, box<DIM>& mesh_box)
       {
-	packer<N, DIM> pack;
-	const int size = this->get_size();
-	int acc = size;
-	for (auto& it : this->m_data)
-	{
-	  auto& send = it.send;
+        packer<N, DIM> pack;
+        const int size = this->get_size();
+        int acc = size;
+        for (auto& it : this->m_data)
+        {
+          auto& send = it.send;
           WrapperF<N> wsend = {send.get_data() , send.get_size() / N};
 #ifdef ONIKA_CUDA_VERSION
           cuda_parallel_for_box(send.get_box(), pack, wsend, mesh, send.get_box(), mesh_box);
 #else
-	  pack(wsend, mesh, send.get_box(), mesh_box);
+          pack(wsend, mesh, send.get_box(), mesh_box);
 #endif
         }
         ONIKA_CU_DEVICE_SYNCHRONIZE();
         for (auto& it : this->m_data)
         {
-	  auto& send = it.send;
-	  int nb_bytes = send.get_size() * sizeof(double);
-	  MPI_Isend(send.get_data(), nb_bytes, MPI_CHAR, send.get_dest(), send.get_tag(), MPI_COMM_WORLD, &(this->m_request[acc++]));
-	}
+          auto& send = it.send;
+          int nb_bytes = send.get_size() * sizeof(double);
+          MPI_Isend(send.get_data(), nb_bytes, MPI_CHAR, send.get_dest(), send.get_tag(), MPI_COMM_WORLD, &(this->m_request[acc++]));
+        }
       }
     };
 }
