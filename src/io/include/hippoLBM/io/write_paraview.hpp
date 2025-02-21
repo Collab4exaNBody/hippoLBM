@@ -7,6 +7,8 @@
 
 namespace hippoLBM
 {
+  constexpr Traversal PARAVIEW_TR = Traversal::All;
+
   template<typename DomainQ>
     inline void write_pvtr( std::string basedir,  std::string basename, size_t number_of_files, DomainQ& domain, bool print_distributions)
     {
@@ -14,7 +16,7 @@ namespace hippoLBM
       auto [lx, ly, lz] = domain.domain_size;
       // I could be smarter here
       int box_size = sizeof(box<3>);
-      auto global = Grid.build_box<Area::Global, Traversal::All>();// Traversal::Extend>(); //Traversal::Real>();
+      auto global = Grid.build_box<Area::Global, PARAVIEW_TR>();// Traversal::Extend>(); //Traversal::Real>();
       std::vector<box<3>> recv;
       recv.resize(number_of_files);
       MPI_Gather(&global, box_size, MPI_CHAR, recv.data(), box_size, MPI_CHAR, 0, MPI_COMM_WORLD);
@@ -32,9 +34,10 @@ namespace hippoLBM
           return;
         }
 
-        outFile << " <VTKFile type=\"PRectilinearGrid\"> " << std::endl;
-        outFile << "   <PRectilinearGrid WholeExtent=\"0 " << lx - 1 << " 0 " << ly - 1 << " 0 " << lz - 1<< "\"";
-        outFile << " GhostLevel=\"#\">" << std::endl;
+        outFile << " <VTKFile type=\"PRectilinearGrid \"> " << std::endl;
+        outFile << "   <PRectilinearGrid WholeExtent=\"0 " << lx - 1 << " 0 " << ly - 1 << " 0 " << lz - 1<< "\"" << std::endl;;
+        outFile << "                     GhostLevel=\"#\">" << std::endl;
+        //outFile << " GhostLevel=\"#\">" << std::endl;
         //  outFile << "      <Piece Extent=\"0 " << lx << " 0 " << ly << " 0 " << lz<< "\"" << std::endl;
         for(size_t i = 0 ; i < number_of_files ; i++ )
         {
@@ -77,12 +80,10 @@ namespace hippoLBM
       // only real point  
       constexpr Area L = Area::Local;
       constexpr Area G = Area::Global;
-      //constexpr Traversal Tr = Traversal::Extend;
-      constexpr Traversal Tr = Traversal::All;
-      auto local = Grid.build_box<L,Tr>();
-      auto global = Grid.build_box<G,Tr>();
+      auto local = Grid.build_box<L,PARAVIEW_TR>();
+      auto global = Grid.build_box<G,PARAVIEW_TR>();
 
-      auto [traversal_ptr, traversal_size] = traversals.get_data<Tr>();
+      auto [traversal_ptr, traversal_size] = traversals.get_data<PARAVIEW_TR>();
 
       write_file<double> writer_double;
       write_file<int> writer_int;
@@ -116,7 +117,7 @@ namespace hippoLBM
       outFile << std::endl;
       outFile << "          </DataArray>"  << std::endl;
       outFile << "          <DataArray type=\"Float32\" Name=\"U\" format=\"ascii\" NumberOfComponents=\"3\">" << std::endl;
-      for_all<L, Tr>(Grid, writer_vec3d, outFile, onika::cuda::vector_data(data.m1));
+      for_all<L, PARAVIEW_TR>(Grid, writer_vec3d, outFile, onika::cuda::vector_data(data.m1));
       outFile << std::endl;
       outFile << "          </DataArray>"  << std::endl;
       outFile << "          <DataArray type=\"Float32\" Name=\"OBST\" format=\"ascii\">" << std::endl;

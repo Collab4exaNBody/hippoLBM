@@ -32,11 +32,13 @@ namespace hippoLBM
 				//constexpr Area G = Area::Global;
 				//constexpr Traversal R = Traversal::Real;
 
-				//domain_lbm<Q>& domain = *DomainQ; 
 				//grid<3>& g = domain.m_grid;
+				auto& domain = *DomainQ; 
+        auto [lx, ly, lz] = domain.domain_size;
+        long long int size_xyz = (long long int)(lx) * (long long int)(ly) * (long long int)(lz);
 
 				std::string  header = "     Step     Time          Mesh Size";
-				std::string line = format_string("%9ld % .6e %13ld", *timestep, *physical_time,  1000);
+				std::string line = format_string("%9ld % .6e %13lld", *timestep, *physical_time,  size_xyz);
 
 				if(*print_log_header)
 				{

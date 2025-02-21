@@ -79,10 +79,10 @@ namespace hippoLBM
 			assert(shift_a == all.size());
 			assert(shift_ge == ghost_edge.size());
 
-			// used by neumann z functors
-			int plane_size_xy = br.get_length(0) * br.get_length(1);
-			int plane_size_xz = br.get_length(0) * br.get_length(2);
-			int plane_size_yz = br.get_length(1) * br.get_length(2);
+			// used by bcs functors
+			int plane_size_xy = ba.get_length(0) * ba.get_length(1);
+			int plane_size_xz = ba.get_length(0) * ba.get_length(2);
+			int plane_size_yz = ba.get_length(1) * ba.get_length(2);
 			int idx_xy0(0), idx_xyl(0);
 			int idx_xz0(0), idx_xzl(0);
 			int idx_yz0(0), idx_yzl(0);
@@ -111,8 +111,8 @@ namespace hippoLBM
 				plane_xy_l.resize(plane_size_xy);
 
       // Plan XY
-			for (int y = br.start(1); y <= br.end(1); y++) {
-				for (int x = br.start(0); x <= br.end(0); x++) {
+			for (int y = ba.start(1); y <= ba.end(1); y++) {
+				for (int x = ba.start(0); x <= ba.end(0); x++) {
 					if (MPI_coord.k == 0)
           {
 						plane_xy_0[idx_xy0++] = G(x, y, plane_0z);
@@ -128,8 +128,8 @@ namespace hippoLBM
       // debug: onika::lout << "Last idx_xyl= " << idx_xyl << " Plane size xyl: " << plane_size_xy << std::endl;
 
       // Plan XZ
-			for (int z = br.start(2); z <= br.end(2); z++) {
-				for (int x = br.start(0); x <= br.end(0); x++) {
+			for (int z = ba.start(2); z <= ba.end(2); z++) {
+				for (int x = ba.start(0); x <= ba.end(0); x++) {
 					if (MPI_coord.j == 0)
 						plane_xz_0[idx_xz0++] = G(x, plane_0y, z);
 					if (MPI_coord.j == MPI_grid.j - 1)
@@ -138,8 +138,8 @@ namespace hippoLBM
 			}
 
 			// Plane YZ
-			for (int z = br.start(2); z <= br.end(2); z++) {
-				for (int y = br.start(1); y <= br.end(1); y++) {
+			for (int z = ba.start(2); z <= ba.end(2); z++) {
+				for (int y = ba.start(1); y <= ba.end(1); y++) {
 					if (MPI_coord.i == 0)
 						plane_yz_0[idx_yz0++] = G(plane_0x, y, z);
 					if (MPI_coord.i == MPI_grid.i - 1)

@@ -69,7 +69,8 @@ namespace hippoLBM
 
       // fill grid size;
       constexpr Area L = Area::Local;
-      constexpr Traversal R = Traversal::Real;
+      constexpr Traversal R = Traversal::All;
+      //constexpr Traversal R = Traversal::Real;
       auto br = Grid.build_box<L, R>();
       onika::math::IJK local_grid_size(br.get_length(0), br.get_length(1), br.get_length(2));
 

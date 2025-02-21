@@ -6,6 +6,8 @@ trigger_dump_paraview:
 dump_paraview_if_triggered: 
   condition: trigger_dump_paraview
   body:
+    - update_ghost
+    - macro_variables
     - write_paraview:
 #       distributions: true
        distributions: false

@@ -64,7 +64,6 @@ namespace hippoLBM
 		{
 			if(periodic[0] == false) // not periodic
 			{
-lout << "not x" << std::endl;
 				constexpr int D = 0; // dimension Z
 				if(MPI_coord.i == 0) resize_data<D,Left>(lgs);
 				if(MPI_coord.i == MPI_grid_size.i-1) resize_data<D,Right>(lgs);
@@ -72,7 +71,6 @@ lout << "not x" << std::endl;
 
 			if(periodic[1] == false) // not periodic
 			{
-lout << "not y" << std::endl;
 				constexpr int D = 1; // dimension Z
 				if(MPI_coord.j == 0) resize_data<D,Left>(lgs);
 				if(MPI_coord.j == MPI_grid_size.j-1) resize_data<D,Right>(lgs);

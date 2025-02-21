@@ -19,6 +19,9 @@
 #include <grid_lbm/lbm_parameters.hpp>
 #include <hippoLBM/collision/macro_variables.hpp>
 
+#include <grid_lbm/domain_lbm.hpp>
+#include <grid_lbm/update_ghost.hpp>
+
 namespace hippoLBM
 {
   using namespace onika;
@@ -67,7 +70,7 @@ namespace hippoLBM
   using MacroVariables3D19Q = MacroVariables<19>;
 
   // === register factories ===  
-  ONIKA_AUTORUN_INIT(parallel_for_benchmark)
+  ONIKA_AUTORUN_INIT(macro_variables)
   {
     OperatorNodeFactory::instance()->register_factory( "macro_variables", make_compatible_operator<MacroVariables3D19Q>);
   }
