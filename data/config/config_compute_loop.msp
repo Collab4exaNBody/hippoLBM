@@ -4,6 +4,8 @@ compute_loop_stop:
   body:
     - sim_continue
 
+pre_stream_bcs: nop
+post_stream_bcs: nop
 boundary_conditions: nop
 
 end_iteration:
@@ -19,8 +21,10 @@ compute_loop:
   body:
   - macro_variables
   - collision_bgk
+  - pre_stream_bcs
   - streaming:
      asynchrone: false
+  - post_stream_bcs
   - boundary_conditions
   - end_iteration
   - compute_loop_stop

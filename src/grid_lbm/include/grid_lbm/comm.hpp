@@ -23,9 +23,9 @@ namespace hippoLBM
       // used for debuging
       void debug_print_comm()
       {
-	onika::lout << "Dest: " << m_dest << " Tag: " << m_tag << " Data Size: " << m_data.size() << std::endl;
-	onika::lout << "Box: " << std::endl; 
-	m_box.print();
+        onika::lout << "Dest: " << m_dest << " Tag: " << m_tag << " Data Size: " << m_data.size() << std::endl;
+        onika::lout << "Box: " << std::endl; 
+        m_box.print();
       }
 
       /**
@@ -37,8 +37,8 @@ namespace hippoLBM
        */
       comm(const int dest, const int tag, const box<DIM>& b) : m_dest(dest), m_tag(tag), m_box(b), m_data()
       {
-	int size = b.number_of_points();
-	allocate(size);
+        int size = b.number_of_points();
+        allocate(size);
       }
 
       // default
@@ -86,7 +86,7 @@ namespace hippoLBM
        */
       void allocate(int size)
       {
-	m_data.resize(size * N);
+        m_data.resize(size * N);
       }
     };
 
@@ -114,10 +114,10 @@ namespace hippoLBM
       // used for debuging
       void debug_print_comm()
       {
-	onika::lout << " Ghost Comm[Send]" << std::endl;
-	send.debug_print_comm();
-	onika::lout << " Ghost Comm[Recv]" << std::endl;
-	recv.debug_print_comm();
+        onika::lout << " Ghost Comm[Send]" << std::endl;
+        send.debug_print_comm();
+        onika::lout << " Ghost Comm[Recv]" << std::endl;
+        recv.debug_print_comm();
       }
 
     };

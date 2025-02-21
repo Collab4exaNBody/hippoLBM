@@ -35,29 +35,29 @@ namespace hippoLBM
       ADD_SLOT( bool, distributions, INPUT, false);
       inline void execute () override final
       {
-	auto& comm = *mpi;
-	int rank, size;
-	MPI_Comm_rank(comm, &rank);
-	MPI_Comm_size(comm, &size);
+        auto& comm = *mpi;
+        int rank, size;
+        MPI_Comm_rank(comm, &rank);
+        MPI_Comm_size(comm, &size);
 
-	std::string file_name = *filename;
-	file_name = format_string(file_name, *timestep);
-	std::string fullname = *basedir + file_name;
+        std::string file_name = *filename;
+        file_name = format_string(file_name, *timestep);
+        std::string fullname = *basedir + file_name;
 
-	if(rank == 0)
-	{
-	  std::filesystem::create_directories( fullname );
-	}
-	fullname += "/%06d";
-	fullname = format_string(fullname, rank);
+        if(rank == 0)
+        {
+          std::filesystem::create_directories( fullname );
+        }
+        fullname += "/%06d";
+        fullname = format_string(fullname, rank);
 
-	auto& domain = *DomainQ;
-	auto& data = *GridDataQ;
-	auto& traversals = *Traversals;
+        auto& domain = *DomainQ;
+        auto& data = *GridDataQ;
+        auto& traversals = *Traversals;
 
-	MPI_Barrier(comm);
-	write_pvtr(*basedir, file_name, size, domain, *distributions);
-	write_vtr( fullname, domain, data, traversals, *distributions);
+        MPI_Barrier(comm);
+        write_pvtr(*basedir, file_name, size, domain, *distributions);
+        write_vtr( fullname, domain, data, traversals, *distributions);
       }
   };
 

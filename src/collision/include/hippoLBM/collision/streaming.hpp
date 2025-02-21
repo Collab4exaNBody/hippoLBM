@@ -15,10 +15,10 @@ namespace hippoLBM
        */
       ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, const WrapperF<Q>& f) const
       {
-	for (int iLB = 1; iLB < Q; iLB += 2)
-	{
-	  std::swap(f(idx,iLB), f(idx,iLB+1));
-	}
+        for (int iLB = 1; iLB < Q; iLB += 2)
+        {
+          std::swap(f(idx,iLB), f(idx,iLB+1));
+        }
       }
     };
 
@@ -45,23 +45,24 @@ namespace hippoLBM
        * @param ez Pointer to an array of integers for Z-direction.
        */
       ONIKA_HOST_DEVICE_FUNC inline void operator()(int x, int y, int z,
-	  const WrapperF<Q>& f, const int* ex, const int* ey, const int* ez) 
+          const WrapperF<Q>& f, const int* ex, const int* ey, const int* ez) 
       {
-	const int idx = g(x,y,z);
-	for (int iLB = 1; iLB < Q; iLB += 2)
-	{
-	  const int next_x = x + ex[iLB];
-	  const int next_y = y + ey[iLB];
-	  const int next_z = z + ez[iLB];
+        const int idx = g(x,y,z);
+        for (int iLB = 1; iLB < Q; iLB += 2)
+        {
+          const int next_x = x + ex[iLB];
+          const int next_y = y + ey[iLB];
+          const int next_z = z + ez[iLB];
 
-	  if(g.is_defined(next_x, next_y, next_z))
-	  {
-	    const int next_idx = g(next_x, next_y, next_z);
-	    {
-	      std::swap(f(idx,iLB+1), f(next_idx, iLB));
-	    }
-	  }
-	}
+          if(g.is_defined(next_x, next_y, next_z))
+          {
+            const int next_idx = g(next_x, next_y, next_z);
+            {
+              std::swap(f(idx,iLB+1), f(next_idx, iLB));
+            }
+          } 
+          //else { onika::lout << " next: ("<< next_x << "," << next_y << "," << next_z << ")" << std::endl;}
+        }
       }
     };
 }

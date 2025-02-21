@@ -35,39 +35,39 @@ namespace hippoLBM
 
       inline std::string documentation() const override final
       {
-	return R"EOF( The `CollisionBGQ` operator implements the Bhatnagar-Gross-Krook (BGK) collision model for the Lattice Boltzmann Method (LBM). This model assumes a single relaxation time approach  to approximate the collision process, driving the distribution functions toward equilibrium.
+        return R"EOF( The `CollisionBGQ` operator implements the Bhatnagar-Gross-Krook (BGK) collision model for the Lattice Boltzmann Method (LBM). This model assumes a single relaxation time approach  to approximate the collision process, driving the distribution functions toward equilibrium.
         )EOF";
       }
 
       inline void execute () override final
       {
-	auto& data = *GridDataQ;
-	auto& traversals = *Traversals;
-	auto& params = *Params;
+        auto& data = *GridDataQ;
+        auto& traversals = *Traversals;
+        auto& params = *Params;
 
-	// define functor
-	collision_bgk<Q> func = {params.Fext};
+        // define functor
+        collision_bgk<Q> func = {params.Fext};
 
-	// get fields
-	math::Vec3d * const pm1 = data.flux();
-	int * const pobst = data.obstacles();
-	WrapperF<Q> pf = data.distributions();
-	double * const pm0 = data.densities();
-	const double * const w = data.weights();
-	auto [pex, pey, pez] = data.exyz();
+        // get fields
+        math::Vec3d * const pm1 = data.flux();
+        int * const pobst = data.obstacles();
+        WrapperF<Q> pf = data.distributions();
+        double * const pm0 = data.densities();
+        const double * const w = data.weights();
+        auto [pex, pey, pez] = data.exyz();
 
-	// get traversal
-	auto [ptr, size] = traversals.get_data<Traversal::Real>();
+        // get traversal
+        auto [ptr, size] = traversals.get_data<Traversal::Real>();
 
-	// run kernel
-	parallel_for_id(ptr, size, func, parallel_execution_context(), pm1, pobst, pf, pm0, pex, pey, pez, w, params.tau);
+        // run kernel
+        parallel_for_id(ptr, size, func, parallel_execution_context(), pm1, pobst, pf, pm0, pex, pey, pez, w, params.tau);
       }
   };
 
   using CollisionBGQ3D19Q = CollisionBGQ<19>;
 
   // === register factories ===  
-  ONIKA_AUTORUN_INIT()
+  ONIKA_AUTORUN_INIT(CollisionBGK)
   {
     OperatorNodeFactory::instance()->register_factory( "collision_bgk", make_compatible_operator<CollisionBGQ3D19Q>);
   }

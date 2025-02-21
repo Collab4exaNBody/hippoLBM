@@ -24,7 +24,7 @@ namespace hippoLBM
 	{
 		public:
 			ADD_SLOT( domain_lbm<Q>, DomainQ, OUTPUT);
-			ADD_SLOT( BoolVector, periodic   , INPUT , OPTIONAL );
+			ADD_SLOT( BoolVector, periodic   , INPUT_OUTPUT , REQUIRED );
 			ADD_SLOT( double, resolution, INPUT_OUTPUT, REQUIRED, DocString{"Resolution"});
 			ADD_SLOT( AABB, bounds, INPUT_OUTPUT, REQUIRED, DocString{"Domain's bounds"});
 			ADD_SLOT( double, dx, OUTPUT, DocString{"Space step"});

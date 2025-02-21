@@ -14,7 +14,7 @@ namespace hippoLBM
       auto [lx, ly, lz] = domain.domain_size;
       // I could be smarter here
       int box_size = sizeof(box<3>);
-      auto global = Grid.build_box<Area::Global, Traversal::Extend>(); //Traversal::Real>();
+      auto global = Grid.build_box<Area::Global, Traversal::All>();// Traversal::Extend>(); //Traversal::Real>();
       std::vector<box<3>> recv;
       recv.resize(number_of_files);
       MPI_Gather(&global, box_size, MPI_CHAR, recv.data(), box_size, MPI_CHAR, 0, MPI_COMM_WORLD);
@@ -25,39 +25,39 @@ namespace hippoLBM
 
       if(rank == 0)
       {
-	std::string name = basedir + "/" + basename + ".pvtr";
-	std::ofstream outFile(name);
-	if (!outFile) {
-	  std::cerr << "Erreur : impossible de créer le fichier de sortie suivant: " << name << std::endl;
-	  return;
-	}
+        std::string name = basedir + "/" + basename + ".pvtr";
+        std::ofstream outFile(name);
+        if (!outFile) {
+          std::cerr << "Erreur : impossible de créer le fichier de sortie suivant: " << name << std::endl;
+          return;
+        }
 
-	outFile << " <VTKFile type=\"PRectilinearGrid\"> " << std::endl;
-	outFile << "   <PRectilinearGrid WholeExtent=\"0 " << lx - 1 << " 0 " << ly - 1 << " 0 " << lz - 1<< "\"";
-	outFile << " GhostLevel=\"#\">" << std::endl;
-	//  outFile << "      <Piece Extent=\"0 " << lx << " 0 " << ly << " 0 " << lz<< "\"" << std::endl;
-	for(size_t i = 0 ; i < number_of_files ; i++ )
-	{
-	  std::string subfile = basename + "/%06d.vtr" ;
-	  subfile = onika::format_string(subfile, i);
-	  outFile << "     <Piece Extent=\" " << recv[i].start(0) << " " <<  recv[i].end(0)  << " " << recv[i].start(1) << " " <<  recv[i].end(1)  << " " << recv[i].start(2) << " " <<  recv[i].end(2)  << "\" Source=\"" << subfile << "\"/>" << std::endl;
-	}
-	outFile << "    <PCoordinates>" << std::endl;
-	outFile << "      <PDataArray type=\"Float32\" Name=\"X\"/>" << std::endl;
-	outFile << "      <PDataArray type=\"Float32\" Name=\"Y\"/>" << std::endl;
-	outFile << "      <PDataArray type=\"Float32\" Name=\"Z\"/>" << std::endl;
-	outFile << "    </PCoordinates>" << std::endl;
-	outFile << "     <PPointData Scalars=\"P OBST\"  Vectors=\"U\" >" << std::endl;
-	outFile << "       <PDataArray Name=\"P\" type=\"Float32\" NumberOfComponents=\"1\"/>" << std::endl;
-	outFile << "       <PDataArray Name=\"OBST\" type=\"Float32\" NumberOfComponents=\"1\"/>" << std::endl;
-	outFile << "       <PDataArray Name=\"U\" type=\"Float32\" NumberOfComponents=\"3\"/>" << std::endl;
-	if(print_distributions) 
-	{
-	  outFile << "       <PDataArray Name=\"Fi\" type=\"Float32\" NumberOfComponents=\"19\"/>" << std::endl;
-	}
-	outFile << "     </PPointData> " << std::endl;
-	outFile << "   </PRectilinearGrid>" << std::endl;
-	outFile << " </VTKFile>" << std::endl;
+        outFile << " <VTKFile type=\"PRectilinearGrid\"> " << std::endl;
+        outFile << "   <PRectilinearGrid WholeExtent=\"0 " << lx - 1 << " 0 " << ly - 1 << " 0 " << lz - 1<< "\"";
+        outFile << " GhostLevel=\"#\">" << std::endl;
+        //  outFile << "      <Piece Extent=\"0 " << lx << " 0 " << ly << " 0 " << lz<< "\"" << std::endl;
+        for(size_t i = 0 ; i < number_of_files ; i++ )
+        {
+          std::string subfile = basename + "/%06d.vtr" ;
+          subfile = onika::format_string(subfile, i);
+          outFile << "     <Piece Extent=\" " << recv[i].start(0) << " " <<  recv[i].end(0)  << " " << recv[i].start(1) << " " <<  recv[i].end(1)  << " " << recv[i].start(2) << " " <<  recv[i].end(2)  << "\" Source=\"" << subfile << "\"/>" << std::endl;
+        }
+        outFile << "    <PCoordinates>" << std::endl;
+        outFile << "      <PDataArray type=\"Float32\" Name=\"X\"/>" << std::endl;
+        outFile << "      <PDataArray type=\"Float32\" Name=\"Y\"/>" << std::endl;
+        outFile << "      <PDataArray type=\"Float32\" Name=\"Z\"/>" << std::endl;
+        outFile << "    </PCoordinates>" << std::endl;
+        outFile << "     <PPointData Scalars=\"P OBST\"  Vectors=\"U\" >" << std::endl;
+        outFile << "       <PDataArray Name=\"P\" type=\"Float32\" NumberOfComponents=\"1\"/>" << std::endl;
+        outFile << "       <PDataArray Name=\"OBST\" type=\"Float32\" NumberOfComponents=\"1\"/>" << std::endl;
+        outFile << "       <PDataArray Name=\"U\" type=\"Float32\" NumberOfComponents=\"3\"/>" << std::endl;
+        if(print_distributions) 
+        {
+          outFile << "       <PDataArray Name=\"Fi\" type=\"Float32\" NumberOfComponents=\"19\"/>" << std::endl;
+        }
+        outFile << "     </PPointData> " << std::endl;
+        outFile << "   </PRectilinearGrid>" << std::endl;
+        outFile << " </VTKFile>" << std::endl;
       }
     }
 
@@ -71,14 +71,14 @@ namespace hippoLBM
       name = name + ".vtr";
       std::ofstream outFile(name);
       if (!outFile) {
-	std::cerr << "Erreur : impossible de créer le fichier de sortie suivant: " << name << std::endl;
-	return;
+        std::cerr << "Erreur : impossible de créer le fichier de sortie suivant: " << name << std::endl;
+        return;
       }
       // only real point  
       constexpr Area L = Area::Local;
       constexpr Area G = Area::Global;
-      constexpr Traversal Tr = Traversal::Extend;
       //constexpr Traversal Tr = Traversal::Extend;
+      constexpr Traversal Tr = Traversal::All;
       auto local = Grid.build_box<L,Tr>();
       auto global = Grid.build_box<G,Tr>();
 
@@ -126,10 +126,10 @@ namespace hippoLBM
 
       if(print_distributions)
       {
-	outFile << "          <DataArray type=\"Float32\" Name=\"Fi\" format=\"ascii\" NumberOfComponents=\"19\">" << std::endl;
-	for_all(traversal_ptr, traversal_size, writer_Q, outFile, data.distributions());
-	outFile << std::endl;
-	outFile << "          </DataArray>"  << std::endl;
+        outFile << "          <DataArray type=\"Float32\" Name=\"Fi\" format=\"ascii\" NumberOfComponents=\"19\">" << std::endl;
+        for_all(traversal_ptr, traversal_size, writer_Q, outFile, data.distributions());
+        outFile << std::endl;
+        outFile << "          </DataArray>"  << std::endl;
       }
 
       outFile << "      </PointData>"  << std::endl;

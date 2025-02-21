@@ -14,36 +14,35 @@ namespace hippoLBM
   template<>
     struct neumann_z_l<19>
     {
-      static constexpr int Q = 19;
       /**
-       * @brief Operator for applying Neumann boundary conditions at z=0.
+       * @brief operator for applying neumann boundary conditions at z=0.
        *
-       * @param idxQ The index.
-       * @param obst Pointer to an array of integers representing obstacles.
-       * @param f Pointer to an array of doubles representing distribution functions.
-       * @param ux The x-component of velocity.
-       * @param uy The y-component of velocity.
-       * @param uz The z-component of velocity.
+       * @param idxq the index.
+       * @param obst pointer to an array of integers representing obstacles.
+       * @param f pointer to an array of doubles representing distribution functions.
+       * @param ux the x-component of velocity.
+       * @param uy the y-component of velocity.
+       * @param uz the z-component of velocity.
        */
       ONIKA_HOST_DEVICE_FUNC inline void operator()(
-	  int idx, 
-	  int * const obst, 
-	  const WrapperF<Q>& f,
-	  const double ux, 
-	  const double uy, 
-	  const double uz) const
+          int idx, 
+          int * const obst, 
+          const WrapperF<19>& f,
+          const double ux, 
+          const double uy, 
+          const double uz) const
       {
-	if (obst[idx] == FLUIDE_) {
-	  const double rho = (f(idx,0) + f(idx,1) + f(idx,2) + f(idx,3) + f(idx,4) + f(idx,7) + f(idx,9) + f(idx,10) + f(idx,8) + 2. * (f(idx,5) + f(idx,11) + f(idx,14) + f(idx,15) + f(idx,18))) / (1. + uz);
-	  const double nxz = (1. / 2.) * (f(idx,1) + f(idx,7) + f(idx,9) - (f(idx,2) + f(idx,10) + f(idx,8))) - (1. / 3.) * rho * ux;
-	  const double nyz = (1. / 2.) * (f(idx,3) + f(idx,7) + f(idx,10) - (f(idx,4) + f(idx,9) + f(idx,8))) - (1. / 3.) * rho * uy;
+        if (obst[idx] == FLUIDE_) {
+          const double rho = (f(idx,0) + f(idx,1) + f(idx,2) + f(idx,3) + f(idx,4) + f(idx,7) + f(idx,9) + f(idx,10) + f(idx,8) + 2. * (f(idx,5) + f(idx,11) + f(idx,14) + f(idx,15) + f(idx,18))) / (1. + uz);
+          const double nxz = (1. / 2.) * (f(idx,1) + f(idx,7) + f(idx,9) - (f(idx,2) + f(idx,10) + f(idx,8))) - (1. / 3.) * rho * ux;
+          const double nyz = (1. / 2.) * (f(idx,3) + f(idx,7) + f(idx,10) - (f(idx,4) + f(idx,9) + f(idx,8))) - (1. / 3.) * rho * uy;
 
-	  f(idx,6) = f(idx,5) - (1. / 3.) * rho * uz;
-	  f(idx,13) = f(idx,14) + (1. / 6.) * rho * (-uz + ux) - nxz;
-	  f(idx,12) = f(idx,11) + (1. / 6.) * rho * (-uz - ux) + nxz;
-	  f(idx,17) = f(idx,18) + (1. / 6.) * rho * (-uz + uy) - nyz;
-	  f(idx,16) = f(idx,15) + (1. / 6.) * rho * (-uz - uy) + nyz;
-	}
+          f(idx,6) = f(idx,5) - (1. / 3.) * rho * uz;
+          f(idx,13) = f(idx,14) + (1. / 6.) * rho * (-uz + ux) - nxz;
+          f(idx,12) = f(idx,11) + (1. / 6.) * rho * (-uz - ux) + nxz;
+          f(idx,17) = f(idx,18) + (1. / 6.) * rho * (-uz + uy) - nyz;
+          f(idx,16) = f(idx,15) + (1. / 6.) * rho * (-uz - uy) + nyz;
+        }
       }
     };
 
@@ -65,24 +64,24 @@ namespace hippoLBM
        * @param uz The z-component of velocity.
        */
       ONIKA_HOST_DEVICE_FUNC inline void operator()(
-	  int idx, 
-	  int * const obst, 
-	  const WrapperF<Q>& f,
-	  const double &ux, 
-	  const double &uy, 
-	  const double &uz) const
+          int idx, 
+          int * const obst, 
+          const WrapperF<Q>& f,
+          const double &ux, 
+          const double &uy, 
+          const double &uz) const
       {
-	if (obst[idx] == FLUIDE_) {
-	  const double rho = (f(idx,0) + f(idx,1) + f(idx,2) + f(idx,3) + f(idx,4) + f(idx,7) + f(idx,9) + f(idx,10) + f(idx,8) + 2. * (f(idx,6) + f(idx,13) + f(idx,12) + f(idx,17) + f(idx,16))) / (1. - uz);
-	  const double nxz = (1. / 2.) * (f(idx,1) + f(idx,7) + f(idx,9) - (f(idx,2) + f(idx,10) + f(idx,8))) - (1. / 3.) * rho * ux;
-	  const double nyz = (1. / 2.) * (f(idx,3) + f(idx,7) + f(idx,10) - (f(idx,4) + f(idx,9) + f(idx,8))) - (1. / 3.) * rho * uy;
+        if (obst[idx] == FLUIDE_) {
+          const double rho = (f(idx,0) + f(idx,1) + f(idx,2) + f(idx,3) + f(idx,4) + f(idx,7) + f(idx,9) + f(idx,10) + f(idx,8) + 2. * (f(idx,6) + f(idx,13) + f(idx,12) + f(idx,17) + f(idx,16))) / (1. - uz);
+          const double nxz = (1. / 2.) * (f(idx,1) + f(idx,7) + f(idx,9) - (f(idx,2) + f(idx,10) + f(idx,8))) - (1. / 3.) * rho * ux;
+          const double nyz = (1. / 2.) * (f(idx,3) + f(idx,7) + f(idx,10) - (f(idx,4) + f(idx,9) + f(idx,8))) - (1. / 3.) * rho * uy;
 
-	  f(idx,5) = f(idx,6) + (1. / 3.) * rho * uz;
-	  f(idx,11) = f(idx,12) + (1. / 6.) * rho * (uz + ux) - nxz;
-	  f(idx,14) = f(idx,13) + (1. / 6.) * rho * (uz - ux) + nxz;
-	  f(idx,15) = f(idx,16) + (1. / 6.) * rho * (uz + uy) - nyz;
-	  f(idx,18) = f(idx,17) + (1. / 6.) * rho * (uz - uy) + nyz;
-	}
+          f(idx,5) = f(idx,6) + (1. / 3.) * rho * uz;
+          f(idx,11) = f(idx,12) + (1. / 6.) * rho * (uz + ux) - nxz;
+          f(idx,14) = f(idx,13) + (1. / 6.) * rho * (uz - ux) + nxz;
+          f(idx,15) = f(idx,16) + (1. / 6.) * rho * (uz + uy) - nyz;
+          f(idx,18) = f(idx,17) + (1. / 6.) * rho * (uz - uy) + nyz;
+        }
       }
     };
 }

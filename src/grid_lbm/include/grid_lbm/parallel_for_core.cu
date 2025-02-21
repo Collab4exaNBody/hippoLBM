@@ -89,24 +89,34 @@ namespace hippoLBM
     }
 
   template<typename Func, typename... Args>
-    static inline ParallelExecutionWrapper parallel_for_id(const int * const traversal, const int size, Func& func, ParallelExecutionContext *exec_ctx, Args && ...args)
-    {
-      ParallelForOptions opts;
-      opts.omp_scheduling = OMP_SCHED_STATIC;
-      parallel_for_id_traversal_runner runner(traversal, func, args...);
-      assert(size > 0);
-      return parallel_for(size, runner, exec_ctx, opts);
-    }
+		static inline ParallelExecutionWrapper parallel_for_simple(int size, Func& func, ParallelExecutionContext *exec_ctx, Args &&...args)
+		{
+			ParallelForOptions opts;
+			opts.omp_scheduling = OMP_SCHED_STATIC;
+			parallel_for_id_runner runner= {func, args...};
+			assert(size > 0);
+			return parallel_for(size, runner, exec_ctx, opts);
+		}
+
+	template<typename Func, typename... Args>
+		static inline ParallelExecutionWrapper parallel_for_id(const int * const traversal, const int size, Func& func, ParallelExecutionContext *exec_ctx, Args && ...args)
+		{
+			ParallelForOptions opts;
+			opts.omp_scheduling = OMP_SCHED_STATIC;
+			parallel_for_id_traversal_runner runner(traversal, func, args...);
+			assert(size > 0);
+			return parallel_for(size, runner, exec_ctx, opts);
+		}
 }
 
 namespace onika
 {
-  namespace parallel
-  {
-    template<typename Func, typename... Args> struct ParallelForFunctorTraits<hippoLBM::parallel_for_id_traversal_runner<Func,Args...>>
-    {
-      static inline constexpr bool RequiresBlockSynchronousCall = false;
-      static inline constexpr bool CudaCompatible = ParallelForFunctorTraits<Func>::CudaCompatible;
-    };
-  }
+	namespace parallel
+	{
+		template<typename Func, typename... Args> struct ParallelForFunctorTraits<hippoLBM::parallel_for_id_traversal_runner<Func,Args...>>
+		{
+			static inline constexpr bool RequiresBlockSynchronousCall = false;
+			static inline constexpr bool CudaCompatible = ParallelForFunctorTraits<Func>::CudaCompatible;
+		};
+	}
 }

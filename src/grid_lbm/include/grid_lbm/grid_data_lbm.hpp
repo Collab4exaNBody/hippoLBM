@@ -51,10 +51,10 @@ namespace hippoLBM
       const double * weights() { return onika::cuda::vector_data(scheme.w); }
       std::tuple<const int *, const int * , const int *> exyz() 
       {
-	const int * ex = onika::cuda::vector_data(scheme.ex); 
-	const int * ey = onika::cuda::vector_data(scheme.ey); 
-	const int * ez = onika::cuda::vector_data(scheme.ez); 
-	return {ex,ey,ez}; 
+        const int * ex = onika::cuda::vector_data(scheme.ex); 
+        const int * ey = onika::cuda::vector_data(scheme.ey); 
+        const int * ez = onika::cuda::vector_data(scheme.ez); 
+        return {ex,ey,ez}; 
       }
     };
 }

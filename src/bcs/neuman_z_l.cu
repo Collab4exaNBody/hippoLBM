@@ -58,6 +58,7 @@ namespace hippoLBM
 
       // get traversal
       auto [ptr, size] = traversals.get_data<Traversal::Plan_xy_l>();
+      if( size == 0) return;
       // run kernel
       parallel_for_id(ptr, size, neumann, parallel_execution_context(), pobst, pf, ux, uy, uz);
     }

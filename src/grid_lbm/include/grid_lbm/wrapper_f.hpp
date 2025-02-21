@@ -9,6 +9,8 @@ namespace hippoLBM
       int N;
       ONIKA_HOST_DEVICE_FUNC inline double& operator()(int idx, int iLB) 
       {
+        assert(idx < N);
+        assert(iLB < Q);
 #ifdef WFAOS
         // case 1 
         return f[idx*Q + iLB];
@@ -20,6 +22,8 @@ namespace hippoLBM
 
       ONIKA_HOST_DEVICE_FUNC inline double& operator()(int idx, int iLB) const 
       {
+        assert(idx < N);
+        assert(iLB < Q);
 #ifdef WFAOS
         // case 1
         return f[idx*Q + iLB];
