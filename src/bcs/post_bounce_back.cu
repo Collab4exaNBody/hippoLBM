@@ -36,7 +36,7 @@ namespace hippoLBM
         )EOF";
     }
 
-    template<int dim, Direction dir> 
+    template<int dim, Side dir> 
       void launcher(traversal_lbm& traversals, WrapperF<Q>& pf, bounce_back_manager<Q>& bbm)
       {
         constexpr int idx = helper_dim_idx<dim,dir>();
@@ -75,12 +75,12 @@ namespace hippoLBM
     constexpr int dim_x = 0;
     constexpr int dim_y = 1;
     constexpr int dim_z = 2;
-    launcher<dim_x, Direction::Left>(traversals, pf, bb);
-    launcher<dim_x, Direction::Right>(traversals, pf, bb);
-    launcher<dim_y, Direction::Left>(traversals, pf, bb);
-    launcher<dim_y, Direction::Right>(traversals, pf, bb);
-    launcher<dim_z, Direction::Left>(traversals, pf, bb);
-    launcher<dim_z, Direction::Right>(traversals, pf, bb);
+    launcher<dim_x, Side::Left>(traversals, pf, bb);
+    launcher<dim_x, Side::Right>(traversals, pf, bb);
+    launcher<dim_y, Side::Left>(traversals, pf, bb);
+    launcher<dim_y, Side::Right>(traversals, pf, bb);
+    launcher<dim_z, Side::Left>(traversals, pf, bb);
+    launcher<dim_z, Side::Right>(traversals, pf, bb);
   }
 };
 

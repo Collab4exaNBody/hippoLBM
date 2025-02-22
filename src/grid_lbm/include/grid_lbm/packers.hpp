@@ -50,7 +50,6 @@ namespace hippoLBM
 
         const auto& inf = dst_box.inf;
         const auto& sup = dst_box.sup;
-        const int nb_bytes =  dst_box.get_length(0) * sizeof(double);
 
 #pragma omp parallel for collapse(2)
         for(int z = inf[2] ; z <= sup[2] ; z++)
@@ -99,6 +98,7 @@ namespace hippoLBM
 
         const auto inf = src_box.inf;
         const auto sup = src_box.sup;
+
         const int nb_bytes = Components * sizeof(double);
 
 #pragma omp parallel for collapse(3)
@@ -122,7 +122,6 @@ namespace hippoLBM
 
         const auto& inf = src_box.inf;
         const auto& sup = src_box.sup;
-        const int nb_bytes =  src_box.get_length(0) * sizeof(double);
 
 #pragma omp parallel for collapse(2)
         for(int z = inf[2] ; z <= sup[2] ; z++)

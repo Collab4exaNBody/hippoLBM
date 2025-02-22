@@ -4,13 +4,10 @@
 
 namespace hippoLBM
 {
-  constexpr int DIMX = 0;
-	constexpr int DIMY = 1;
-	constexpr int DIMZ = 2;
-	constexpr Direction LEFT = Direction::Left;
-	constexpr Direction RIGHT = Direction::Right;
+	constexpr Side LEFT = Side::Left;
+	constexpr Side RIGHT = Side::Right;
 
-	template<int dim, Direction dir>
+	template<int dim, Side dir>
 		inline constexpr Traversal get_traversal();
 
 	template<> inline constexpr Traversal get_traversal<DIMX,  LEFT>() { return Traversal::Plan_yz_0; }
@@ -22,10 +19,10 @@ namespace hippoLBM
 
   ////////////////////// Pre streaming ///////////////////////////
 
-	template<int dim, Direction dir, int Q>
+	template<int dim, Side dir, int Q>
 		struct pre_bounce_back {};
 
-	template<int dim, Direction dir, int Q> struct pre_bounce_back_coeff{};
+	template<int dim, Side dir, int Q> struct pre_bounce_back_coeff{};
 	template<> struct pre_bounce_back_coeff<DIMX, LEFT, 19> { int fid[5] = {2,10,8,12,14};};
 	template<> struct pre_bounce_back_coeff<DIMX, RIGHT,19> { int fid[5] = {1,9,7,11,13};	};
 
@@ -36,11 +33,11 @@ namespace hippoLBM
 	template<> struct pre_bounce_back_coeff<DIMZ, RIGHT,19> { int fid[5] = {5,14,11,18,15};};
 
 
-	template<int dim, Direction dir> struct pre_bounce_back<dim, dir, 19>
+	template<int Dim, Side S> struct pre_bounce_back<Dim, S, 19>
 	{
 		const int * const traversal; 
 		static constexpr int Un = 5;
-		pre_bounce_back_coeff<dim, dir, 19> coeff;
+		pre_bounce_back_coeff<Dim, S, 19> coeff;
 		ONIKA_HOST_DEVICE_FUNC inline void operator()(
 				int idx, 
 				const WrapperF<19>& f, // data could be modified, but the ptr inside WrapperF can't be modified
@@ -57,10 +54,10 @@ namespace hippoLBM
 
   ////////////////////// Post streaming ///////////////////////////
 
-	template<int dim, Direction dir, int Q>
+	template<int Dim, Side S, int Q>
 		struct post_bounce_back {};
 
-	template<int dim, Direction dir, int Q> struct post_bounce_back_coeff{};
+	template<int Dim, Side S, int Q> struct post_bounce_back_coeff{};
 	template<> struct post_bounce_back_coeff<DIMX, LEFT, 19> { int fid[5] = {1,9,7,11,13};};
 	template<> struct post_bounce_back_coeff<DIMX, RIGHT,19> { int fid[5] = {2,10,8,12,14};	};
 
@@ -70,11 +67,11 @@ namespace hippoLBM
 	template<> struct post_bounce_back_coeff<DIMZ, LEFT, 19> { int fid[5] = {5,14,11,18,15};};
 	template<> struct post_bounce_back_coeff<DIMZ, RIGHT,19> { int fid[5] = {6,13,12,17,16};};
 
-	template<int dim, Direction dir> struct post_bounce_back<dim, dir, 19>
+	template<int Dim, Side S> struct post_bounce_back<Dim, S, 19>
 	{
 		const int * const traversal; 
 		static constexpr int Un = 5;
-		post_bounce_back_coeff<dim, dir, 19> coeff;
+		post_bounce_back_coeff<Dim, S, 19> coeff;
 		ONIKA_HOST_DEVICE_FUNC inline void operator()(
 				int idx, 
 				const WrapperF<19>& f, // data could be modified, but the ptr inside WrapperF can't be modified
@@ -89,4 +86,22 @@ namespace hippoLBM
 			}
 		}
 	};
+}
+
+
+namespace onika
+{
+	namespace parallel
+	{
+		template<int Dim, hippoLBM::Side S, int Q> struct ParallelForFunctorTraits<hippoLBM::pre_bounce_back<Dim, S, Q>>
+		{
+			static inline constexpr bool RequiresBlockSynchronousCall = false;
+			static inline constexpr bool CudaCompatible = true;
+		};
+		template<int Dim, hippoLBM::Side S, int Q> struct ParallelForFunctorTraits<hippoLBM::post_bounce_back<Dim, S, Q>>
+		{
+			static inline constexpr bool RequiresBlockSynchronousCall = false;
+			static inline constexpr bool CudaCompatible = true;
+		};
+	}
 }

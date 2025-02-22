@@ -8,7 +8,11 @@ namespace hippoLBM
 		Global
 	};
 
-	enum Direction {Left, Right};
+	enum Side
+  {
+    Left, 
+    Right
+  };
 
 	enum Traversal
 	{
@@ -25,4 +29,11 @@ namespace hippoLBM
 		Plan_yz_l,
 		Extend ///< used for paraview and test if the grid have a point
 	};
+
+  constexpr int DIMX = 0;
+  constexpr int DIMY = 1;
+  constexpr int DIMZ = 2;
+	constexpr int DIM_MAX = 3;
 }
+
+#define FLUIDE_ -1

@@ -10,29 +10,29 @@
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
 #include <onika/math/basic_types_operators.h>
+#include <grid_lbm/enum.hpp>
 #include <grid_lbm/domain_lbm.hpp>
 #include <grid_lbm/comm.hpp>
-#include <grid_lbm/enum.hpp>
 #include <grid_lbm/grid_data_lbm.hpp>
 #include <grid_lbm/parallel_for_core.cu>
 #include <grid_lbm/traversal_lbm.hpp>
-#include <grid_lbm/lbm_parameters.hpp>
 #include <hippoLBM/bcs/bounce_back_manager.hpp>
 #include <hippoLBM/bcs/cavity.hpp>
 
 namespace hippoLBM
 {
-	using namespace onika;
-	using namespace scg;
-	using namespace onika::cuda;
+  using namespace onika;
+  using namespace scg;
+  using namespace onika::cuda;
 
-	template<int Q>
-		class CavityZL : public OperatorNode
+	template<int Dim, Side S, int Q>
+		class Cavity : public OperatorNode
 	{
 		typedef std::array<double,3> readVec3;
+		ADD_SLOT( domain_lbm<Q>, DomainQ, INPUT, REQUIRED);
 		ADD_SLOT( grid_data_lbm<Q>, GridDataQ, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
 		ADD_SLOT( readVec3, U, INPUT, REQUIRED, DocString{"Prescribed velocity at the boundary (z = lz), enforcing the Cavity condition."});
-    ADD_SLOT( bounce_back_manager<Q>, bbmanager, INPUT_OUTPUT, REQUIRED);
+		ADD_SLOT( bounce_back_manager<Q>, bbmanager, INPUT_OUTPUT, REQUIRED);
 
 		public:
 		inline std::string documentation() const override final
@@ -47,35 +47,38 @@ namespace hippoLBM
 		{
 			auto& data = *GridDataQ;
 			auto& bb = *bbmanager;
-
-			// define functors
-			cavity_z_l<Q> bcs = {};
-
+			auto& domain = *DomainQ;
+			auto [lx, ly, lz] = domain.domain_size;
 			auto [ux,uy,uz] = *U;
 
+			// define functors
+			cavity<Dim, S, Q> bcs = {};
+
 			// get fields
-      constexpr int dimZ = 2;
-      constexpr int idx = helper_dim_idx<dimZ,Direction::Right>();
-      WrapperF<5> pfi = bb.get_data(idx);
+			constexpr int idx = helper_dim_idx<Dim,S>();
+			WrapperF<5> pfi = bb.get_data(idx);
 			int * const pobst = data.obstacles();
-      auto [pex, pey, pez] = data.exyz();
-      const double * const pw = data.weights();
+			auto [pex, pey, pez] = data.exyz();
+			const double * const pw = data.weights();
+
+			// initialize coefficients
+			bcs.compute_coeff(ux, uy, uz, pw, pex, pey, pez, lx, ly, lz);
 
 			// run kernel
-      auto params = make_tuple(pobst, pfi, ux, uy, uz, pw, pex, pey, pez, 30,30,30);
-      parallel_for_id_runner runner = {bcs, params};
-      //onika::lout << " Fi size: "<< pfi.N << std::endl;
-      parallel_for(pfi.N, runner, parallel_execution_context(), ParallelForOptions());
-			//parallel_for_simple(size, bcs, parallel_execution_context(), pobst, pf, ux, uy, uz, pw, pex, pey, pez, 30,30,30);
+			auto params = make_tuple(pobst, pfi);
+			parallel_for_id_runner runner = {bcs, params};
+			parallel_for(pfi.N, runner, parallel_execution_context(), ParallelForOptions());
 		}
 	};
 
-	using CavityZL3D19Q = CavityZL<19>;
+	using CavityZ0_3D19Q = Cavity<DIMZ, Side::Left, 19>;
+	using CavityZL_3D19Q = Cavity<DIMZ, Side::Right, 19>;
 
 	// === register factories ===  
-	ONIKA_AUTORUN_INIT()
+	ONIKA_AUTORUN_INIT(cavity)
 	{
-		OperatorNodeFactory::instance()->register_factory( "cavity_z_l", make_compatible_operator<CavityZL3D19Q>);
+		OperatorNodeFactory::instance()->register_factory( "cavity_z_0", make_compatible_operator<CavityZ0_3D19Q>);
+		OperatorNodeFactory::instance()->register_factory( "cavity_z_l", make_compatible_operator<CavityZL_3D19Q>);
 	}
 }
 

@@ -34,7 +34,7 @@ namespace hippoLBM
           return;
         }
 
-        outFile << " <VTKFile type=\"PRectilinearGrid \"> " << std::endl;
+        outFile << " <VTKFile type=\"PRectilinearGrid\"> " << std::endl;
         outFile << "   <PRectilinearGrid WholeExtent=\"0 " << lx - 1 << " 0 " << ly - 1 << " 0 " << lz - 1<< "\"" << std::endl;;
         outFile << "                     GhostLevel=\"#\">" << std::endl;
         //outFile << " GhostLevel=\"#\">" << std::endl;

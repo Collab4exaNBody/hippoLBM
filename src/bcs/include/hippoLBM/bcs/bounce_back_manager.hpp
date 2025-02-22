@@ -7,11 +7,11 @@ namespace hippoLBM
   using namespace onika;
 	template <typename T> using vector_t = onika::memory::CudaMMVector<T>;
 
-	template<int dim, Direction dir> 
+	template<int dim, Side dir> 
 		inline constexpr int helper_dim_idx() 
 		{
-			static_assert(dim < DIM);
-			if constexpr (dir == Direction::Right) return dim*2 + 1;
+			static_assert(dim < DIM_MAX);
+			if constexpr (dir == Side::Right) return dim*2 + 1;
 			else return dim * 2;
 		}
 
@@ -22,14 +22,13 @@ namespace hippoLBM
 	template<> struct bounce_back_manager<19>
 	{
 		static constexpr int  Un = 5; 
-		static constexpr int DIM = 3;
 		// data[0] : x left
 		// data[1] : x right
 		// data[2] : y left
 		// data[3] : y right
 		// data[4] : z bottom
 		// data[5] : z top
-		std::array<vector_t<double>,6> _data;
+		std::array<vector_t<double>, 2 * DIM_MAX> _data;
 
 
 		WrapperF<Un> get_data(int i)
@@ -43,16 +42,16 @@ namespace hippoLBM
 		template<int dim>
 			int get_size(const onika::math::IJK lgs)
 			{
-				if constexpr(dim == 0) return lgs.j * lgs.k;
-				if constexpr(dim == 1) return lgs.i * lgs.k;
-				if constexpr(dim == 2) return lgs.i * lgs.j;
+				if constexpr(dim == DIMX) return lgs.j * lgs.k;
+				if constexpr(dim == DIMY) return lgs.i * lgs.k;
+				if constexpr(dim == DIMZ) return lgs.i * lgs.j;
 			}
 
-		template<int dim, Direction dir>
+		template<int Dim, Side S>
 			void resize_data(const onika::math::IJK& lgs)
 			{
-				const size_t size_dim = get_size<dim>(lgs) * Un; 
-				int i = helper_dim_idx<dim,dir>();
+				const size_t size_dim = get_size<Dim>(lgs) * Un; 
+				int i = helper_dim_idx<Dim,S>();
 				auto& data = _data[i];
         if(size_dim != onika::cuda::vector_size(data))
         {
@@ -62,25 +61,22 @@ namespace hippoLBM
 
 		void resize_data(const std::vector<bool>& periodic, const onika::math::IJK& lgs /* local grid size*/, const onika::math::IJK& MPI_coord, const onika::math::IJK& MPI_grid_size)
 		{
-			if(periodic[0] == false) // not periodic
+			if(periodic[DIMX] == false) // not periodic
 			{
-				constexpr int D = 0; // dimension Z
-				if(MPI_coord.i == 0) resize_data<D,Left>(lgs);
-				if(MPI_coord.i == MPI_grid_size.i-1) resize_data<D,Right>(lgs);
+				if(MPI_coord.i == 0) resize_data<DIMX,Left>(lgs);
+				if(MPI_coord.i == MPI_grid_size.i-1) resize_data<DIMX,Right>(lgs);
 			}
 
-			if(periodic[1] == false) // not periodic
+			if(periodic[DIMY] == false) // not periodic
 			{
-				constexpr int D = 1; // dimension Z
-				if(MPI_coord.j == 0) resize_data<D,Left>(lgs);
-				if(MPI_coord.j == MPI_grid_size.j-1) resize_data<D,Right>(lgs);
+				if(MPI_coord.j == 0) resize_data<DIMY,Left>(lgs);
+				if(MPI_coord.j == MPI_grid_size.j-1) resize_data<DIMY,Right>(lgs);
 			}
 
-			if(periodic[2] == false) // not periodic
+			if(periodic[DIMZ] == false) // not periodic
 			{
-				constexpr int D = 2; // dimension Z
-				if(MPI_coord.k == 0) resize_data<D,Left>(lgs); 
-				if(MPI_coord.k == MPI_grid_size.k-1) resize_data<D,Right>(lgs);
+				if(MPI_coord.k == 0) resize_data<DIMZ,Left>(lgs); 
+				if(MPI_coord.k == MPI_grid_size.k-1) resize_data<DIMZ,Right>(lgs);
 			}
 		}
 	};
