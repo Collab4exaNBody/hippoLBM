@@ -19,11 +19,11 @@ namespace hippoLBM
        */
       ONIKA_HOST_DEVICE_FUNC void operator()(const int idx, const WrapperF<Q>& f, const double* const w) const
       {
-	for (int iLB = 0; iLB < Q; iLB++)
-	{
-	  f(idx,iLB)=w[iLB];
-	  //          std::cout << "f " << f[idxQ+iLB] << std::endl; 
-	}
+        for (int iLB = 0; iLB < Q; iLB++)
+        {
+          f(idx,iLB)=w[iLB];
+          //          std::cout << "f " << f[idxQ+iLB] << std::endl; 
+        }
       };
     };
 }
@@ -36,7 +36,7 @@ namespace onika
     {
       static inline constexpr bool RequiresBlockSynchronousCall = false;
       static inline constexpr bool CudaCompatible = true
-	;
+        ;
     };
   }
 }

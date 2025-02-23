@@ -5,6 +5,7 @@
 #include <grid_lbm/point.hpp>
 #include <grid_lbm/box.hpp>
 #include <cassert>
+#include <tuple>
 
 namespace hippoLBM
 {
@@ -190,6 +191,28 @@ namespace hippoLBM
           res = {res.x * dx, res.y * dx, res.z * dx}; // add operator *=
           return res;
         }
+
+      template<Area A, Traversal Tr>
+        ONIKA_HOST_DEVICE_FUNC std::tuple<bool, box<3>> restrict_box_to_grid(const box<3>& input_box)
+        {
+          box<3> adjusted_box;
+          adjusted_box.inf = convert<A, false>(input_box.inf);
+          adjusted_box.sup = convert<A, false>(input_box.sup);
+          box<3> subdomain = build_box<A,Tr>();
+          bool is_inside_subdomain = intersect(subdomain, adjusted_box);
+          if( ! is_inside_subdomain ) 
+          {
+            return {false, adjusted_box};
+          }
+
+          for(int dim = 0; dim < 3 ; dim++)
+          {
+            adjusted_box.inf[dim] = std::max(adjusted_box.inf[dim], subdomain.inf[dim]);
+            adjusted_box.sup[dim] = std::min(adjusted_box.sup[dim], subdomain.sup[dim]);
+          }
+          return {true, adjusted_box};
+        }
+
 
       ONIKA_HOST_DEVICE_FUNC int operator()(point<3>& p)
       {

@@ -198,7 +198,6 @@ namespace hippoLBM
 					return false;
 				}
 			}
-
 			// Si aucune des conditions de non-intersection n'est remplie, les boîtes s'intersectent
 			return true;
 		}
