@@ -37,3 +37,4 @@ namespace hippoLBM
 }
 
 #define FLUIDE_ -1
+#define WALL_ -2

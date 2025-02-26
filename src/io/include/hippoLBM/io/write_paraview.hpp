@@ -66,7 +66,7 @@ namespace hippoLBM
 
 
   template<typename DomainQ, typename GridDataQ>
-    inline void write_vtr(std::string name, DomainQ& domain, GridDataQ& data, traversal_lbm& traversals, bool print_distributions)
+    inline void write_vtr(std::string name, DomainQ& domain, GridDataQ& data, traversal_lbm& traversals, LBMParameters params, bool print_distributions)
     {
       grid<3>& Grid = domain.m_grid;
       auto [lx, ly, lz] = domain.domain_size;
@@ -85,10 +85,19 @@ namespace hippoLBM
 
       auto [traversal_ptr, traversal_size] = traversals.get_data<PARAVIEW_TR>();
 
-      write_file<double> writer_double;
-      write_file<int> writer_int;
+      const int * const obst = data.obstacles();
+
+      NullFuncWriter nullop;
+      write_file writer_obst = {nullop};
       write_distributions<19> writer_Q;
-      write_vec3d writer_vec3d = {local};
+
+      double ratio_dx_dtLB = dx / params.dtLB;
+      UWriter u = {obst, ratio_dx_dtLB};
+      write_vec3d writer_vec3d = {u, local};
+
+      double c_c_avg_rho_div_three = 1./3. * params.celerity * params.celerity * params.avg_rho;
+      PressionWriter pression = {obst, c_c_avg_rho_div_three};
+      write_file writer_double = {pression};
 
       assert( local.get_length(0) == global.get_length(0) );
       assert( local.get_length(1) == global.get_length(1) );
@@ -121,7 +130,7 @@ namespace hippoLBM
       outFile << std::endl;
       outFile << "          </DataArray>"  << std::endl;
       outFile << "          <DataArray type=\"Float32\" Name=\"OBST\" format=\"ascii\">" << std::endl;
-      for_all(traversal_ptr, traversal_size, writer_int, outFile, onika::cuda::vector_data(data.obst));
+      for_all(traversal_ptr, traversal_size, writer_obst, outFile, onika::cuda::vector_data(data.obst));
       outFile << std::endl;
       outFile << "          </DataArray>"  << std::endl;
 

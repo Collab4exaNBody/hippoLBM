@@ -1,6 +1,7 @@
 do_domain: nop
 set_lbm_parameters: nop
 set_obstacles: nop
+set_distributions: nop
 
 initialize:
   - global
@@ -12,6 +13,7 @@ initialize:
   - init_obst
   - init_distributions:
      do_update: false
+  - set_distributions
   - set_obstacles
   - macro_variables
   - end_iteration

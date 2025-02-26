@@ -86,8 +86,44 @@ namespace hippoLBM
 			}
 		}
 	};
-}
 
+
+  //////////////////////// Wall streaming ///////////////////////////////
+
+  template<int Q> struct wall_bounce_back {};
+
+  template<>
+		struct wall_bounce_back<19>
+		{
+      grid<3> g;
+      static constexpr int Q = 19;
+      const int iopp[Q] = {0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15, 18, 17};
+			ONIKA_HOST_DEVICE_FUNC inline void operator()(
+					int x,
+					int y,
+					int z,
+					const int * const obst,
+					const WrapperF<Q>& f,
+					const int* ex, const int* ey, const int* ez)
+			{
+				const int idx = g(x,y,z);
+				if(obst[idx] == WALL_)
+				{
+					for(int iLB = 1 ; iLB < Q ; iLB++)
+					{
+						const int next_x = x + ex[iLB];
+						const int next_y = y + ey[iLB];
+						const int next_z = z + ez[iLB];
+						if(g.is_defined(next_x, next_y, next_z))
+						{
+							const int idx_next = g(next_x, next_y, next_z);
+							if(obst[idx_next] != WALL_) f(idx, iLB) = f(idx_next, iopp[iLB]);
+						}
+					}
+				}
+			}
+		};
+}
 
 namespace onika
 {
@@ -98,7 +134,14 @@ namespace onika
 			static inline constexpr bool RequiresBlockSynchronousCall = false;
 			static inline constexpr bool CudaCompatible = true;
 		};
+
 		template<int Dim, hippoLBM::Side S, int Q> struct ParallelForFunctorTraits<hippoLBM::post_bounce_back<Dim, S, Q>>
+		{
+			static inline constexpr bool RequiresBlockSynchronousCall = false;
+			static inline constexpr bool CudaCompatible = true;
+		};
+
+		template<int Q> struct ParallelForFunctorTraits<hippoLBM::wall_bounce_back<Q>>
 		{
 			static inline constexpr bool RequiresBlockSynchronousCall = false;
 			static inline constexpr bool CudaCompatible = true;

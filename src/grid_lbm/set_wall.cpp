@@ -26,7 +26,7 @@ namespace hippoLBM
 		public:
       ADD_SLOT( domain_lbm<Q>, DomainQ, INPUT, REQUIRED);
       ADD_SLOT( grid_data_lbm<Q>, GridDataQ, INPUT_OUTPUT);
-			ADD_SLOT( AABB, bounds, INPUT_OUTPUT, REQUIRED, DocString{"Domain's bounds"});
+			ADD_SLOT( AABB, bounds, INPUT, REQUIRED, DocString{"Domain's bounds"});
 			ADD_SLOT( double, dx, INPUT, REQUIRED, DocString{"Space step"});
 			inline void execute () override final
 			{
@@ -55,7 +55,7 @@ namespace hippoLBM
 						for(int x = wall_box.start(0) ; x <= wall_box.end(0) ; x++)
 						{
               const int idx = Grid(x,y,z);
-              obst[idx] = 0;
+              obst[idx] = WALL_;
 						}
 			}
 	};

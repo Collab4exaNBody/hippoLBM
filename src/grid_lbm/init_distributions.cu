@@ -27,31 +27,65 @@ namespace hippoLBM
     class InitDistributionsLBM : public OperatorNode
   {
     public:
+      ADD_SLOT( domain_lbm<Q>, DomainQ, INPUT, REQUIRED);
       ADD_SLOT( grid_data_lbm<Q>, GridDataQ, INPUT_OUTPUT);
       ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED);
+      ADD_SLOT( AABB, bounds, INPUT, OPTIONAL, DocString{"Domain's bounds"});
+      ADD_SLOT( double, tmp_coeff, INPUT, double(1) );
       ADD_SLOT( bool, do_update, INPUT, false);
 
       inline void execute () override final
       {
-	auto& data = *GridDataQ;
-	auto& traversals = *Traversals;
+        auto& data = *GridDataQ;
+        auto& traversals = *Traversals;
+        domain_lbm<Q>& domain = *DomainQ;
 
-	WrapperF pf = data.distributions();
-	const double * const pw = data.weights();
+        WrapperF pf = data.distributions();
+        const double * const pw = data.weights();
 
-	init_distributions<Q> func = {};
+        init_distributions<Q> func = {*tmp_coeff};
 
-	if( *do_update )
-	{
-	  auto [ptr, size] = traversals.get_data<Traversal::Real>();
-	  parallel_for_id(ptr, size, func, parallel_execution_context(), pf, pw);
-	//  update_ghost(domain, pf);
-	}
-	else
-	{
-	  auto [ptr, size] = traversals.get_data<Traversal::All>();
-	  parallel_for_id(ptr, size, func, parallel_execution_context(), pf, pw);
-	}
+        if(bounds.has_value())
+        {
+          grid<3>& Grid = domain.m_grid;
+
+          auto& bound = *bounds;
+          Vec3d min = bound.bmin;
+          Vec3d max = bound.bmax;
+          double Dx = Grid.dx;
+          point<3> _min = {int(min.x/Dx), int(min.y/Dx), int(min.z/Dx)};
+          point<3> _max = {int(max.x/Dx), int(max.y/Dx), int(max.z/Dx)};
+
+          box<3> global_wall_box = {_min, _max};
+          global_wall_box.print();
+
+          auto [is_inside_subdomain, wall_box] = Grid.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_wall_box);
+          wall_box.print();
+          if( !is_inside_subdomain ) return;
+
+          for(int z = wall_box.start(2) ; z <= wall_box.end(2) ; z++)
+            for(int y = wall_box.start(1) ; y <= wall_box.end(1) ; y++)
+              for(int x = wall_box.start(0) ; x <= wall_box.end(0) ; x++)
+              {
+                const int idx = Grid(x,y,z);
+                func(idx, pf, pw);
+              }
+
+        }
+        else  // all domain
+        { 
+          if( *do_update )
+          {
+            auto [ptr, size] = traversals.get_data<Traversal::Real>();
+            parallel_for_id(ptr, size, func, parallel_execution_context(), pf, pw);
+            update_ghost(domain, pf);
+          }
+          else
+          {
+            auto [ptr, size] = traversals.get_data<Traversal::All>();
+            parallel_for_id(ptr, size, func, parallel_execution_context(), pf, pw);
+          }
+        }
       }
   };
 

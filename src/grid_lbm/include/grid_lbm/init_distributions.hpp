@@ -10,6 +10,7 @@ namespace hippoLBM
   template<int Q>
     struct init_distributions
     {
+      double coeff = 1;
       /**
        * @brief Operator to initialize distributions at a given index.
        *
@@ -21,8 +22,7 @@ namespace hippoLBM
       {
         for (int iLB = 0; iLB < Q; iLB++)
         {
-          f(idx,iLB)=w[iLB];
-          //          std::cout << "f " << f[idxQ+iLB] << std::endl; 
+          f(idx,iLB) = coeff * w[iLB];
         }
       };
     };
