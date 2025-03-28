@@ -82,7 +82,7 @@ namespace hippoLBM
 
       /*** check is the point is in the grid */
       template<Area A, Traversal Tr>
-        ONIKA_HOST_DEVICE_FUNC inline bool contains(point<DIM>& p)
+        ONIKA_HOST_DEVICE_FUNC inline bool contains(point<DIM>& p) const
         {
           for (int dim = 0; dim < DIM ; dim++)
           {
@@ -95,7 +95,7 @@ namespace hippoLBM
         }
 
       /*** check if the point is defined */
-      ONIKA_HOST_DEVICE_FUNC inline bool is_defined(point<DIM>& p)
+      ONIKA_HOST_DEVICE_FUNC inline bool is_defined(point<DIM>& p) const
       {
         for (int dim = 0; dim < DIM ; dim++)
         {
@@ -107,7 +107,7 @@ namespace hippoLBM
         return true;
       }
 
-      ONIKA_HOST_DEVICE_FUNC inline bool is_defined(int i, int j, int k)
+      ONIKA_HOST_DEVICE_FUNC inline bool is_defined(int i, int j, int k) const
       {
         if( i < ext.start(0) || i > ext.end(0) ) return false;
         if( j < ext.start(1) || j > ext.end(1) ) return false;
@@ -214,17 +214,17 @@ namespace hippoLBM
         }
 
 
-      ONIKA_HOST_DEVICE_FUNC int operator()(point<3>& p)
+      ONIKA_HOST_DEVICE_FUNC int operator()(point<3>& p) const
       {
         return bx(p[0], p[1], p[2]);
       }  
 
-      ONIKA_HOST_DEVICE_FUNC int operator()(point<3>&& p)
+      ONIKA_HOST_DEVICE_FUNC int operator()(point<3>&& p) const
       {
         return bx(p[0], p[1], p[2]);
       }  
 
-      ONIKA_HOST_DEVICE_FUNC int operator()(int x, int y, int z)
+      ONIKA_HOST_DEVICE_FUNC int operator()(int x, int y, int z) const
       {
         return bx(x, y, z);
       }  

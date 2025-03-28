@@ -17,30 +17,30 @@
 
 namespace hippoLBM
 {
-	using namespace onika;
-	using namespace scg;
+  using namespace onika;
+  using namespace scg;
 
-	template<int Q>
-		class BuildTraversalLBM : public OperatorNode
-	{
-		public:
-			ADD_SLOT( domain_lbm<Q>, DomainQ, INPUT);
-			ADD_SLOT( traversal_lbm, Traversals, OUTPUT);
-			inline void execute () override final
-			{
-				auto& domain = *DomainQ;
-				traversal_lbm traversal;
-				traversal.build_traversal(domain.m_grid, domain.MPI_coord, domain.MPI_grid_size);
-				*Traversals = traversal;
-			}
-	};
+  template<int Q>
+    class BuildTraversalLBM : public OperatorNode
+  {
+    public:
+      ADD_SLOT( domain_lbm<Q>, DomainQ, INPUT);
+      ADD_SLOT( traversal_lbm, Traversals, OUTPUT);
+      inline void execute () override final
+      {
+	auto& domain = *DomainQ;
+	traversal_lbm traversal;
+	traversal.build_traversal(domain.m_grid, domain.MPI_coord, domain.MPI_grid_size);
+	*Traversals = traversal;
+      }
+  };
 
-	using BuildTraversalLBM3D19Q = BuildTraversalLBM<19>;
+  using BuildTraversalLBM3D19Q = BuildTraversalLBM<19>;
 
-	// === register factories ===  
-	ONIKA_AUTORUN_INIT(parallel_for_benchmark)
-	{
-		OperatorNodeFactory::instance()->register_factory( "build_traversal", make_compatible_operator<BuildTraversalLBM3D19Q>);
-	}
+  // === register factories ===  
+  ONIKA_AUTORUN_INIT(parallel_for_benchmark)
+  {
+    OperatorNodeFactory::instance()->register_factory( "build_traversal", make_compatible_operator<BuildTraversalLBM3D19Q>);
+  }
 }
 

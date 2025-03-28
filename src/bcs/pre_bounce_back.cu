@@ -97,7 +97,7 @@ namespace hippoLBM
   using PreBounceBack3D19Q = PreBounceBack<19>;
 
   // === register factories ===  
-  ONIKA_AUTORUN_INIT()
+  ONIKA_AUTORUN_INIT(pre_bounce_back)
   {
     OperatorNodeFactory::instance()->register_factory( "pre_bounce_back", make_compatible_operator<PreBounceBack3D19Q>);
   }

@@ -43,7 +43,7 @@ namespace hippoLBM
         MPI_Comm_size(comm, &size);
 
         std::string file_name = *filename;
-        file_name = format_string(file_name, *timestep);
+        file_name = onika::format_string(file_name, *timestep);
         std::string fullname = *basedir + file_name;
 
         if(rank == 0)
@@ -51,7 +51,7 @@ namespace hippoLBM
           std::filesystem::create_directories( fullname );
         }
         fullname += "/%06d";
-        fullname = format_string(fullname, rank);
+        fullname = onika::format_string(fullname, rank);
 
         auto& domain = *DomainQ;
         auto& data = *GridDataQ;

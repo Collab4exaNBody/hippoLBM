@@ -24,16 +24,18 @@ namespace hippoLBM
    * @tparam N The number of data elements per point.
    * @tparam DIM The dimension of the communication box.
    */
-  template<int N, int DIM>
+  template<int Components, int DIM>
     struct ghost_manager
     {
-      std::vector<ghost_comm<N, DIM>> m_data; ///< Vector of ghost communications.
+      using ParExecSpace3d = onika::parallel::ParallelExecutionSpace<3>;
+      std::vector<ghost_comm<Components, DIM>> m_data; ///< Vector of ghost communications.
       std::vector<MPI_Request> m_request; ///< Vector of MPI requests.
 
 
       void debug_print_comm()
       {
-        onika::lout << "Debug Print Comms, number of comms" << m_data.size() << " N: " << N << " DIM: " << DIM << std::endl;
+        onika::lout << "Debug Print Comms, number of comms" << m_data.size() << " Components: " << 
+ Components << " DIM: " << DIM << std::endl;
         for(auto it: m_data) it.debug_print_comm();
       }
 
@@ -50,7 +52,7 @@ namespace hippoLBM
        * @param s The send communication.
        * @param r The receive communication.
        */
-      void add_comm(comm<N, DIM>& s, comm<N, DIM>& r)
+      void add_comm(comm<Components, DIM>& s, comm<Components, DIM>& r)
       {
         m_data.push_back(ghost_comm(s, r));
       }
@@ -104,30 +106,26 @@ namespace hippoLBM
        * @param mesh Pointer to the mesh data.
        * @param mesh_box The box representing the mesh.
        */
-      void do_unpack(double* mesh, box<DIM>& mesh_box)
-      {
-        unpacker<N, DIM> unpack;
-        for (auto& it : this->m_data)
-        {
-          auto& recv = it.recv;
-          unpack(mesh, recv.get_data(), recv.get_box(), mesh_box);
-        }
-      }
-      void do_unpack(WrapperF<N>& mesh, box<DIM>& mesh_box)
-      {
-        unpacker<N, DIM> unpack;
-        for (auto& it : this->m_data)
-        {
-          auto& recv = it.recv;
-          WrapperF<N> wrecv = {recv.get_data() , recv.get_size() / N};
-#ifdef ONIKA_CUDA_VERSION
-          cuda_parallel_for_box(recv.get_box(), unpack, mesh, wrecv, recv.get_box(), mesh_box);
-#else
-          unpack(mesh, wrecv, recv.get_box(), mesh_box);
-#endif
-        }
-        ONIKA_CU_DEVICE_SYNCHRONIZE();
-      }
+      template<typename ParExecCtxFunc>
+	void do_unpack(
+	    WrapperF<Components>& mesh, 
+	    box<DIM>& mesh_box, 
+	    ParExecCtxFunc& par_exec_ctx)
+	{
+	  for (auto& it : this->m_data)
+	  {
+	    auto& recv = it.recv;
+	    // Wrap data
+	    WrapperF<Components> wrecv = {recv.get_data() , recv.get_size() / Components};
+	    // Define kernel
+	    unpacker<Components, DIM> unpack = {mesh, wrecv, recv.get_box(), mesh_box};
+	    // Define cuda/omp grid
+	    ParExecSpace3d parallel_range = set(recv.get_box());        
+	    // Run kernel
+	    parallel_for(parallel_range, unpack, par_exec_ctx("unpack"));
+	  }
+	  ONIKA_CU_DEVICE_SYNCHRONIZE();
+	}
 
       /**
        * @brief Pack and send ghost cell data from the mesh.
@@ -135,45 +133,33 @@ namespace hippoLBM
        * @param mesh Pointer to the mesh data.
        * @param mesh_box The box representing the mesh.
        */
-      void do_pack_send(double* mesh, box<DIM>& mesh_box)
-      {
-        packer<N, DIM> pack;
-        const int size = this->get_size();
-        int acc = size;
-        for (auto& it : this->m_data)
-        {
-          auto& send = it.send;
-          pack(send.get_data(), mesh, send.get_box(), mesh_box);
-          int nb_bytes = send.get_size() * sizeof(double);
-#ifdef PRINT_DEBUG_MPI
-          std::cout << "I send " << nb_bytes << " bytes to " << send.get_dest() << " with tag " << send.get_tag() << std::endl;
-#endif
-          MPI_Isend(send.get_data(), nb_bytes, MPI_CHAR, send.get_dest(), send.get_tag(), MPI_COMM_WORLD, &(this->m_request[acc++]));
-        }
-      }
-
-      void do_pack_send(WrapperF<N>& mesh, box<DIM>& mesh_box)
-      {
-        packer<N, DIM> pack;
-        const int size = this->get_size();
-        int acc = size;
-        for (auto& it : this->m_data)
-        {
-          auto& send = it.send;
-          WrapperF<N> wsend = {send.get_data() , send.get_size() / N};
-#ifdef ONIKA_CUDA_VERSION
-          cuda_parallel_for_box(send.get_box(), pack, wsend, mesh, send.get_box(), mesh_box);
-#else
-          pack(wsend, mesh, send.get_box(), mesh_box);
-#endif
-        }
-        ONIKA_CU_DEVICE_SYNCHRONIZE();
-        for (auto& it : this->m_data)
-        {
-          auto& send = it.send;
-          int nb_bytes = send.get_size() * sizeof(double);
-          MPI_Isend(send.get_data(), nb_bytes, MPI_CHAR, send.get_dest(), send.get_tag(), MPI_COMM_WORLD, &(this->m_request[acc++]));
-        }
-      }
+      template<typename ParExecCtxFunc>
+	void do_pack_send(
+	    WrapperF<Components>& mesh, 
+	    box<DIM>& mesh_box,
+	    ParExecCtxFunc& par_exec_ctx)
+	{
+	  const int size = this->get_size();
+	  int acc = size;
+	  for (auto& it : this->m_data)
+	  {
+	    auto& send = it.send;
+	    // Wrap data
+	    WrapperF<Components> wsend = {send.get_data() , send.get_size() / Components};
+	    // Define kernel
+	    packer<Components, DIM> pack = {wsend, mesh, send.get_box(), mesh_box};
+	    // Define cuda/omp grid
+	    ParExecSpace3d parallel_range = set(send.get_box());
+	    // Run kernel
+	    parallel_for(parallel_range, pack, par_exec_ctx("pack"));
+	  }
+	  ONIKA_CU_DEVICE_SYNCHRONIZE();
+	  for (auto& it : this->m_data)
+	  {
+	    auto& send = it.send;
+	    int nb_bytes = send.get_size() * sizeof(double);
+	    MPI_Isend(send.get_data(), nb_bytes, MPI_CHAR, send.get_dest(), send.get_tag(), MPI_COMM_WORLD, &(this->m_request[acc++]));
+	  }
+	}
     };
 }

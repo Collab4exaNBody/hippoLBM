@@ -17,6 +17,7 @@
 #include <grid_lbm/traversal_lbm.hpp>
 #include <grid_lbm/init_distributions.hpp>
 #include <grid_lbm/update_ghost.hpp>
+  
 
 namespace hippoLBM
 {
@@ -43,7 +44,14 @@ namespace hippoLBM
         WrapperF pf = data.distributions();
         const double * const pw = data.weights();
 
+        // define kernel
         init_distributions<Q> func = {*tmp_coeff};
+
+        // capture the parallel execution context
+        auto par_exec_ctx = [this] (const char* exec_name)
+        { 
+          return this->parallel_execution_context(exec_name);
+        };
 
         if(bounds.has_value())
         {
@@ -78,7 +86,7 @@ namespace hippoLBM
           {
             auto [ptr, size] = traversals.get_data<Traversal::Real>();
             parallel_for_id(ptr, size, func, parallel_execution_context(), pf, pw);
-            update_ghost(domain, pf);
+            update_ghost(domain, pf, par_exec_ctx);
           }
           else
           {

@@ -16,10 +16,17 @@ if(USE_AOS)
   add_compile_options(-DWFAOS)
 endif()
 
-
 ## Onika
 find_package(OpenMP REQUIRED)
 find_package(onika REQUIRED)
+
+
+# ======================================
+# === add compiler option with CUDA  ===
+# ======================================
+if(ONIKA_BUILD_CUDA)
+	set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
+endif()
 
 add_subdirectory(src)
 

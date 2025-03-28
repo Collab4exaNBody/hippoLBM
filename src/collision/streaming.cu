@@ -15,7 +15,6 @@
 #include <grid_lbm/enum.hpp>
 #include <grid_lbm/grid_data_lbm.hpp>
 #include <grid_lbm/parallel_for_core.cu>
-#include <grid_lbm/parallel_for_box.hpp>
 #include <grid_lbm/traversal_lbm.hpp>
 #include <hippoLBM/collision/streaming.hpp>
 #include <grid_lbm/update_ghost.hpp>
@@ -25,8 +24,6 @@ namespace hippoLBM
   using namespace onika;
   using namespace scg;
   using namespace onika::cuda;
-
-
 
   template<int Q>
     class StreamingLBM : public OperatorNode
@@ -50,13 +47,19 @@ namespace hippoLBM
         auto& traversals = *Traversals;
         grid<3>& Grid = domain.m_grid;
 
-        // define functors
-        streaming_step1<Q> step1 = {};
-        streaming_step2<Q> step2 = {Grid};
-
         // get fields
         WrapperF<Q> pf = data.distributions();
         auto [pex, pey, pez] = data.exyz();
+
+        // define functors
+        streaming_step1<Q> step1 = {};
+        streaming_step2<Q> step2 = {Grid, pf, pex, pey, pez};
+
+        // capture the parallel execution context
+        auto par_exec_ctx = [this] (const char* exec_name)
+        { 
+          return this->parallel_execution_context(exec_name);
+        };
 
         if( *asynchrone )
         {
@@ -88,14 +91,11 @@ namespace hippoLBM
           // get traversal
           auto [ptr, size] = traversals.get_data<Traversal::Real>();
           // run kernel
-          parallel_for_id(ptr, size, step1, parallel_execution_context(), pf);
-          update_ghost(domain, pf);
+          parallel_for_id(ptr, size, step1, parallel_execution_context("streaming_step1"), pf);
+          update_ghost(domain, pf, par_exec_ctx);
           box<3> extend = Grid.build_box<Area::Local, Traversal::Extend>();
-#ifdef ONIKA_CUDA_VERSION
-          cuda_parallel_for_box(extend, step2, pf, pex, pey, pez);
-#else
-          parallel_for_box(extend, step2, pf, pex, pey, pez);
-#endif
+	  onika::parallel::ParallelExecutionSpace<3> parallel_range = set(extend);        
+          parallel_for(parallel_range, step2, parallel_execution_context("streaming_step2"));
         }
       }
   };

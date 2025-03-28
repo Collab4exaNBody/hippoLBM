@@ -4,7 +4,6 @@
 #include <onika/parallel/block_parallel_for.h>
 #include <onika/parallel/parallel_for.h>
 
-
 namespace hippoLBM
 {
   using namespace onika::parallel;

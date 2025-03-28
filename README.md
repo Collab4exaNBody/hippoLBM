@@ -22,3 +22,9 @@ spack load yaml-cpp@0.6.3
 ## pour moi
 
 export ONIKA_CONFIG_PATH=/home/rp269144/codes/hipoLBM/data/config
+
+
+## topaze
+
+export ONIKA_CONFIG_PATH=/ccc/scratch/cont002/den/pratraph/hipoLBM/data/config
+export ONIKA_PLUGIN_PATH=/ccc/scratch/cont002/den/pratraph/hipoLBM/build/plugins

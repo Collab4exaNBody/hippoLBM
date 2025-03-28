@@ -1,6 +1,7 @@
 #pragma once
 
 #include <grid_lbm/box.hpp>
+#include <onika/cuda/stl_adaptors.h>
 
 namespace hippoLBM
 {

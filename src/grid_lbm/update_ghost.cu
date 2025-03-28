@@ -39,9 +39,15 @@ namespace hippoLBM
         auto& data = *GridDataQ;
         auto& domain = *DomainQ;
 
+        // capture the parallel execution context
+        auto par_exec_ctx = [this] (const char* exec_name)
+        { 
+          return this->parallel_execution_context(exec_name);
+        };
+
         // get fields
         WrapperF<Q> pf = data.distributions();
-        update_ghost(domain, pf);
+        update_ghost(domain, pf, par_exec_ctx);
       }
   };
 
