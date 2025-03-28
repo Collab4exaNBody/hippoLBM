@@ -9,10 +9,12 @@ post_stream_bcs: nop
 boundary_conditions: nop
 
 end_iteration:
-  - trigger_dump_paraview
-  - dump_paraview_if_triggered
-  - next_time_step
-  - log
+  rebind: {dt: dtLB }
+  body:
+    - trigger_dump_paraview
+    - dump_paraview_if_triggered
+    - next_time_step
+    - log
 
 compute_loop:
   loop: true
