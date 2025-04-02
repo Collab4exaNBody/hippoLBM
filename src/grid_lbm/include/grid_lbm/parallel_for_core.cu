@@ -118,4 +118,12 @@ namespace onika
 			static inline constexpr bool CudaCompatible = ParallelForFunctorTraits<Func>::CudaCompatible;
 		};
 	}
+	namespace parallel
+	{
+		template<typename Func, typename... Args> struct ParallelForFunctorTraits<hippoLBM::parallel_for_id_runner<Func,Args...>>
+		{
+			static inline constexpr bool RequiresBlockSynchronousCall = false;
+			static inline constexpr bool CudaCompatible = ParallelForFunctorTraits<Func>::CudaCompatible;
+		};
+	}
 }

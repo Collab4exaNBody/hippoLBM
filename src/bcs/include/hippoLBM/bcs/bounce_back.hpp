@@ -24,9 +24,9 @@ namespace hippoLBM
 
   template<int dim, Side dir, int Q> struct pre_bounce_back_coeff{};
   template<> struct pre_bounce_back_coeff<DIMX, LEFT, 19> { int fid[5] = {2,10,8,12,14};};
-  template<> struct pre_bounce_back_coeff<DIMX, RIGHT,19> { int fid[5] = {1,9,7,11,13};	};
+  template<> struct pre_bounce_back_coeff<DIMX, RIGHT,19> { int fid[5] = {1,9,7,11,13};  };
 
-  template<> struct pre_bounce_back_coeff<DIMY, LEFT, 19> { int fid[5] = {4,8,9,16,18};	};
+  template<> struct pre_bounce_back_coeff<DIMY, LEFT, 19> { int fid[5] = {4,8,9,16,18};  };
   template<> struct pre_bounce_back_coeff<DIMY, RIGHT,19> { int fid[5] = {3,7,10,15,17};};
 
   template<> struct pre_bounce_back_coeff<DIMZ, LEFT, 19> { int fid[5] = {6,13,12,17,16};};
@@ -39,15 +39,15 @@ namespace hippoLBM
     static constexpr int Un = 5;
     pre_bounce_back_coeff<Dim, S, 19> coeff;
     ONIKA_HOST_DEVICE_FUNC inline void operator()(
-	int idx, 
-	const WrapperF<19>& f, // data could be modified, but the ptr inside WrapperF can't be modified
-	const WrapperF<Un>& fi) const
+        int idx, 
+        const WrapperF<19>& f, // data could be modified, but the ptr inside WrapperF can't be modified
+        const WrapperF<Un>& fi) const
     {
       const int fidx = traversal[idx];
 #pragma GCC unroll 5
       for(int i = 0 ; i < 5 ; i++)
       {
-	fi(idx, i) = f(fidx, coeff.fid[i]);
+        fi(idx, i) = f(fidx, coeff.fid[i]);
       }
     }
   };
@@ -59,9 +59,9 @@ namespace hippoLBM
 
   template<int Dim, Side S, int Q> struct post_bounce_back_coeff{};
   template<> struct post_bounce_back_coeff<DIMX, LEFT, 19> { int fid[5] = {1,9,7,11,13};};
-  template<> struct post_bounce_back_coeff<DIMX, RIGHT,19> { int fid[5] = {2,10,8,12,14};	};
+  template<> struct post_bounce_back_coeff<DIMX, RIGHT,19> { int fid[5] = {2,10,8,12,14};  };
 
-  template<> struct post_bounce_back_coeff<DIMY, LEFT, 19> { int fid[5] = {3,7,10,15,17};	};
+  template<> struct post_bounce_back_coeff<DIMY, LEFT, 19> { int fid[5] = {3,7,10,15,17};  };
   template<> struct post_bounce_back_coeff<DIMY, RIGHT,19> { int fid[5] = {4,8,9,16,18};};
 
   template<> struct post_bounce_back_coeff<DIMZ, LEFT, 19> { int fid[5] = {5,14,11,18,15};};
@@ -73,16 +73,16 @@ namespace hippoLBM
     static constexpr int Un = 5;
     post_bounce_back_coeff<Dim, S, 19> coeff;
     ONIKA_HOST_DEVICE_FUNC inline void operator()(
-	int idx, 
-	const WrapperF<19>& f, // data could be modified, but the ptr inside WrapperF can't be modified
-	const WrapperF<Un>& fi) const
+        int idx, 
+        const WrapperF<19>& f, // data could be modified, but the ptr inside WrapperF can't be modified
+        const WrapperF<Un>& fi) const
     {
       const int fidx = traversal[idx];
       //onika::lout << " idx " << idx << " <-> f idx " << fidx << std::endl;
 #pragma GCC unroll 5 
       for(int i = 0 ; i < 5 ; i++)
       {
-	f(fidx, coeff.fid[i]) = fi(idx, i);
+        f(fidx, coeff.fid[i]) = fi(idx, i);
       }
     }
   };
@@ -97,7 +97,7 @@ namespace hippoLBM
     {
       grid<3> g;
       const int * const obst;
-      const WrapperF<19>& f;
+      const WrapperF<19> f;
       const int* ex;
       const int* ey; 
       const int* ez;
@@ -106,21 +106,21 @@ namespace hippoLBM
 
       ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t coord) const
       {
-	const int idx = g(coord.x, coord.y, coord.z);
-	if(obst[idx] == WALL_)
-	{
-	  for(int iLB = 1 ; iLB < Q ; iLB++)
-	  {
-	    const int next_x = coord.x + ex[iLB];
-	    const int next_y = coord.y + ey[iLB];
-	    const int next_z = coord.z + ez[iLB];
-	    if(g.is_defined(next_x, next_y, next_z))
-	    {
-	      const int idx_next = g(next_x, next_y, next_z);
-	      if(obst[idx_next] != WALL_) f(idx, iLB) = f(idx_next, iopp[iLB]);
-	    }
-	  }
-	}
+        const int idx = g(coord.x, coord.y, coord.z);
+        if(obst[idx] == WALL_)
+        {
+          for(int iLB = 1 ; iLB < Q ; iLB++)
+          {
+            const int next_x = coord.x + ex[iLB];
+            const int next_y = coord.y + ey[iLB];
+            const int next_z = coord.z + ez[iLB];
+            if(g.is_defined(next_x, next_y, next_z))
+            {
+              const int idx_next = g(next_x, next_y, next_z);
+              if(obst[idx_next] != WALL_) f(idx, iLB) = f(idx_next, iopp[iLB]);
+            }
+          }
+        }
       }
     };
 }

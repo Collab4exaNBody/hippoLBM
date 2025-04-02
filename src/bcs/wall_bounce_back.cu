@@ -32,29 +32,28 @@ namespace hippoLBM
 
       inline std::string documentation() const override final
       {
-	return R"EOF(  The WallBounceBack class is described as part of the Lattice Boltzmann Method (LBM) implementation, specifically the wall bounce back steps.)EOF";
+        return R"EOF(  The WallBounceBack class is described as part of the Lattice Boltzmann Method (LBM) implementation, specifically the wall bounce back steps.)EOF";
       }
 
 
       inline void execute () override final
       {
-	auto& data = *GridDataQ;
-	auto& domain = *DomainQ;
-	grid<3>& Grid = domain.m_grid;
+        auto& data = *GridDataQ;
+        auto& domain = *DomainQ;
+        grid<3>& Grid = domain.m_grid;
 
+        // get fields
+        const int* const pobst = data.obstacles();
+        WrapperF<Q> pf = data.distributions();
+        auto [pex, pey, pez] = data.exyz();
 
-	// get fields
-	const int* const pobst = data.obstacles();
-	WrapperF<Q> pf = data.distributions();
-	auto [pex, pey, pez] = data.exyz();
+        // define functors
+        wall_bounce_back<Q> func = {Grid, pobst, pf, pex, pey, pez};
 
-	// define functors
-	wall_bounce_back<Q> func = {Grid, pobst, pf, pex, pey, pez};
-
-	// run kernel
-	box<3> extend = Grid.build_box<Area::Local, Traversal::Extend>();
+        // run kernel
+        box<3> extend = Grid.build_box<Area::Local, Traversal::Extend>();
         onika::parallel::ParallelExecutionSpace<3> parallel_range = set(extend);
-	parallel_for(parallel_range, func, parallel_execution_context("wall_bounce_back"));
+        parallel_for(parallel_range, func, parallel_execution_context("wall_bounce_back"));
       }
   };
 
