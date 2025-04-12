@@ -1,0 +1,16 @@
+enable_testing()
+
+function(run_test name)
+	set(ExampleName "hippolbm_${name}")
+	set(FileName "${name}.msp")
+	add_test(${ExampleName} ${CMAKE_BINARY_DIR}/hippoLBM ${CMAKE_CURRENT_SOURCE_DIR}/${FileName} --omp_num_threads 1)
+	add_test(${ExampleName}_omp ${CMAKE_BINARY_DIR}/hippoLBM ${CMAKE_CURRENT_SOURCE_DIR}/${FileName} --omp_num_threads 2)
+	add_test(${ExampleName}_mpi mpirun -n 2 ${CMAKE_BINARY_DIR}/hippoLBM ${CMAKE_CURRENT_SOURCE_DIR}/${FileName} --omp_num_threads 1)
+endfunction()
+
+run_test(regression_lbm_cavite_wall)
+run_test(regression_lbm_poiseuille)
+run_test(regression_lbm_cavite)
+run_test(regression_lbm_couette)
+run_test(regression_lbm_diff_pressure)
+run_test(regression_lbm_diff_pressure_complex_test)

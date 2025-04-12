@@ -59,6 +59,8 @@ target_include_directories(hippoLBM PUBLIC ${ONIKA_INCLUDE_DIRS})
 target_link_directories(hippoLBM PUBLIC ${ONIKA_LIBRARY_DIRS})
 target_link_libraries(hippoLBM PUBLIC ${ONIKA_LIBRARIES})
 
+## non-regression tests
+add_subdirectory(regression-test)
 
 ## CREATE env.sh
 
