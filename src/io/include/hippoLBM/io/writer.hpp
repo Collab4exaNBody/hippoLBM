@@ -45,7 +45,7 @@ namespace hippoLBM
 		{
       Func func;
       template<typename T>
-			inline void operator()(int idx, std::ofstream& output, T* const ptr) const
+			inline void operator()(int idx, std::stringstream& output, T* const ptr) const 
 			{
 				T tmp = ptr[idx];
         tmp = func(idx, tmp);
@@ -56,7 +56,7 @@ namespace hippoLBM
 	template<int Q>
 		struct write_distributions
 		{
-			inline void operator()(int idx, std::ofstream& output, const WrapperF<Q>& fi) const
+			inline void operator()(int idx, std::stringstream& output, const WrapperF<Q>& fi) const
 			{
 				for(int i = 0 ; i < Q ; i ++) 
 				{
@@ -71,7 +71,7 @@ namespace hippoLBM
 	{
     Func func;
 		box<3> b;
-		inline void operator()(const int x, const int y, const int z, std::ofstream& output, onika::math::Vec3d* const ptr) const
+		inline void operator()(const int x, const int y, const int z, std::stringstream& output, onika::math::Vec3d* const ptr) const
 		{
 			const int idx = b(x,y,z);
 			onika::math::Vec3d tmp = func(idx, ptr[idx]);
