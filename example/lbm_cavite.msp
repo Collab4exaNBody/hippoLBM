@@ -1,7 +1,7 @@
 do_domain:
   - domain:
      bounds: [[0,0,0],[0.1,0.1,0.1]]
-     resolution: 100
+     resolution: 200
      periodic: [false, false, false]
 
 set_lbm_parameters:
@@ -19,5 +19,5 @@ post_stream_bcs:
 
 
 global:
-   simulation_paraview_freq: 25
-   simulation_end_iteration: 100
+   simulation_paraview_freq: 50
+   simulation_end_iteration: 1000
