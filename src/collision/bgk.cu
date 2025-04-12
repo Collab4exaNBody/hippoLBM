@@ -17,7 +17,7 @@
 #include <grid_lbm/parallel_for_core.cu>
 #include <grid_lbm/traversal_lbm.hpp>
 #include <grid_lbm/lbm_parameters.hpp>
-#include <hippoLBM/collision/collision_bgk.hpp>
+#include <hippoLBM/collision/bgk.hpp>
 
 namespace hippoLBM
 {
@@ -26,7 +26,7 @@ namespace hippoLBM
   using namespace onika::cuda;
 
   template<int Q>
-    class CollisionBGQ : public OperatorNode
+    class CollisionBGK : public OperatorNode
   {
     public:
       ADD_SLOT( grid_data_lbm<Q>, GridDataQ, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
@@ -35,7 +35,7 @@ namespace hippoLBM
 
       inline std::string documentation() const override final
       {
-        return R"EOF( The `CollisionBGQ` operator implements the Bhatnagar-Gross-Krook (BGK) collision model for the Lattice Boltzmann Method (LBM). This model assumes a single relaxation time approach  to approximate the collision process, driving the distribution functions toward equilibrium.
+        return R"EOF( The `CollisionBGK` operator implements the Bhatnagar-Gross-Krook (BGK) collision model for the Lattice Boltzmann Method (LBM). This model assumes a single relaxation time approach  to approximate the collision process, driving the distribution functions toward equilibrium.
         )EOF";
       }
 
@@ -46,7 +46,7 @@ namespace hippoLBM
         auto& params = *Params;
 
         // define functor
-        collision_bgk<Q> func = {params.Fext};
+        bgk<Q> func = {params.Fext};
 
         // get fields
         math::Vec3d * const pm1 = data.flux();
@@ -64,12 +64,12 @@ namespace hippoLBM
       }
   };
 
-  using CollisionBGQ3D19Q = CollisionBGQ<19>;
+  using CollisionBGK3D19Q = CollisionBGK<19>;
 
   // === register factories ===  
   ONIKA_AUTORUN_INIT(CollisionBGK)
   {
-    OperatorNodeFactory::instance()->register_factory( "collision_bgk", make_compatible_operator<CollisionBGQ3D19Q>);
+    OperatorNodeFactory::instance()->register_factory( "bgk", make_compatible_operator<CollisionBGK3D19Q>);
   }
 }
 
