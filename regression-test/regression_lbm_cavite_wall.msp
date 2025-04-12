@@ -1,0 +1,28 @@
+do_domain:
+  - domain:
+     bounds: [[0,0,0],[0.1,0.1,0.1]]
+     resolution: 30
+     periodic: [false, false, false]
+
+set_lbm_parameters:
+  - lbm_parameters:
+     Fext: [0,0,0]
+     nuth: 1e-4
+
+pre_stream_bcs:
+  - pre_bounce_back
+  - cavity_z_l:
+     U: [0.1, 0.0, 0]
+  - wall_bounce_back
+
+set_obstacles:
+  - set_wall:
+     bounds: [[0.048,0,0],[0.052,0.1,0.08]]
+
+post_stream_bcs:
+  - post_bounce_back
+
+
+global:
+   simulation_paraview_freq: 25
+   simulation_end_iteration: 100

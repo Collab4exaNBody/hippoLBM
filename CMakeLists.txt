@@ -8,6 +8,14 @@ project(
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# ===========================
+# === CMake customization ===
+# ===========================
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Release RelWithDebInfo Debug)
+if (NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
+endif()
+
 ## options
 
 option(USE_AOS "Use Array Of Structure  data storage" OFF)
@@ -50,3 +58,11 @@ target_compile_definitions(hippoLBM PUBLIC ${ONIKA_COMPILE_DEFINITIONS})
 target_include_directories(hippoLBM PUBLIC ${ONIKA_INCLUDE_DIRS})
 target_link_directories(hippoLBM PUBLIC ${ONIKA_LIBRARY_DIRS})
 target_link_libraries(hippoLBM PUBLIC ${ONIKA_LIBRARIES})
+
+## non-regression tests
+add_subdirectory(regression-test)
+
+## CREATE env.sh
+
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/setup-env.sh  "export ONIKA_CONFIG_PATH=${CMAKE_CURRENT_SOURCE_DIR}/data/config\nexport ONIKA_PLUGIN_PATH=${CMAKE_CURRENT_BINARY_DIR}/plugins \n")
+

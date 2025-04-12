@@ -1,0 +1,44 @@
+do_domain:
+  - domain:
+     bounds: [[0,0,0],[0.1,0.1,0.1]]
+     resolution: 30
+     periodic: [false, true, false]
+
+set_lbm_parameters:
+  - lbm_parameters:
+     Fext: [0,0,0]
+     nuth: 1e-4
+
+pre_stream_bcs:
+  - pre_bounce_back
+  - wall_bounce_back
+
+set_obstacles:
+  - set_wall:
+     bounds: [[0.024,0,0.06],[0.026,0.1,0.1]]
+  - set_wall:
+     bounds: [[0.024,0,0],[0.026,0.1,0.04]]
+  - set_wall:
+     bounds: [[0.034,0,0.025],[0.036,0.1,0.075]]
+  - set_wall:
+     bounds: [[0.049,0,0.06],[0.051,0.1,0.1]]
+  - set_wall:
+     bounds: [[0.049,0,0],[0.051,0.1,0.04]]
+  - set_wall:
+     bounds: [[0.068,0,0.0355],[0.072,0.1,0.065]]
+  - set_wall:
+     bounds: [[0.085,0,0.02],[0.1,0.1,0.03]]
+  - set_wall:
+     bounds: [[0.085,0,0.07],[0.1,0.1,0.08]]
+
+set_distributions:
+  - init_distributions:
+     tmp_coeff: 1.5
+     bounds: [[0,0,0], [0.024,1,1]]
+
+post_stream_bcs:
+  - post_bounce_back
+
+global:
+   simulation_paraview_freq: 25
+   simulation_end_iteration: 100
