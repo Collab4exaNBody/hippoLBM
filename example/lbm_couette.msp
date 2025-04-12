@@ -1,7 +1,7 @@
 do_domain:
   - domain:
      bounds: [[0,0,0],[0.1,0.1,0.1]]
-     resolution: 30
+     resolution: 100
      periodic: [true, true, false]
 
 set_lbm_parameters:
@@ -14,7 +14,6 @@ boundary_conditions:
      U: [0.001,0,0]
 
 global:
-   timestep: 0
-   physical_time: 0.
-   compute_loop_continue: true
-   simulation_end_iteration: 100
+   global:
+      simulation_paraview_freq: 100
+      simulation_end_iteration: 3000
