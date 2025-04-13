@@ -10,7 +10,7 @@ namespace hippoLBM
    * @brief A functor for collision operations in the lattice Boltzmann method.
    */
   template<int Q>
-    struct collision_bgk
+    struct bgk
     {
       const Vec3d m_Fext;
       /**
@@ -62,7 +62,7 @@ namespace onika
 {
   namespace parallel
   {
-    template<int Q> struct ParallelForFunctorTraits<hippoLBM::collision_bgk<Q>>
+    template<int Q> struct ParallelForFunctorTraits<hippoLBM::bgk<Q>>
     {
       static inline constexpr bool RequiresBlockSynchronousCall = false;
       static inline constexpr bool CudaCompatible = true;

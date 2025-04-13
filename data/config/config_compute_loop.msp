@@ -17,13 +17,15 @@ end_iteration:
     - trigger_print_log
     - print_log_if_triggered
 
+collision: bgk # default model
+
 compute_loop:
   loop: true
   name: loop
   condition: compute_loop_continue
   body:
   - macro_variables
-  - collision_bgk
+  - collision
   - pre_stream_bcs
   - streaming:
      asynchrone: false
