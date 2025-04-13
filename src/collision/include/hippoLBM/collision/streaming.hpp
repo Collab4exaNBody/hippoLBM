@@ -34,9 +34,9 @@ namespace hippoLBM
     {
       grid<3> g;
       const WrapperF<Q> f;
-      const int* ex;
-      const int* ey; 
-      const int* ez;
+      const int* __restrict__ const ex;
+      const int* __restrict__ const ey; 
+      const int* __restrict__ const ez;
       /**
        * @brief Operator for performing the second step of streaming at given coordinates (x, y, z).
        *
@@ -48,7 +48,7 @@ namespace hippoLBM
        * @param ey Pointer to an array of integers for Y-direction.
        * @param ez Pointer to an array of integers for Z-direction.
        */
-      ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t coord) const
+      ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t&& coord) const
       {
         const int idx = g(coord.x,coord.y,coord.z);
         for (int iLB = 1; iLB < Q; iLB += 2)
@@ -60,11 +60,8 @@ namespace hippoLBM
           if(g.is_defined(next_x, next_y, next_z))
           {
             const int next_idx = g(next_x, next_y, next_z);
-            {
-              std::swap(f(idx,iLB+1), f(next_idx, iLB));
-            }
+            std::swap(f(idx,iLB+1), f(next_idx, iLB));
           } 
-          //else { onika::lout << " next: ("<< next_x << "," << next_y << "," << next_z << ")" << std::endl;}
         }
       }
     };
@@ -83,7 +80,7 @@ namespace onika
 
     template<int Q> struct ParallelForFunctorTraits<hippoLBM::streaming_step2<Q>>
     {
-      static inline constexpr bool RequiresBlockSynchronousCall = true;
+      static inline constexpr bool RequiresBlockSynchronousCall = false;
       static inline constexpr bool CudaCompatible = true;
     };
   }

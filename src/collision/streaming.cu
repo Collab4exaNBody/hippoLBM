@@ -94,7 +94,7 @@ namespace hippoLBM
           parallel_for_id(ptr, size, step1, parallel_execution_context("streaming_step1"), pf);
           update_ghost(domain, pf, par_exec_ctx);
           box<3> extend = Grid.build_box<Area::Local, Traversal::Extend>();
-	  onika::parallel::ParallelExecutionSpace<3> parallel_range = set(extend);        
+          onika::parallel::ParallelExecutionSpace<3> parallel_range = set(extend);        
           parallel_for(parallel_range, step2, parallel_execution_context("streaming_step2"));
         }
       }

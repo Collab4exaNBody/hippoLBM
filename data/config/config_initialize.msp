@@ -23,4 +23,5 @@ global:
    physical_time: 0.
    compute_loop_continue: true
    simulation_paraview_freq: -1
+   simulation_print_log_freq: 1
    simulation_end_iteration: 100

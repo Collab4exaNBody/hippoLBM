@@ -1,6 +1,9 @@
 configuration:
   logging:
     debug: false
+  profiling:
+    exectime: false
+    summary: true
 
 includes:
   - config_initialize.msp
