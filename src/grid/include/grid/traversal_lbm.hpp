@@ -1,7 +1,7 @@
 #pragma once
 
 #include <onika/math/basic_types_def.h>
-#include <grid_lbm/grid.hpp>
+#include <grid/grid.hpp>
 
 namespace hippoLBM
 {

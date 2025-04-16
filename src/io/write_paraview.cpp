@@ -8,11 +8,11 @@
 #include <onika/cuda/cuda.h>
 #include <onika/memory/allocator.h>
 
-#include <grid_lbm/domain_lbm.hpp>
-#include <grid_lbm/enum.hpp>
-#include <grid_lbm/grid_data_lbm.hpp>
-#include <grid_lbm/traversal_lbm.hpp>
-#include <grid_lbm/lbm_parameters.hpp>
+#include <grid/domain_lbm.hpp>
+#include <grid/enum.hpp>
+#include <grid/lbm_fields.hpp>
+#include <grid/traversal_lbm.hpp>
+#include <grid/lbm_parameters.hpp>
 #include <hippoLBM/io/write_paraview.hpp>
 
 #include <onika/string_utils.h>
@@ -27,7 +27,7 @@ namespace hippoLBM
   {
     public:
       ADD_SLOT( domain_lbm<Q>, DomainQ, INPUT);
-      ADD_SLOT( grid_data_lbm<Q>, GridDataQ, INPUT);
+      ADD_SLOT( lbm_fields<Q>, GridDataQ, INPUT);
       ADD_SLOT( traversal_lbm, Traversals, INPUT);
       ADD_SLOT( LBMParameters, Params, INPUT);
       ADD_SLOT( MPI_Comm, mpi, INPUT , MPI_COMM_WORLD);

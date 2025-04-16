@@ -1,6 +1,6 @@
 #pragma once
 
-#include <grid_lbm/field_view.hpp>
+#include <grid/field_view.hpp>
 
 namespace hippoLBM
 {

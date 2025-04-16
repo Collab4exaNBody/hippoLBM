@@ -8,8 +8,8 @@
 #include <onika/parallel/parallel_for.h>
 
 #include <onika/math/basic_types_yaml.h>
-#include <grid_lbm/domain_lbm.hpp>
-#include <grid_lbm/comm.hpp>
+#include <grid/domain_lbm.hpp>
+#include <grid/comm.hpp>
 
 
 namespace hippoLBM

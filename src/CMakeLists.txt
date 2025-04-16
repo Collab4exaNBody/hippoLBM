@@ -1,5 +1,5 @@
 #add_subdirectory(core)
-add_subdirectory(grid_lbm)
+add_subdirectory(grid)
 add_subdirectory(io)
 add_subdirectory(bcs)
 add_subdirectory(collision)

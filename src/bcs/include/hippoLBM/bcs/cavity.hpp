@@ -1,7 +1,7 @@
 #pragma once
 
-#include <grid_lbm/enum.hpp>
-#include <grid_lbm/field_view.hpp>
+#include <grid/enum.hpp>
+#include <grid/field_view.hpp>
 
 namespace hippoLBM
 {
@@ -32,7 +32,6 @@ namespace hippoLBM
 				const double uxx = ux * ( 1 + 0.5/ ( L - 1 ));
 				const double uyy = uy * ( 1 + 0.5/ ( L - 1 ));
 				const double uzz = uz * ( 1 + 0.5/ ( L - 1 ));
-#pragma GCC unroll 5
 				for(int i = 0 ; i < Un ; i++)
 				{
 					const int fid = c_coeff.fid[i];
@@ -46,7 +45,6 @@ namespace hippoLBM
 					const FieldView<Un>& fi) const
 			{
 				if (obst[idx] == FLUIDE_) {
-#pragma GCC unroll 5
 					for(int i = 0 ; i < Un ; i++)
 					{
 						fi(idx,i) += coeff[i];

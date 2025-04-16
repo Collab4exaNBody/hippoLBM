@@ -9,7 +9,7 @@
 
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
-#include <grid_lbm/lbm_parameters.hpp>
+#include <grid/lbm_parameters.hpp>
 
 
 namespace hippoLBM

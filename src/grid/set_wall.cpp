@@ -9,11 +9,11 @@
 
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
-#include <grid_lbm/domain_lbm.hpp>
-#include <grid_lbm/comm.hpp>
-#include <grid_lbm/enum.hpp>
-#include <grid_lbm/traversal_lbm.hpp>
-#include <grid_lbm/grid_data_lbm.hpp>
+#include <grid/domain_lbm.hpp>
+#include <grid/comm.hpp>
+#include <grid/enum.hpp>
+#include <grid/traversal_lbm.hpp>
+#include <grid/lbm_fields.hpp>
 
 namespace hippoLBM
 {
@@ -25,12 +25,12 @@ namespace hippoLBM
 	{
 		public:
       ADD_SLOT( domain_lbm<Q>, DomainQ, INPUT, REQUIRED);
-      ADD_SLOT( grid_data_lbm<Q>, GridDataQ, INPUT_OUTPUT);
+      ADD_SLOT( lbm_fields<Q>, GridDataQ, INPUT_OUTPUT);
 			ADD_SLOT( AABB, bounds, INPUT, REQUIRED, DocString{"Domain's bounds"});
 			ADD_SLOT( double, dx, INPUT, REQUIRED, DocString{"Space step"});
 			inline void execute () override final
 			{
-        grid_data_lbm<Q>& grid_data = *GridDataQ;
+        lbm_fields<Q>& grid_data = *GridDataQ;
         domain_lbm<Q>& domain = *DomainQ;
         grid<3>& Grid = domain.m_grid;
        

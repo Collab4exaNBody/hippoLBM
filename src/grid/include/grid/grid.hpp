@@ -1,9 +1,9 @@
 #pragma once
 
 #include <onika/math/basic_types_def.h>
-#include <grid_lbm/enum.hpp>
-#include <grid_lbm/point.hpp>
-#include <grid_lbm/box.hpp>
+#include <grid/enum.hpp>
+#include <grid/point.hpp>
+#include <grid/box.hpp>
 #include <cassert>
 #include <tuple>
 

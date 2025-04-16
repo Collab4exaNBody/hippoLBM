@@ -10,14 +10,14 @@
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
 #include <onika/math/basic_types_operators.h>
-#include <grid_lbm/domain_lbm.hpp>
-#include <grid_lbm/comm.hpp>
-#include <grid_lbm/enum.hpp>
-#include <grid_lbm/grid_data_lbm.hpp>
-#include <grid_lbm/parallel_for_core.cu>
-#include <grid_lbm/traversal_lbm.hpp>
+#include <grid/domain_lbm.hpp>
+#include <grid/comm.hpp>
+#include <grid/enum.hpp>
+#include <grid/lbm_fields.hpp>
+#include <grid/parallel_for_core.cu>
+#include <grid/traversal_lbm.hpp>
 #include <hippoLBM/collision/streaming.hpp>
-#include <grid_lbm/update_ghost.hpp>
+#include <grid/update_ghost.hpp>
 
 namespace hippoLBM
 {
@@ -29,7 +29,7 @@ namespace hippoLBM
     class StreamingLBM : public OperatorNode
   {
     public:
-      ADD_SLOT( grid_data_lbm<Q>, GridDataQ, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+      ADD_SLOT( lbm_fields<Q>, GridDataQ, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
       ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
       ADD_SLOT( domain_lbm<Q>, DomainQ, INPUT, REQUIRED);
       ADD_SLOT( bool, asynchrone, INPUT, false, DocString{"The asynchrone option controls the execution style: when true, it allows asynchronous operations with overlapping computation and communication, improving parallel performance. When false, it runs synchronously, ensuring sequential execution of operations and data updates."});

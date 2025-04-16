@@ -1,6 +1,6 @@
 #pragma once
 
-#include <grid_lbm/field_view.hpp>
+#include <grid/field_view.hpp>
 using namespace std;
 
 namespace hippoLBM
@@ -12,9 +12,9 @@ namespace hippoLBM
   template <typename T> using vector_t = onika::memory::CudaMMVector<T>;
 
   template<int Q>
-    struct scheme_lbm {};
+    struct lbm_scheme {};
 
-  template<> struct scheme_lbm<19>
+  template<> struct lbm_scheme<19>
   {
     const vector_t<double> w = {1. / 3, 1. / 18, 1. / 18, 1. / 18, 1. / 18, 1. / 18, 1. / 18, 1. / 36, 1. / 36, 1. / 36, 1. / 36, 1. / 36, 1. / 36, 1. / 36, 1. / 36, 1. / 36, 1. / 36, 1. / 36, 1. / 36};
     const vector_t<int> ex = {0, 1, -1, 0, 0, 0, 0, 1, -1, 1, -1, 1, -1, 1, -1, 0, 0, 0, 0};
@@ -24,10 +24,10 @@ namespace hippoLBM
   };
 
   template<int Q>
-    struct grid_data_lbm 
+    struct lbm_fields 
     {
       int grid_size;
-      scheme_lbm<Q> scheme;
+      lbm_scheme<Q> scheme;
 
       // fields
       vector_t<double> f; // fi
@@ -38,7 +38,7 @@ namespace hippoLBM
       // dunno
       vector_t<double> fi_x_0, fi_x_l, fi_y_0, fi_y_l, fi_z_0, fi_z_l;
 
-      grid_data_lbm() {}
+      lbm_fields() {}
 
       // accessors
       FieldView<Q> distributions() { 

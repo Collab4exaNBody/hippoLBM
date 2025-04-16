@@ -1,6 +1,6 @@
 #pragma once
 
-#include <grid_lbm/enum.hpp>
+#include <grid/enum.hpp>
 
 namespace hippoLBM
 {

@@ -2,7 +2,7 @@
 
 #include <hippoLBM/io/writer.hpp>
 #include <onika/string_utils.h>
-#include <grid_lbm/parallel_for_core.cu>
+#include <grid/parallel_for_core.cu>
 
 
 namespace hippoLBM

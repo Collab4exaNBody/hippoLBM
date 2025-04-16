@@ -1,8 +1,8 @@
 #pragma once
 
 #include <onika/parallel/parallel_for.h>
-#include <grid_lbm/box.hpp>
-#include <grid_lbm/field_view.hpp>
+#include <grid/box.hpp>
+#include <grid/field_view.hpp>
 
 namespace hippoLBM
 {

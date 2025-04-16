@@ -9,11 +9,11 @@
 #pragma once
 #include <cstring>
 #include <onika/cuda/cuda_context.h>
-#include <grid_lbm/point.hpp>
-#include <grid_lbm/box.hpp>
-#include <grid_lbm/comm.hpp>
-#include <grid_lbm/operator_ghost_manager.hpp>
-#include <grid_lbm/packers.hpp>
+#include <grid/point.hpp>
+#include <grid/box.hpp>
+#include <grid/comm.hpp>
+#include <grid/operator_ghost_manager.hpp>
+#include <grid/packers.hpp>
 
 namespace hippoLBM
 {

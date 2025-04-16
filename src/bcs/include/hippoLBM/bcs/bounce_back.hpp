@@ -1,6 +1,6 @@
 #pragma once
 
-#include <grid_lbm/enum.hpp>
+#include <grid/enum.hpp>
 
 namespace hippoLBM
 {
@@ -44,7 +44,6 @@ namespace hippoLBM
         const FieldView<Un>& fi) const
     {
       const int fidx = traversal[idx];
-#pragma GCC unroll 5
       for(int i = 0 ; i < 5 ; i++)
       {
         fi(idx, i) = f(fidx, coeff.fid[i]);
@@ -78,8 +77,6 @@ namespace hippoLBM
         const FieldView<Un>& fi) const
     {
       const int fidx = traversal[idx];
-      //onika::lout << " idx " << idx << " <-> f idx " << fidx << std::endl;
-#pragma GCC unroll 5 
       for(int i = 0 ; i < 5 ; i++)
       {
         f(fidx, coeff.fid[i]) = fi(idx, i);

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <grid_lbm/box.hpp>
-#include <grid_lbm/ghost_manager.hpp>
-#include <grid_lbm/grid.hpp>
+#include <grid/box.hpp>
+#include <grid/ghost_manager.hpp>
+#include <grid/grid.hpp>
 
 namespace hippoLBM
 {

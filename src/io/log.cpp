@@ -9,8 +9,8 @@
 
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
-#include <grid_lbm/domain_lbm.hpp>
-#include <grid_lbm/enum.hpp>
+#include <grid/domain_lbm.hpp>
+#include <grid/enum.hpp>
 #include <onika/string_utils.h>
 
 #include<chrono>
