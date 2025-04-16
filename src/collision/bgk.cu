@@ -49,9 +49,9 @@ namespace hippoLBM
         bgk<Q> func = {params.Fext};
 
         // get fields
-        math::Vec3d * const pm1 = data.flux();
+        FieldView<3> pm1 = data.flux();
         int * const pobst = data.obstacles();
-        WrapperF<Q> pf = data.distributions();
+        FieldView<Q> pf = data.distributions();
         double * const pm0 = data.densities();
         const double * const w = data.weights();
         auto [pex, pey, pez] = data.exyz();

@@ -53,7 +53,7 @@ namespace hippoLBM
       auto [ux,uy,uz] = *U;
 
       // get fields
-      WrapperF<Q> pf = data.distributions();
+      FieldView<Q> pf = data.distributions();
       int * const pobst = data.obstacles();
 
       // get traversal

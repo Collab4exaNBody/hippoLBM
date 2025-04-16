@@ -1,6 +1,6 @@
 #pragma once
 
-#include <grid_lbm/wrapper_f.hpp>
+#include <grid_lbm/field_view.hpp>
 using namespace std;
 
 namespace hippoLBM
@@ -32,7 +32,7 @@ namespace hippoLBM
       // fields
       vector_t<double> f; // fi
       vector_t<double> m0; // densities
-      vector_t<Vec3d> m1; // flux
+      vector_t<double> m1; // flux
       vector_t<int> obst; // obstacles
 
       // dunno
@@ -41,12 +41,14 @@ namespace hippoLBM
       grid_data_lbm() {}
 
       // accessors
-      WrapperF<Q> distributions() { 
-        return WrapperF<Q>{onika::cuda::vector_data(f), grid_size}; 
+      FieldView<Q> distributions() { 
+        return FieldView<Q>{onika::cuda::vector_data(f), grid_size}; 
       }
       //double * distributions() { return onika::cuda::vector_data(f); }
       double * densities() { return onika::cuda::vector_data(m0); }
-      Vec3d * flux() { return onika::cuda::vector_data(m1); }
+      FieldView<3> flux() { 
+        return FieldView<3>{onika::cuda::vector_data(m1), grid_size}; 
+      }
       int * obstacles() { return onika::cuda::vector_data(obst); }
       const double * weights() { return onika::cuda::vector_data(scheme.w); }
       std::tuple<const int *, const int * , const int *> exyz() 

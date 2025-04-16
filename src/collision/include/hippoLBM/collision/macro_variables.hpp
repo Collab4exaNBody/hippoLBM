@@ -1,6 +1,6 @@
 #pragma once
 
-#include <grid_lbm/wrapper_f.hpp>
+#include <grid_lbm/field_view.hpp>
 #define FLUIDE_ -1
 
 namespace hippoLBM
@@ -15,9 +15,9 @@ namespace hippoLBM
       const Vec3d Fext_2;
       ONIKA_HOST_DEVICE_FUNC inline void operator()(
           const int idx, 
-          Vec3d * pm1, 
+          const FieldView<3>& pm1, 
           int * const pobst, 
-          const WrapperF<Q>& pf,
+          const FieldView<Q>& pf,
           double * const pm0,
           const int* pex, 
           const int* pey, 
@@ -41,7 +41,9 @@ namespace hippoLBM
           }
 
           pm0[idx] = rho;
-          pm1[idx] = onika::math::Vec3d(ux, uy, uz); // + Fext_2; // why?
+          pm1(idx, 0) = ux;
+          pm1(idx, 1) = uy;
+          pm1(idx, 2) = uz;
         }
       }
     };

@@ -48,7 +48,7 @@ namespace hippoLBM
         grid<3>& Grid = domain.m_grid;
 
         // get fields
-        WrapperF<Q> pf = data.distributions();
+        FieldView<Q> pf = data.distributions();
         auto [pex, pey, pez] = data.exyz();
 
         // define functors
@@ -90,6 +90,7 @@ namespace hippoLBM
         {
           // get traversal
           auto [ptr, size] = traversals.get_data<Traversal::Real>();
+
           // run kernel
           parallel_for_id(ptr, size, step1, parallel_execution_context("streaming_step1"), pf);
           update_ghost(domain, pf, par_exec_ctx);

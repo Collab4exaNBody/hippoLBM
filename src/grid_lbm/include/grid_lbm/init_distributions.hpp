@@ -1,6 +1,6 @@
 #pragma once
 
-#include<grid_lbm/wrapper_f.hpp>
+#include<grid_lbm/field_view.hpp>
 
 namespace hippoLBM
 {
@@ -18,7 +18,7 @@ namespace hippoLBM
        * @param f Pointer to the distribution function.
        * @param w Pointer to the weight coefficients.
        */
-      ONIKA_HOST_DEVICE_FUNC void operator()(const int idx, const WrapperF<Q>& f, const double* const w) const
+      ONIKA_HOST_DEVICE_FUNC void operator()(const int idx, const FieldView<Q>& f, const double* const w) const
       {
         for (int iLB = 0; iLB < Q; iLB++)
         {

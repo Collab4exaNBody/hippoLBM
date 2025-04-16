@@ -4,6 +4,9 @@ configuration:
   profiling:
     exectime: false
     summary: true
+  onika:
+    gpu_block_dims: [32,4,4]
+    gpu_block_size: 256
 
 includes:
   - config_initialize.msp

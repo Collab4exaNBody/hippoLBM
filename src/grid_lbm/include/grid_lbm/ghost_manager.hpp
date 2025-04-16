@@ -77,7 +77,7 @@ namespace hippoLBM
        */
       void wait_all()
       {
-        MPI_Waitall(m_request.size(), m_request.data(), MPI_STATUSES_IGNORE);
+        //MPI_Waitall(m_request.size(), m_request.data(), MPI_STATUSES_IGNORE);
       }
 
       /**
@@ -91,12 +91,17 @@ namespace hippoLBM
 #endif
         for (auto& it : this->m_data)
         {
+          auto& send = it.recv;
           auto& recv = it.recv;
           int nb_bytes = recv.get_size() * sizeof(double);
 #ifdef PRINT_DEBUG_MPI
           std::cout << "I recv " << nb_bytes << " bytes from " << recv.get_dest() << " with tag " << recv.get_tag() << std::endl;
 #endif
-          MPI_Irecv(recv.get_data(), nb_bytes, MPI_CHAR, recv.get_dest(), recv.get_tag(), MPI_COMM_WORLD, &(this->m_request[acc++]));
+          bool do_recv = !((send.get_tag() == recv.get_tag()) && (send.get_dest() == recv.get_dest()));
+          if(do_recv) // NOT (periodic case && himself)
+          {
+           MPI_Irecv(recv.get_data(), nb_bytes, MPI_CHAR, recv.get_dest(), recv.get_tag(), MPI_COMM_WORLD, &(this->m_request[acc++]));
+          }
         }
       }
 
@@ -108,7 +113,7 @@ namespace hippoLBM
        */
       template<typename ParExecCtxFunc>
 	void do_unpack(
-	    WrapperF<Components>& mesh, 
+	    FieldView<Components>& mesh, 
 	    box<DIM>& mesh_box, 
 	    ParExecCtxFunc& par_exec_ctx)
 	{
@@ -116,7 +121,7 @@ namespace hippoLBM
 	  {
 	    auto& recv = it.recv;
 	    // Wrap data
-	    WrapperF<Components> wrecv = {recv.get_data() , recv.get_size() / Components};
+	    FieldView<Components> wrecv = {recv.get_data() , recv.get_size() / Components};
 	    // Define kernel
 	    unpacker<Components, DIM> unpack = {mesh, wrecv, recv.get_box(), mesh_box};
 	    // Define cuda/omp grid
@@ -135,7 +140,7 @@ namespace hippoLBM
        */
       template<typename ParExecCtxFunc>
 	void do_pack_send(
-	    WrapperF<Components>& mesh, 
+	    FieldView<Components>& mesh, 
 	    box<DIM>& mesh_box,
 	    ParExecCtxFunc& par_exec_ctx)
 	{
@@ -145,7 +150,7 @@ namespace hippoLBM
 	  {
 	    auto& send = it.send;
 	    // Wrap data
-	    WrapperF<Components> wsend = {send.get_data() , send.get_size() / Components};
+	    FieldView<Components> wsend = {send.get_data() , send.get_size() / Components};
 	    // Define kernel
 	    packer<Components, DIM> pack = {wsend, mesh, send.get_box(), mesh_box};
 	    // Define cuda/omp grid
@@ -154,11 +159,20 @@ namespace hippoLBM
 	    parallel_for(parallel_range, pack, par_exec_ctx("pack"));
 	  }
 	  ONIKA_CU_DEVICE_SYNCHRONIZE();
+
 	  for (auto& it : this->m_data)
 	  {
 	    auto& send = it.send;
+      auto& recv = it.recv; 
 	    int nb_bytes = send.get_size() * sizeof(double);
-	    MPI_Isend(send.get_data(), nb_bytes, MPI_CHAR, send.get_dest(), send.get_tag(), MPI_COMM_WORLD, &(this->m_request[acc++]));
+      if((send.get_tag() == recv.get_tag()) && (send.get_dest() == recv.get_dest())) // periodic case && himself
+      {
+        ONIKA_CU_MEMCPY(recv.get_data(), send.get_data(), nb_bytes); // cudaMemcpyDefault, 0 /** default stream */);
+      }
+      else
+      {
+	      MPI_Isend(send.get_data(), nb_bytes, MPI_CHAR, send.get_dest(), send.get_tag(), MPI_COMM_WORLD, &(this->m_request[acc++]));
+      }
 	  }
 	}
     };

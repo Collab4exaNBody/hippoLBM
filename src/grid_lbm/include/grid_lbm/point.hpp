@@ -2,6 +2,7 @@
 
 namespace hippoLBM
 {
+
 	typedef std::array<int,3> int3d;
 
 	inline
@@ -23,7 +24,7 @@ namespace hippoLBM
 			ONIKA_HOST_DEVICE_FUNC inline int get_val(int dim) {return position[dim];}
 			ONIKA_HOST_DEVICE_FUNC inline void set_val(int dim, int val) { position[dim] = val;}
 			ONIKA_HOST_DEVICE_FUNC inline int& operator[](int dim) {return position[dim];}
-			ONIKA_HOST_DEVICE_FUNC inline int operator[](int dim) const {return position[dim];}	
+			ONIKA_HOST_DEVICE_FUNC inline const int& operator[](int dim) const {return position[dim];}	
 			void print() 
 			{
 				for(int dim = 0; dim < DIM ; dim++) 

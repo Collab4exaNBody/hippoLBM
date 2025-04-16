@@ -40,8 +40,8 @@ namespace hippoLBM
     pre_bounce_back_coeff<Dim, S, 19> coeff;
     ONIKA_HOST_DEVICE_FUNC inline void operator()(
         int idx, 
-        const WrapperF<19>& f, // data could be modified, but the ptr inside WrapperF can't be modified
-        const WrapperF<Un>& fi) const
+        const FieldView<19>& f, // data could be modified, but the ptr inside FieldView can't be modified
+        const FieldView<Un>& fi) const
     {
       const int fidx = traversal[idx];
 #pragma GCC unroll 5
@@ -74,8 +74,8 @@ namespace hippoLBM
     post_bounce_back_coeff<Dim, S, 19> coeff;
     ONIKA_HOST_DEVICE_FUNC inline void operator()(
         int idx, 
-        const WrapperF<19>& f, // data could be modified, but the ptr inside WrapperF can't be modified
-        const WrapperF<Un>& fi) const
+        const FieldView<19>& f, // data could be modified, but the ptr inside FieldView can't be modified
+        const FieldView<Un>& fi) const
     {
       const int fidx = traversal[idx];
       //onika::lout << " idx " << idx << " <-> f idx " << fidx << std::endl;
@@ -97,7 +97,7 @@ namespace hippoLBM
     {
       grid<3> g;
       const int * const obst;
-      const WrapperF<19> f;
+      const FieldView<19> f;
       const int* ex;
       const int* ey; 
       const int* ez;

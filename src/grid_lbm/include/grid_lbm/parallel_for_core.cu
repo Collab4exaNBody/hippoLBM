@@ -31,7 +31,7 @@ namespace hippoLBM
   template<typename Func, typename... Args>
     struct parallel_for_id_traversal_runner
     {
-      const int * const traversal;
+      const int * const __restrict__ traversal;
       Func kernel;
       std::tuple<Args...> params; /**< Tuple of parameters to be passed to the kernel function. */
       parallel_for_id_traversal_runner(const int * const trvl, Func& func, Args ... parameters) : traversal(trvl), kernel(func), params(parameters...) {}

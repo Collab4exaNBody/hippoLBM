@@ -33,8 +33,8 @@ namespace hippoLBM
        * @return     The length of the box along the specified dimension.
        */
       ONIKA_HOST_DEVICE_FUNC inline int get_length(int dim) { 
-	assert(sup[dim] >= inf[dim]) ;
-	return (sup[dim] - inf[dim]) + 1; 
+        assert(sup[dim] >= inf[dim]) ;
+        return (sup[dim] - inf[dim]) + 1; 
       }
 
       /**
@@ -44,18 +44,18 @@ namespace hippoLBM
        * @return     The length of the box along the specified dimension.
        */
       ONIKA_HOST_DEVICE_FUNC inline int get_length(int dim) const { 
-	assert(sup[dim] >= inf[dim]) ;
-	return (sup[dim] - inf[dim]) + 1; 
+        assert(sup[dim] >= inf[dim]) ;
+        return (sup[dim] - inf[dim]) + 1; 
       }
 
       ONIKA_HOST_DEVICE_FUNC inline int start(int dim) const
       {
-	return inf[dim];
+        return inf[dim];
       }
 
       ONIKA_HOST_DEVICE_FUNC inline int end(int dim) const
       {
-	return sup[dim];
+        return sup[dim];
       }
 
       /**
@@ -64,27 +64,27 @@ namespace hippoLBM
        * @return The total number of points within the box.
        */
       ONIKA_HOST_DEVICE_FUNC inline int number_of_points() const {
-	int res = 1;
-	for(int dim = 0 ; dim < DIM ; dim++) res *= (this->get_length(dim)); // sup is included (+1)
-	return res;
+        int res = 1;
+        for(int dim = 0 ; dim < DIM ; dim++) res *= (this->get_length(dim)); // sup is included (+1)
+        return res;
       }
 
       ONIKA_HOST_DEVICE_FUNC inline bool contains(point<3>& p)
       {
-	for( int dim = 0 ; dim < DIM ; dim++ )
-	{
-	  if( (p[dim] < inf[dim]) || (p[dim] > sup[dim]) ) return false; 
-	}
-	return true;
+        for( int dim = 0 ; dim < DIM ; dim++ )
+        {
+          if( (p[dim] < inf[dim]) || (p[dim] > sup[dim]) ) return false; 
+        }
+        return true;
       }
 
       ONIKA_HOST_DEVICE_FUNC inline bool contains(point<3>&& p)
       {
-	for( int dim = 0 ; dim < DIM ; dim++ )
-	{
-	  if( (p[dim] < inf[dim]) || (p[dim] > sup[dim]) ) return false; 
-	}
-	return true;
+        for( int dim = 0 ; dim < DIM ; dim++ )
+        {
+          if( (p[dim] < inf[dim]) || (p[dim] > sup[dim]) ) return false; 
+        }
+        return true;
       }
 
       /**
@@ -92,10 +92,10 @@ namespace hippoLBM
        */
       void print() 
       {
-	onika::lout << " inf:"; 
-	inf.print();
-	onika::lout << " sup:";
-	sup.print();
+        onika::lout << " inf:"; 
+        inf.print();
+        onika::lout << " sup:";
+        sup.print();
       }
 
       /**
@@ -108,10 +108,10 @@ namespace hippoLBM
        */
       ONIKA_HOST_DEVICE_FUNC inline int operator()(const int x, const int y, const int z)
       {
-	int idx = z * (this->get_length(1)) + y;
-	idx *= this->get_length(0);
-	idx += x;
-	return idx;
+        int idx = z * (this->get_length(1)) + y;
+        idx *= this->get_length(0);
+        idx += x;
+        return idx;
       }
 
       /**
@@ -124,10 +124,10 @@ namespace hippoLBM
        */
       ONIKA_HOST_DEVICE_FUNC inline int operator()(const int x, const int y, const int z) const
       {
-	int idx = z * (this->get_length(1)) + y;
-	idx *= this->get_length(0);
-	idx += x;
-	return idx;
+        int idx = z * (this->get_length(1)) + y;
+        idx *= this->get_length(0);
+        idx += x;
+        return idx;
       }
 
       /**
@@ -153,7 +153,7 @@ namespace hippoLBM
       /** 
        * @brief accessor to the `inf` member
        */
-      ONIKA_HOST_DEVICE_FUNC inline point<DIM> lower() const { return inf;} 
+      ONIKA_HOST_DEVICE_FUNC inline point<DIM>& lower() const { return inf;} 
       /** 
        * @brief accessor to the `sup` member
        */
@@ -161,7 +161,7 @@ namespace hippoLBM
       /** 
        * @brief accessor to the `sup` member
        */
-      ONIKA_HOST_DEVICE_FUNC inline point<DIM> upper() const { return sup;} 
+      ONIKA_HOST_DEVICE_FUNC inline point<DIM>& upper() const { return sup;} 
 
     };
 
@@ -193,10 +193,10 @@ namespace hippoLBM
       // Vérifier les conditions de non-intersection sur l'axe x
       for(int dim = 0 ; dim < DIM ; dim++)
       {
-	if (a.sup[dim] < b.inf[dim] || b.sup[dim] < a.inf[dim])
-	{
-	  return false;
-	}
+        if (a.sup[dim] < b.inf[dim] || b.sup[dim] < a.inf[dim])
+        {
+          return false;
+        }
       }
       // Si aucune des conditions de non-intersection n'est remplie, les boîtes s'intersectent
       return true;
@@ -206,7 +206,7 @@ namespace hippoLBM
   {
     return onika::parallel::ParallelExecutionSpace<3>{
       {bx.start(0), bx.start(1), bx.start(2)}, 
-	{bx.end(0)+1, bx.end(1)+1, bx.end(2)+1}
+        {bx.end(0)+1, bx.end(1)+1, bx.end(2)+1}
     };
   }
 }

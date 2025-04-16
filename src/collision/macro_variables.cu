@@ -53,9 +53,9 @@ namespace hippoLBM
         macro_variables<Q> func = {params.Fext / 2};
 
         // get fields
-        math::Vec3d * const pm1 = data.flux();
+        FieldView<3> pm1 = data.flux();
         int * const pobst = data.obstacles();
-        WrapperF<Q> pf = data.distributions();
+        FieldView<Q> pf = data.distributions();
         double * const pm0 = data.densities();
         auto [pex, pey, pez] = data.exyz();
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <grid_lbm/wrapper_f.hpp>
+#include <grid_lbm/field_view.hpp>
 
 namespace hippoLBM
 {
@@ -13,7 +13,7 @@ namespace hippoLBM
        * @param idx The index.
        * @param f Pointer to an array of doubles representing distribution functions.
        */
-      ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, const WrapperF<Q>& f) const
+      ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, const FieldView<Q>& f) const
       {
         for (int iLB = 1; iLB < Q; iLB += 2)
         {
@@ -33,7 +33,7 @@ namespace hippoLBM
     struct streaming_step2
     {
       grid<3> g;
-      const WrapperF<Q> f;
+      const FieldView<Q> f;
       const int* __restrict__ const ex;
       const int* __restrict__ const ey; 
       const int* __restrict__ const ez;
@@ -50,6 +50,7 @@ namespace hippoLBM
        */
       ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t&& coord) const
       {
+
         const int idx = g(coord.x,coord.y,coord.z);
         for (int iLB = 1; iLB < Q; iLB += 2)
         {

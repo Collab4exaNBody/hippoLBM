@@ -46,7 +46,7 @@ namespace hippoLBM
         };
 
         // get fields
-        WrapperF<Q> pf = data.distributions();
+        FieldView<Q> pf = data.distributions();
         update_ghost(domain, pf, par_exec_ctx);
       }
   };

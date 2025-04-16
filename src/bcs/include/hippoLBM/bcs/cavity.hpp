@@ -1,7 +1,7 @@
 #pragma once
 
 #include <grid_lbm/enum.hpp>
-#include <grid_lbm/wrapper_f.hpp>
+#include <grid_lbm/field_view.hpp>
 
 namespace hippoLBM
 {
@@ -43,7 +43,7 @@ namespace hippoLBM
 			ONIKA_HOST_DEVICE_FUNC inline void operator()(
 					int idx, 
 					int * const obst, 
-					const WrapperF<Un>& fi) const
+					const FieldView<Un>& fi) const
 			{
 				if (obst[idx] == FLUIDE_) {
 #pragma GCC unroll 5

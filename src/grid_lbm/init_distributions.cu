@@ -41,7 +41,7 @@ namespace hippoLBM
         auto& traversals = *Traversals;
         domain_lbm<Q>& domain = *DomainQ;
 
-        WrapperF pf = data.distributions();
+        FieldView pf = data.distributions();
         const double * const pw = data.weights();
 
         // define kernel

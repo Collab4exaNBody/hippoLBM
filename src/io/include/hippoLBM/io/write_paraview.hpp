@@ -170,7 +170,7 @@ namespace hippoLBM
 			outFile << "          <DataArray type=\"Float32\" Name=\"U\" format=\"ascii\" NumberOfComponents=\"3\">" << std::endl;
 			{ 
 				std::stringstream paraview_stream_buffer;
-				for_all<L, PARAVIEW_TR>(Grid, writer_vec3d, paraview_stream_buffer, onika::cuda::vector_data(data.m1));
+				for_all<L, PARAVIEW_TR>(Grid, writer_vec3d, paraview_stream_buffer, data.flux());
 				outFile << paraview_stream_buffer.rdbuf();
 			} 
 			outFile << std::endl;

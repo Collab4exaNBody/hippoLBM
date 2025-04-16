@@ -1,6 +1,6 @@
 #pragma once
 
-#include <grid_lbm/wrapper_f.hpp>
+#include <grid_lbm/field_view.hpp>
 #define FLUIDE_ -1
 
 namespace hippoLBM
@@ -15,7 +15,7 @@ namespace hippoLBM
     {
       const Vec3d m_Fext;
 
-      ONIKA_HOST_DEVICE_FUNC void mrt_core(const WrapperF<19>& f, const size_t idx, double tau) const 
+      ONIKA_HOST_DEVICE_FUNC void mrt_core(const FieldView<19>& f, const size_t idx, double tau) const 
       {
 	const double s9 = 1/tau, s13 = s9;
 	// D'humiéres et al parametrization
@@ -113,7 +113,7 @@ namespace hippoLBM
       ONIKA_HOST_DEVICE_FUNC inline void operator()(
           int idx, 
           int * const __restrict__ obst, 
-          const WrapperF<19>& f,
+          const FieldView<19>& f,
           double * const __restrict__ m0, 
           const int* __restrict__ ex, 
           const int* __restrict__ ey,

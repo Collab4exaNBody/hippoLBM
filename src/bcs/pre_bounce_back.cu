@@ -40,15 +40,15 @@ namespace hippoLBM
     }
 
     template<int dim, Side dir> 
-      void launcher(traversal_lbm& traversals, WrapperF<Q>& pf, bounce_back_manager<Q>& bbm)
+      void launcher(traversal_lbm& traversals, FieldView<Q>& pf, bounce_back_manager<Q>& bbm)
       {
         int idx = helper_dim_idx<dim,dir>();
-        WrapperF<bounce_back_manager<Q>::Un> pfi = bbm.get_data(idx);
-        if( pfi.N > 0 )
+        FieldView<bounce_back_manager<Q>::Un> pfi = bbm.get_data(idx);
+        if( pfi.num_elements > 0 )
         {
           constexpr Traversal Tr = get_traversal<dim, dir>();
           auto [ptr, size] = traversals.get_data<Tr>();
-          assert(size == size_t(pfi.N));
+          assert(size == size_t(pfi.num_elements));
           assert(ptr != nullptr);
 
           ParallelForOptions opts;
@@ -79,7 +79,7 @@ namespace hippoLBM
       bb.resize_data(*periodic, local_grid_size, domain.MPI_coord, domain.MPI_grid_size);
 
       // get fields
-      WrapperF<Q> pf = data.distributions();
+      FieldView<Q> pf = data.distributions();
 
       // for clarity
       constexpr int dim_x = 0;

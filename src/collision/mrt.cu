@@ -50,7 +50,7 @@ namespace hippoLBM
 
         // get fields
         int * const pobst = data.obstacles();
-        WrapperF<Q> pf = data.distributions();
+        FieldView<Q> pf = data.distributions();
         double * const pm0 = data.densities();
         const double * const w = data.weights();
         auto [pex, pey, pez] = data.exyz();

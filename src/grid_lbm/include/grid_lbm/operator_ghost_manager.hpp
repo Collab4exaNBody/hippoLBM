@@ -5,7 +5,7 @@
 
 namespace hippoLBM
 {
-	typedef std::array<int,3> int3d;
+//	typedef std::array<int,3> int3d;
 	/**
 	 * @brief Build communication coordinates based on relative positions, domain size, and periodic boundary conditions.
 	 *

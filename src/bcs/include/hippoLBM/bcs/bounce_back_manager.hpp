@@ -31,12 +31,12 @@ namespace hippoLBM
 		std::array<vector_t<double>, 2 * DIM_MAX> _data;
 
 
-		WrapperF<Un> get_data(int i)
+		FieldView<Un> get_data(int i)
 		{
 			assert( onika::cuda::vector_size(_data[i]) % Un == 0 );
 			int size = onika::cuda::vector_size(_data[i]) / Un;
 			double * ptr = onika::cuda::vector_data(_data[i]);
-			return WrapperF<Un>{ptr, size}; 
+			return FieldView<Un>{ptr, size}; 
 		}
 
 		template<int dim>

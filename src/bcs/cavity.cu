@@ -56,7 +56,7 @@ namespace hippoLBM
 
 			// get fields
 			constexpr int idx = helper_dim_idx<Dim,S>();
-			WrapperF<5> pfi = bb.get_data(idx);
+			FieldView<5> pfi = bb.get_data(idx);
 			int * const pobst = data.obstacles();
 			auto [pex, pey, pez] = data.exyz();
 			const double * const pw = data.weights();
@@ -67,7 +67,7 @@ namespace hippoLBM
 			// run kernel
 			auto params = make_tuple(pobst, pfi);
 			parallel_for_id_runner runner = {bcs, params};
-			parallel_for(pfi.N, runner, parallel_execution_context(), ParallelForOptions());
+			parallel_for(pfi.num_elements, runner, parallel_execution_context(), ParallelForOptions());
 		}
 	};
 

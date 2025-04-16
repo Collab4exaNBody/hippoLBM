@@ -1,6 +1,6 @@
 #pragma once
 
-#include <grid_lbm/wrapper_f.hpp>
+#include <grid_lbm/field_view.hpp>
 #define FLUIDE_ -1
 
 namespace hippoLBM
@@ -27,7 +27,7 @@ namespace hippoLBM
       ONIKA_HOST_DEVICE_FUNC inline void operator()(
           int idx, 
           int * const obst, 
-          const WrapperF<19>& f,
+          const FieldView<19>& f,
           const double ux, 
           const double uy, 
           const double uz) const
@@ -66,7 +66,7 @@ namespace hippoLBM
       ONIKA_HOST_DEVICE_FUNC inline void operator()(
           int idx, 
           int * const obst, 
-          const WrapperF<Q>& f,
+          const FieldView<Q>& f,
           const double &ux, 
           const double &uy, 
           const double &uz) const

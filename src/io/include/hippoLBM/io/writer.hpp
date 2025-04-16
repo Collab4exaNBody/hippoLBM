@@ -16,11 +16,12 @@ namespace hippoLBM
   {
     const int * const obst;
     const double ratio_dx_dtLB;
-    inline Vec3d operator()(const int idx, const Vec3d& m1) const
+    inline Vec3d operator()(const int idx, const FieldView<3>& m1) const
     {
       if(obst[idx] == FLUIDE_)
       {
-        return ratio_dx_dtLB * m1;
+        Vec3d _m1 = {m1(idx,0), m1(idx,1), m1(idx,2)};
+        return ratio_dx_dtLB * _m1;
       }
       return Vec3d{0,0,0};
     }
@@ -56,7 +57,7 @@ namespace hippoLBM
 	template<int Q>
 		struct write_distributions
 		{
-			inline void operator()(int idx, std::stringstream& output, const WrapperF<Q>& fi) const
+			inline void operator()(int idx, std::stringstream& output, const FieldView<Q>& fi) const
 			{
 				for(int i = 0 ; i < Q ; i ++) 
 				{
@@ -75,6 +76,12 @@ namespace hippoLBM
 		{
 			const int idx = b(x,y,z);
 			onika::math::Vec3d tmp = func(idx, ptr[idx]);
+			output << (float)tmp.x << " " << (float)tmp.y << " " << (float)tmp.z << " ";
+		}
+		inline void operator()(const int x, const int y, const int z, std::stringstream& output, const FieldView<3>& WF) const
+		{
+			const int idx = b(x,y,z);
+			onika::math::Vec3d tmp = func(idx, WF);
 			output << (float)tmp.x << " " << (float)tmp.y << " " << (float)tmp.z << " ";
 		}
 	};

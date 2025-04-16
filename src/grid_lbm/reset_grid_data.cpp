@@ -52,7 +52,7 @@ namespace hippoLBM
           grid_data.f.resize(np*Q);
           grid_data.obst.resize(np);
           grid_data.m0.resize(np);
-          grid_data.m1.resize(np);
+          grid_data.m1.resize(np*3);
           grid_data.fi_x_0.resize(size_YZU);
           grid_data.fi_x_l.resize(size_YZU);
           grid_data.fi_y_0.resize(size_XZU);

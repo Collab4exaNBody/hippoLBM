@@ -1,11 +1,11 @@
 #pragma once
 
-#include<grid_lbm/wrapper_f.hpp>
+#include<grid_lbm/field_view.hpp>
 
 namespace hippoLBM
 {
   template<int Q, int Components, typename ParExecCtxFunc>
-    inline void update_ghost(domain_lbm<Q>& domain, WrapperF<Components>& data, ParExecCtxFunc& par_exec_ctx_func)
+    inline void update_ghost(domain_lbm<Q>& domain, FieldView<Components>& data, ParExecCtxFunc& par_exec_ctx_func)
     {
       grid<3>& Grid = domain.m_grid;
       constexpr Area L = Area::Local;

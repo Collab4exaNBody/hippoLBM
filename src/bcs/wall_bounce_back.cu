@@ -44,7 +44,7 @@ namespace hippoLBM
 
         // get fields
         const int* const pobst = data.obstacles();
-        WrapperF<Q> pf = data.distributions();
+        FieldView<Q> pf = data.distributions();
         auto [pex, pey, pez] = data.exyz();
 
         // define functors
