@@ -7,8 +7,9 @@
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
 
+#include <grid/make_variant_operator.hpp>
 #include <onika/math/basic_types.h>
-#include <grid/domain_lbm.hpp>
+#include <grid/lbm_domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
 #include <grid/lbm_fields.hpp>
@@ -26,7 +27,7 @@ namespace hippoLBM
     class NeumannZ0 : public OperatorNode
   {
     typedef std::array<double,3> readVec3;
-    ADD_SLOT( lbm_fields<Q>, GridDataQ, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+    ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
     ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
     ADD_SLOT( readVec3, U, INPUT, REQUIRED, DocString{"Prescribed velocity at the boundary (z = 0), enforcing the Neumann condition."});
     public:
@@ -40,7 +41,7 @@ namespace hippoLBM
 
     inline void execute () override final
     {
-      auto& data = *GridDataQ;
+      auto& data = *LBMFieds;
       auto& traversals = *Traversals;
 
       // define functors
@@ -59,12 +60,10 @@ namespace hippoLBM
     }
   };
 
-  using NeumannZ03D19Q = NeumannZ0<19>;
-
   // === register factories ===  
   ONIKA_AUTORUN_INIT()
   {
-    OperatorNodeFactory::instance()->register_factory( "neumann_z_0", make_compatible_operator<NeumannZ03D19Q>);
+    OperatorNodeFactory::instance()->register_factory( "neumann_z_0", make_variant_operator<NeumannZ0>);
   }
 }
 

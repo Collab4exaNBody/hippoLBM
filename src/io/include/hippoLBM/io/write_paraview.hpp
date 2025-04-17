@@ -44,8 +44,8 @@ namespace hippoLBM
   };
 
 
-  template<typename DomainQ>
-    inline void write_pvtr( std::string basedir,  std::string basename, size_t number_of_files, DomainQ& domain, bool print_distributions)
+  template<typename LBMDomain>
+    inline void write_pvtr( std::string basedir,  std::string basename, size_t number_of_files, LBMDomain& domain, bool print_distributions)
     {
       grid<3>& Grid = domain.m_grid;
       auto [lx, ly, lz] = domain.domain_size;
@@ -100,8 +100,8 @@ namespace hippoLBM
     }
 
 
-  template<typename DomainQ, typename GridDataQ>
-    inline void write_vtr(std::string name, DomainQ& domain, GridDataQ& data, traversal_lbm& traversals, LBMParameters params, bool print_distributions)
+  template<typename LBMDomain, typename LBMFieds>
+    inline void write_vtr(std::string name, LBMDomain& domain, LBMFieds& data, traversal_lbm& traversals, LBMParameters params, bool print_distributions)
     {
       grid<3>& Grid = domain.m_grid;
       auto [lx, ly, lz] = domain.domain_size;

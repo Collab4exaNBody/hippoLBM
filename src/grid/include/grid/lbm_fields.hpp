@@ -1,5 +1,6 @@
 #pragma once
 
+#include <onika/cuda/stl_adaptors.h>
 #include <grid/field_view.hpp>
 using namespace std;
 

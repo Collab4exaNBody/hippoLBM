@@ -8,7 +8,8 @@
 #include <onika/cuda/cuda.h>
 #include <onika/memory/allocator.h>
 
-#include <grid/domain_lbm.hpp>
+#include <grid/make_variant_operator.hpp>
+#include <grid/lbm_domain.hpp>
 #include <grid/enum.hpp>
 #include <grid/lbm_fields.hpp>
 #include <grid/traversal_lbm.hpp>
@@ -26,8 +27,8 @@ namespace hippoLBM
     class WriteParaviewLBM : public OperatorNode
   {
     public:
-      ADD_SLOT( domain_lbm<Q>, DomainQ, INPUT);
-      ADD_SLOT( lbm_fields<Q>, GridDataQ, INPUT);
+      ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT);
+      ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT);
       ADD_SLOT( traversal_lbm, Traversals, INPUT);
       ADD_SLOT( LBMParameters, Params, INPUT);
       ADD_SLOT( MPI_Comm, mpi, INPUT , MPI_COMM_WORLD);
@@ -53,8 +54,8 @@ namespace hippoLBM
         fullname += "/%06d";
         fullname = onika::format_string(fullname, rank);
 
-        auto& domain = *DomainQ;
-        auto& data = *GridDataQ;
+        auto& domain = *LBMDomain;
+        auto& data = *LBMFieds;
         auto& traversals = *Traversals;
 
         MPI_Barrier(comm);
@@ -63,12 +64,10 @@ namespace hippoLBM
       }
   };
 
-  using WriteParaviewLBM3D19Q = WriteParaviewLBM<19>;
-
   // === register factories ===  
-  ONIKA_AUTORUN_INIT()
+  ONIKA_AUTORUN_INIT(write_paraview)
   {
-    OperatorNodeFactory::instance()->register_factory( "write_paraview", make_compatible_operator<WriteParaviewLBM3D19Q>);
+    OperatorNodeFactory::instance()->register_factory( "write_paraview", make_variant_operator<WriteParaviewLBM>);
   }
 }
 

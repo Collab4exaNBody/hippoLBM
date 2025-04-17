@@ -7,10 +7,9 @@
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
 
-#include <onika/math/basic_types_yaml.h>
-#include <onika/math/basic_types_stream.h>
-#include <onika/math/basic_types_operators.h>
-#include <grid/domain_lbm.hpp>
+#include <grid/make_variant_operator.hpp>
+#include <onika/math/basic_types.h>
+#include <grid/lbm_domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
 #include <grid/lbm_fields.hpp>
@@ -29,7 +28,7 @@ namespace hippoLBM
     class NeumannZL : public OperatorNode
   {
     typedef std::array<double,3> readVec3;
-    ADD_SLOT( lbm_fields<Q>, GridDataQ, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+    ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
     ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
     ADD_SLOT( readVec3, U, INPUT, REQUIRED, DocString{"Prescribed velocity at the boundary (z = lz), enforcing the Neumann condition."});
 
@@ -44,7 +43,7 @@ namespace hippoLBM
 
     inline void execute () override final
     {
-      auto& data = *GridDataQ;
+      auto& data = *LBMFieds;
       auto& traversals = *Traversals;
 
       // define functors
@@ -64,12 +63,10 @@ namespace hippoLBM
     }
   };
 
-  using NeumannZL3D19Q = NeumannZL<19>;
-
   // === register factories ===  
-  ONIKA_AUTORUN_INIT()
+  ONIKA_AUTORUN_INIT(neumann_z_l)
   {
-    OperatorNodeFactory::instance()->register_factory( "neumann_z_l", make_compatible_operator<NeumannZL3D19Q>);
+    OperatorNodeFactory::instance()->register_factory( "neumann_z_l", make_variant_operator<NeumannZL>);
   }
 }
 

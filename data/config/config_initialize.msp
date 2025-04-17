@@ -3,13 +3,17 @@ set_lbm_parameters: nop
 set_obstacles: nop
 set_distributions: nop
 
+default_grid: define_grid_3dq19
+
+grid_flavor: default_grid
+
 initialize:
   - global
   - do_domain
   - set_lbm_parameters
   - print_domain
   - build_traversal
-  - reset_grid_data
+  - grid_flavor
   - init_obst
   - init_distributions:
      do_update: false

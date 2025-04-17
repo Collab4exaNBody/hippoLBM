@@ -7,11 +7,10 @@
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
 
-#include <onika/math/basic_types_yaml.h>
-#include <onika/math/basic_types_stream.h>
-#include <onika/math/basic_types_operators.h>
+#include <grid/make_variant_operator.hpp>
+#include <onika/math/basic_types.h>
 #include <grid/enum.hpp>
-#include <grid/domain_lbm.hpp>
+#include <grid/lbm_domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/lbm_fields.hpp>
 #include <grid/parallel_for_core.cu>
@@ -29,8 +28,8 @@ namespace hippoLBM
 		class Cavity : public OperatorNode
 	{
 		typedef std::array<double,3> readVec3;
-		ADD_SLOT( domain_lbm<Q>, DomainQ, INPUT, REQUIRED);
-		ADD_SLOT( lbm_fields<Q>, GridDataQ, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+		ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT, REQUIRED);
+		ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
 		ADD_SLOT( readVec3, U, INPUT, REQUIRED, DocString{"Prescribed velocity at the boundary (z = lz), enforcing the Cavity condition."});
 		ADD_SLOT( bounce_back_manager<Q>, bbmanager, INPUT_OUTPUT, REQUIRED);
 
@@ -45,9 +44,9 @@ namespace hippoLBM
 
 		inline void execute () override final
 		{
-			auto& data = *GridDataQ;
+			auto& data = *LBMFieds;
 			auto& bb = *bbmanager;
-			auto& domain = *DomainQ;
+			auto& domain = *LBMDomain;
 			auto [lx, ly, lz] = domain.domain_size;
 			auto [ux,uy,uz] = *U;
 
@@ -71,14 +70,14 @@ namespace hippoLBM
 		}
 	};
 
-	using CavityZ0_3D19Q = Cavity<DIMZ, Side::Left, 19>;
-	using CavityZL_3D19Q = Cavity<DIMZ, Side::Right, 19>;
+	template<int Q> using CavityZ0_3D19Q = Cavity<DIMZ, Side::Left, Q>;
+	template<int Q> using CavityZL_3D19Q = Cavity<DIMZ, Side::Right,Q>;
 
 	// === register factories ===  
 	ONIKA_AUTORUN_INIT(cavity)
 	{
-		OperatorNodeFactory::instance()->register_factory( "cavity_z_0", make_compatible_operator<CavityZ0_3D19Q>);
-		OperatorNodeFactory::instance()->register_factory( "cavity_z_l", make_compatible_operator<CavityZL_3D19Q>);
+		OperatorNodeFactory::instance()->register_factory( "cavity_z_0", make_variant_operator<CavityZ0_3D19Q>);
+		OperatorNodeFactory::instance()->register_factory( "cavity_z_l", make_variant_operator<CavityZL_3D19Q>);
 	}
 }
 

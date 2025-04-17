@@ -7,9 +7,8 @@
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
 
-#include <onika/math/basic_types_yaml.h>
-#include <onika/math/basic_types_stream.h>
-#include <grid/domain_lbm.hpp>
+#include <onika/math/basic_types.h>
+#include <grid/lbm_domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
 #include <grid/lbm_fields.hpp>
@@ -21,19 +20,18 @@ namespace hippoLBM
   using namespace scg;
 
   template<int Q>
-    class ResetGridDataLBM : public OperatorNode
+    class DefineLBMFields : public OperatorNode
   {
     public:
-      ADD_SLOT( domain_lbm<Q>, DomainQ, INPUT, REQUIRED);
-      // Un = 5
-      ADD_SLOT( lbm_fields<Q>, GridDataQ, INPUT_OUTPUT);
+      ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT, REQUIRED);
+      ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT);
 
       inline void execute () override final
       {
         constexpr Area L = Area::Local;
         constexpr Traversal Tr = Traversal::All;
-        lbm_fields<Q>& grid_data = *GridDataQ;
-        domain_lbm<Q>& domain = *DomainQ;
+        lbm_fields<Q>& grid_data = *LBMFieds;
+        lbm_domain<Q>& domain = *LBMDomain;
         grid<3>& Grid = domain.m_grid;
         box<3>& Box = domain.m_box;
 
@@ -63,12 +61,13 @@ namespace hippoLBM
       }
   };
 
-  using ResetGridDataLBM3D19Q = ResetGridDataLBM<19>;
+
 
   // === register factories ===  
-  ONIKA_AUTORUN_INIT(parallel_for_benchmark)
+  ONIKA_AUTORUN_INIT(define_grid)
   {
-    OperatorNodeFactory::instance()->register_factory( "reset_grid_data", make_compatible_operator<ResetGridDataLBM3D19Q>);
+    OperatorNodeFactory::instance()->register_factory( "define_grid_3dq19", make_compatible_operator<DefineLBMFields<19>>);
+    //OperatorNodeFactory::instance()->register_factory( "define_grid_3dq15", make_compatible_operator<DefineLBMFields<15>>);
   }
 }
 

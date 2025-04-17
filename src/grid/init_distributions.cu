@@ -1,4 +1,3 @@
-#include <mpi.h>
 #include <onika/scg/operator.h>
 #include <onika/scg/operator_slot.h>
 #include <onika/scg/operator_factory.h>
@@ -7,9 +6,9 @@
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
 
-#include <onika/math/basic_types_yaml.h>
-#include <onika/math/basic_types_stream.h>
-#include <grid/domain_lbm.hpp>
+#include <grid/make_variant_operator.hpp>
+#include <onika/math/basic_types.h>
+#include <grid/lbm_domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
 #include <grid/lbm_fields.hpp>
@@ -17,7 +16,6 @@
 #include <grid/traversal_lbm.hpp>
 #include <grid/init_distributions.hpp>
 #include <grid/update_ghost.hpp>
-  
 
 namespace hippoLBM
 {
@@ -28,8 +26,8 @@ namespace hippoLBM
     class InitDistributionsLBM : public OperatorNode
   {
     public:
-      ADD_SLOT( domain_lbm<Q>, DomainQ, INPUT, REQUIRED);
-      ADD_SLOT( lbm_fields<Q>, GridDataQ, INPUT_OUTPUT);
+      ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT, REQUIRED);
+      ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT);
       ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED);
       ADD_SLOT( AABB, bounds, INPUT, OPTIONAL, DocString{"Domain's bounds"});
       ADD_SLOT( double, tmp_coeff, INPUT, double(1) );
@@ -37,9 +35,9 @@ namespace hippoLBM
 
       inline void execute () override final
       {
-        auto& data = *GridDataQ;
+        auto& data = *LBMFieds;
         auto& traversals = *Traversals;
-        domain_lbm<Q>& domain = *DomainQ;
+        lbm_domain<Q>& domain = *LBMDomain;
 
         FieldView pf = data.distributions();
         const double * const pw = data.weights();
@@ -97,11 +95,9 @@ namespace hippoLBM
       }
   };
 
-  using InitDistributionsLBM3D19Q = InitDistributionsLBM<19>;
-
   // === register factories ===  
-  ONIKA_AUTORUN_INIT(parallel_for_benchmark)
+  ONIKA_AUTORUN_INIT(init_distributions)
   {
-    OperatorNodeFactory::instance()->register_factory( "init_distributions", make_compatible_operator<InitDistributionsLBM3D19Q>);
+    OperatorNodeFactory::instance()->register_factory( "init_distributions", make_variant_operator<InitDistributionsLBM>);
   }
 }

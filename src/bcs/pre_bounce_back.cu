@@ -7,8 +7,9 @@
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
 
+#include <grid/make_variant_operator.hpp>
 #include <onika/math/basic_types.h>
-#include <grid/domain_lbm.hpp>
+#include <grid/lbm_domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
 #include <grid/lbm_fields.hpp>
@@ -27,9 +28,9 @@ namespace hippoLBM
   template<int Q>
     class PreBounceBack : public OperatorNode
   {
-    ADD_SLOT( lbm_fields<Q>, GridDataQ, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+    ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
     ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
-    ADD_SLOT( domain_lbm<Q>, DomainQ, INPUT, REQUIRED);
+    ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT, REQUIRED);
     ADD_SLOT( bounce_back_manager<Q>, bbmanager, INPUT_OUTPUT);
     ADD_SLOT( BoolVector, periodic   , INPUT , REQUIRED );
     public:
@@ -62,9 +63,9 @@ namespace hippoLBM
 
     inline void execute () override final
     {
-      auto& data = *GridDataQ;
+      auto& data = *LBMFieds;
       auto& traversals = *Traversals;
-      auto& domain = *DomainQ;
+      auto& domain = *LBMDomain;
       grid<3>& Grid = domain.m_grid;
 
       // fill grid size;
@@ -94,11 +95,9 @@ namespace hippoLBM
     }
   };
 
-  using PreBounceBack3D19Q = PreBounceBack<19>;
-
   // === register factories ===  
   ONIKA_AUTORUN_INIT(pre_bounce_back)
   {
-    OperatorNodeFactory::instance()->register_factory( "pre_bounce_back", make_compatible_operator<PreBounceBack3D19Q>);
+    OperatorNodeFactory::instance()->register_factory( "pre_bounce_back", make_variant_operator<PreBounceBack>);
   }
 }

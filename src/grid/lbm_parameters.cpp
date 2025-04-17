@@ -48,9 +48,9 @@ namespace hippoLBM
 	};
 
 	// === register factories ===  
-	ONIKA_AUTORUN_INIT(parallel_for_benchmark)
+	ONIKA_AUTORUN_INIT(lbm_parameters)
 	{
-		OperatorNodeFactory::instance()->register_factory( "lbm_parameters", make_compatible_operator<LBMParametersOp>);
+		OperatorNodeFactory::instance()->register_factory( "lbm_parameters", make_simple_operator<LBMParametersOp>);
 	}
 }
 

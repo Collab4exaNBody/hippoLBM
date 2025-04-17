@@ -7,9 +7,9 @@
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
 
-#include <onika/math/basic_types_yaml.h>
-#include <onika/math/basic_types_stream.h>
-#include <grid/domain_lbm.hpp>
+#include <onika/math/basic_types.h>
+#include <grid/make_variant_operator.hpp>
+#include <grid/lbm_domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
 #include <grid/traversal_lbm.hpp>
@@ -19,19 +19,21 @@ namespace hippoLBM
 {
 	using namespace onika;
 	using namespace scg;
+  using onika::math::AABB;
 
 	template<int Q>
 		class SetWall : public OperatorNode
 	{
 		public:
-      ADD_SLOT( domain_lbm<Q>, DomainQ, INPUT, REQUIRED);
-      ADD_SLOT( lbm_fields<Q>, GridDataQ, INPUT_OUTPUT);
+      ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT, REQUIRED);
+      ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT);
 			ADD_SLOT( AABB, bounds, INPUT, REQUIRED, DocString{"Domain's bounds"});
 			ADD_SLOT( double, dx, INPUT, REQUIRED, DocString{"Space step"});
+
 			inline void execute () override final
 			{
-        lbm_fields<Q>& grid_data = *GridDataQ;
-        domain_lbm<Q>& domain = *DomainQ;
+        lbm_fields<Q>& grid_data = *LBMFieds;
+        lbm_domain<Q>& domain = *LBMDomain;
         grid<3>& Grid = domain.m_grid;
        
         auto& bound = *bounds;
@@ -60,12 +62,10 @@ namespace hippoLBM
 			}
 	};
 
-	using SetWall3D19Q = SetWall<19>;
-
 	// === register factories ===  
 	ONIKA_AUTORUN_INIT(set_wall)
 	{
-		OperatorNodeFactory::instance()->register_factory( "set_wall", make_compatible_operator<SetWall3D19Q>);
+		OperatorNodeFactory::instance()->register_factory( "set_wall", make_variant_operator<SetWall>);
 	}
 }
 

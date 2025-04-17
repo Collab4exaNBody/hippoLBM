@@ -1,12 +1,5 @@
-//
-//  GhostManagercpp
-//  
-//
-//  Created by prat on 19/09/2023.
-//  Copyright © 2019 amarsid. All rights reserved.
-//
-
 #pragma once
+#include <mpi.h>
 #include <cstring>
 #include <onika/cuda/cuda_context.h>
 #include <grid/point.hpp>

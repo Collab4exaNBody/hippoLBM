@@ -10,7 +10,7 @@
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
 #include <onika/math/basic_types_operators.h>
-#include <grid/domain_lbm.hpp>
+#include <grid/lbm_domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
 #include <grid/lbm_fields.hpp>
@@ -18,6 +18,7 @@
 #include <grid/traversal_lbm.hpp>
 #include <grid/lbm_parameters.hpp>
 #include <hippoLBM/collision/bgk.hpp>
+#include <grid/make_variant_operator.hpp>
 
 namespace hippoLBM
 {
@@ -29,7 +30,7 @@ namespace hippoLBM
     class CollisionBGK : public OperatorNode
   {
     public:
-      ADD_SLOT( lbm_fields<Q>, GridDataQ, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+      ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
       ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
       ADD_SLOT( LBMParameters, Params, INPUT, REQUIRED, DocString{"Contains global LBM simulation parameters"});
 
@@ -41,7 +42,7 @@ namespace hippoLBM
 
       inline void execute () override final
       {
-        auto& data = *GridDataQ;
+        auto& data = *LBMFieds;
         auto& traversals = *Traversals;
         auto& params = *Params;
 
@@ -69,7 +70,7 @@ namespace hippoLBM
   // === register factories ===  
   ONIKA_AUTORUN_INIT(CollisionBGK)
   {
-    OperatorNodeFactory::instance()->register_factory( "bgk", make_compatible_operator<CollisionBGK3D19Q>);
+    OperatorNodeFactory::instance()->register_factory( "bgk", make_variant_operator<CollisionBGK>);
   }
 }
 

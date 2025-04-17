@@ -9,7 +9,9 @@
 
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
-#include <grid/domain_lbm.hpp>
+
+#include <grid/make_variant_operator.hpp>
+#include <grid/lbm_domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
 #include <grid/traversal_lbm.hpp>
@@ -24,13 +26,13 @@ namespace hippoLBM
 		class PrintDomainLBM : public OperatorNode
 	{
 		public:
-			ADD_SLOT( domain_lbm<Q>, DomainQ, INPUT);
+			ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT);
 			inline void execute () override final
 			{
         constexpr Area G = Area::Global;
         constexpr Traversal R = Traversal::Real;
 
-        domain_lbm<Q>& domain = *DomainQ; 
+        lbm_domain<Q>& domain = *LBMDomain; 
         grid<3>& g = domain.m_grid;
         const onika::math::AABB& bounds = domain.bounds;
         const int3d& domain_size = domain.domain_size;
@@ -53,12 +55,10 @@ namespace hippoLBM
 			}
 	};
 
-	using PrintDomainLBM3D19Q = PrintDomainLBM<19>;
-
 	// === register factories ===  
-	ONIKA_AUTORUN_INIT(parallel_for_benchmark)
+	ONIKA_AUTORUN_INIT(print_domain)
 	{
-		OperatorNodeFactory::instance()->register_factory( "print_domain", make_compatible_operator<PrintDomainLBM3D19Q>);
+		OperatorNodeFactory::instance()->register_factory( "print_domain", make_variant_operator<PrintDomainLBM>);
 	}
 }
 

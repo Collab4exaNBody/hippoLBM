@@ -7,9 +7,10 @@
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
 
+#include <grid/make_variant_operator.hpp>
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
-#include <grid/domain_lbm.hpp>
+#include <grid/lbm_domain.hpp>
 #include <grid/enum.hpp>
 #include <onika/string_utils.h>
 
@@ -27,7 +28,7 @@ namespace hippoLBM
     typedef std::chrono::time_point<std::chrono::steady_clock> time_point;
 
 		public:
-			ADD_SLOT( domain_lbm<Q>, DomainQ, INPUT_OUTPUT, REQUIRED);
+			ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT_OUTPUT, REQUIRED);
 			ADD_SLOT( long , timestep , INPUT, REQUIRED);
 	    ADD_SLOT( double , physical_time , INPUT, REQUIRED);
 			ADD_SLOT( bool , print_log_header, INPUT_OUTPUT, true);
@@ -36,7 +37,7 @@ namespace hippoLBM
 
 			inline void execute () override final
 			{
-				auto& domain = *DomainQ; 
+				auto& domain = *LBMDomain; 
         auto [lx, ly, lz] = domain.domain_size;
         long long int size_xyz = (long long int)(lx) * (long long int)(ly) * (long long int)(lz);
 
@@ -71,12 +72,10 @@ namespace hippoLBM
 			}
 	};
 
-	using LogLBM3D19Q = LogLBM<19>;
-
 	// === register factories ===  
 	ONIKA_AUTORUN_INIT()
 	{
-		OperatorNodeFactory::instance()->register_factory( "log", make_compatible_operator<LogLBM3D19Q>);
+		OperatorNodeFactory::instance()->register_factory( "log", make_variant_operator<LogLBM>);
 	}
 }
 

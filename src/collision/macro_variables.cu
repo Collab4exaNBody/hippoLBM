@@ -10,7 +10,7 @@
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
 #include <onika/math/basic_types_operators.h>
-#include <grid/domain_lbm.hpp>
+#include <grid/lbm_domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
 #include <grid/lbm_fields.hpp>
@@ -19,8 +19,9 @@
 #include <grid/lbm_parameters.hpp>
 #include <hippoLBM/collision/macro_variables.hpp>
 
-#include <grid/domain_lbm.hpp>
+#include <grid/lbm_domain.hpp>
 #include <grid/update_ghost.hpp>
+#include <grid/make_variant_operator.hpp>
 
 namespace hippoLBM
 {
@@ -31,7 +32,7 @@ namespace hippoLBM
   template<int Q>
     class MacroVariables : public OperatorNode
   {
-      ADD_SLOT( lbm_fields<Q>, GridDataQ, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+      ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
       ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
       ADD_SLOT( LBMParameters, Params, INPUT, REQUIRED, DocString{"Contains global LBM simulation parameters"});
 
@@ -45,7 +46,7 @@ namespace hippoLBM
 
       inline void execute () override final
       {
-        auto& data = *GridDataQ;
+        auto& data = *LBMFieds;
         auto& traversals = *Traversals;
         auto& params = *Params;
 
@@ -67,12 +68,10 @@ namespace hippoLBM
       }
   };
 
-  using MacroVariables3D19Q = MacroVariables<19>;
-
   // === register factories ===  
   ONIKA_AUTORUN_INIT(macro_variables)
   {
-    OperatorNodeFactory::instance()->register_factory( "macro_variables", make_compatible_operator<MacroVariables3D19Q>);
+    OperatorNodeFactory::instance()->register_factory( "macro_variables", make_variant_operator<MacroVariables>);
   }
 }
 
