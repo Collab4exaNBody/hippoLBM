@@ -47,14 +47,15 @@ namespace hippoLBM
         auto& domain = *LBMDomain;
         auto& traversals = *Traversals;
         grid<3>& Grid = domain.m_grid;
+        auto [ptr, size] = traversals.get_levels();
 
         // get fields
         FieldView<Q> pf = data.distributions();
         auto [pex, pey, pez] = data.exyz();
 
         // define functors
-        streaming_step1<Q> step1 = {};
-        streaming_step2<Q> step2 = {Grid, pf, pex, pey, pez};
+        streaming_step1<Q, Traversal::Real> step1 = {ptr, pf};
+        streaming_step2<Q, Traversal::Extend> step2 = {ptr, Grid, pf, pex, pey, pez};
 
         // capture the parallel execution context
         auto par_exec_ctx = [this] (const char* exec_name)
@@ -89,15 +90,15 @@ namespace hippoLBM
         }
         else
         {
-          // get traversal
-          auto [ptr, size] = traversals.get_data<Traversal::Real>();
-
           // run kernel
-          parallel_for_id(ptr, size, step1, parallel_execution_context("streaming_step1"), pf);
+          parallel_for_simple(size, step1, parallel_execution_context("streaming_step1"));
           update_ghost(domain, pf, par_exec_ctx);
+          parallel_for_simple(size, step2, parallel_execution_context("streaming_step2"));
+/*
           box<3> extend = Grid.build_box<Area::Local, Traversal::Extend>();
           onika::parallel::ParallelExecutionSpace<3> parallel_range = set(extend);        
           parallel_for(parallel_range, step2, parallel_execution_context("streaming_step2"));
+*/
         }
       }
   };

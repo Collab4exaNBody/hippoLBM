@@ -92,7 +92,7 @@ namespace hippoLBM
 		{
 			ParallelForOptions opts;
 			opts.omp_scheduling = OMP_SCHED_STATIC;
-			parallel_for_id_runner runner= {func, args...};
+			parallel_for_id_runner<Func, Args...> runner{func, std::tuple<Args...>(args...)};
 			assert(size > 0);
 			return parallel_for(size, runner, exec_ctx, opts);
 		}

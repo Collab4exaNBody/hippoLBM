@@ -228,5 +228,10 @@ namespace hippoLBM
       {
         return bx(x, y, z);
       }  
+
+      ONIKA_HOST_DEVICE_FUNC inline std::tuple<int,int,int> operator()(int idx) const
+      {
+        return bx(idx);
+      }  
     };
 }

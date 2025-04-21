@@ -33,6 +33,7 @@ namespace hippoLBM
       ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
       ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
       ADD_SLOT( LBMParameters, Params, INPUT, REQUIRED, DocString{"Contains global LBM simulation parameters"});
+      ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT, REQUIRED);
 
       inline std::string documentation() const override final
       {
@@ -46,9 +47,6 @@ namespace hippoLBM
         auto& traversals = *Traversals;
         auto& params = *Params;
 
-        // define functor
-        bgk<Q> func = {params.Fext};
-
         // get fields
         FieldView<3> pm1 = data.flux();
         int * const pobst = data.obstacles();
@@ -58,10 +56,11 @@ namespace hippoLBM
         auto [pex, pey, pez] = data.exyz();
 
         // get traversal
-        auto [ptr, size] = traversals.get_data<Traversal::Real>();
-
-        // run kernel
-        parallel_for_id(ptr, size, func, parallel_execution_context(), pm1, pobst, pf, pm0, pex, pey, pez, w, params.tau);
+        auto [ptr, size] = traversals.get_levels();
+        // define functor
+        bgk<Q, Traversal::Real> func = {ptr, params.Fext, pm1, pobst, pf, pm0, pex, pey, pez, w, params.tau};
+        // run kernel over the lbm grid
+        parallel_for_simple(size, func, parallel_execution_context());
       }
   };
 

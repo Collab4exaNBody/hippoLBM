@@ -130,6 +130,18 @@ namespace hippoLBM
         return idx;
       }
 
+      ONIKA_HOST_DEVICE_FUNC inline std::tuple<int,int,int> operator()(int idx) const
+      {
+        int size_y = this->get_length(1);
+        int size_x = this->get_length(0);
+        int size_xy = size_y * size_x;
+        int z = idx / size_xy;
+        idx = idx - z * size_xy;
+        int y = idx / size_x;
+        int x = idx % size_x;
+        return {x,y,z};
+      }
+
       /**
        * @brief compute the length of the box along a specified dimension.
        *

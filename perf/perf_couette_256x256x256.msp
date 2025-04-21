@@ -1,0 +1,19 @@
+do_domain:
+  - domain:
+     bounds: [[0,0,0],[0.1,0.1,0.1]]
+     resolution: 256
+     periodic: [true, true, false]
+
+set_lbm_parameters:
+  - lbm_parameters:
+     Fext: [0,0,0]
+     nuth: 1e-2
+
+boundary_conditions:
+  - neumann_z_l:
+     U: [0.001,0,0]
+
+global:
+   simulation_paraview_freq: -1
+   simulation_print_log_freq: 1000
+   simulation_end_iteration: 1000
