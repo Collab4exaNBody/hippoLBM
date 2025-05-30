@@ -63,6 +63,17 @@ target_link_libraries(hippoLBM PUBLIC ${ONIKA_LIBRARIES})
 add_subdirectory(regression-test)
 
 ## CREATE env.sh
+if(DEFINED ONIKA_PLUGIN_PATH)
+  list(APPEND ONIKA_PLUGIN_PATH ${CMAKE_CURRENT_BINARY_DIR}/plugins)
+else()
+  set(ONIKA_PLUGIN_PATH "${CMAKE_CURRENT_BINARY_DIR}/plugins")
+endif()
 
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/setup-env.sh  "export ONIKA_CONFIG_PATH=${CMAKE_CURRENT_SOURCE_DIR}/data/config\nexport ONIKA_PLUGIN_PATH=${CMAKE_CURRENT_BINARY_DIR}/plugins \n")
+string(REPLACE ";" ":" ONIKA_PLUGIN_PATH "${ONIKA_PLUGIN_PATH}")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bin/setup-env.sh  
+  "#!/bin/bash\n"
+  "source ${onika_DIR}/bin/setup-env.sh\n"
+	"export ONIKA_CONFIG_PATH=${CMAKE_CURRENT_SOURCE_DIR}/data/config\n"
+	"export ONIKA_PLUGIN_PATH=${ONIKA_PLUGIN_PATH} \n")
 
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin/ DESTINATION bin )
