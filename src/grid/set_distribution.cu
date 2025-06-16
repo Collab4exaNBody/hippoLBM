@@ -14,7 +14,7 @@
 #include <grid/lbm_fields.hpp>
 #include <grid/parallel_for_core.cu>
 #include <grid/traversal_lbm.hpp>
-#include <grid/init_distributions.hpp>
+#include <hippoLBM/grid/set_distribution.hpp>
 #include <grid/update_ghost.hpp>
 
 namespace hippoLBM
@@ -23,14 +23,14 @@ namespace hippoLBM
   using namespace scg;
 
   template<int Q>
-    class InitDistributionsLBM : public OperatorNode
+    class SetDistributionsLBM : public OperatorNode
   {
     public:
       ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT, REQUIRED);
       ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT);
       ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED);
       ADD_SLOT( AABB, bounds, INPUT, OPTIONAL, DocString{"Domain's bounds"});
-      ADD_SLOT( double, tmp_coeff, INPUT, double(1) );
+      ADD_SLOT( double, value, INPUT, double(1) );
       ADD_SLOT( bool, do_update, INPUT, false);
 
       inline void execute () override final
@@ -43,7 +43,7 @@ namespace hippoLBM
         const double * const pw = data.weights();
 
         // define kernel
-        init_distributions<Q> func = {*tmp_coeff};
+        init_distributions<Q> func = {*value};
 
         // capture the parallel execution context
         auto par_exec_ctx = [this] (const char* exec_name)
@@ -98,6 +98,6 @@ namespace hippoLBM
   // === register factories ===  
   ONIKA_AUTORUN_INIT(init_distributions)
   {
-    OperatorNodeFactory::instance()->register_factory( "init_distributions", make_variant_operator<InitDistributionsLBM>);
+    OperatorNodeFactory::instance()->register_factory( "set_distribution", make_variant_operator<SetDistributionsLBM>);
   }
 }

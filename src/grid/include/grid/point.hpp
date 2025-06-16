@@ -46,6 +46,12 @@ namespace hippoLBM
 				point<DIM> res = {position[0] - p[0], position[1] - p[1], position[2] - p[2]};
 				return res;
 			} 
+
+			ONIKA_HOST_DEVICE_FUNC point<DIM> operator-(const point<DIM>& p)
+			{
+				point<DIM> res = {position[0] - p[0], position[1] - p[1], position[2] - p[2]};
+				return res;
+			} 
 		};
 
 	template<int DIM>

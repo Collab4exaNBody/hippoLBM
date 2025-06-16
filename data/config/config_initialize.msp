@@ -3,6 +3,11 @@ set_lbm_parameters: nop
 set_obstacles: nop
 set_distributions: nop
 
+
+setup_obstacles:
+  - init_obstacles
+  - set_obstacles
+
 default_grid: define_grid_3dq19
 
 grid_flavor: default_grid
@@ -15,10 +20,11 @@ initialize:
   - build_traversal
   - grid_flavor
   - init_obst
-  - init_distributions:
+  - set_distribution: # default f_iLB = 1
      do_update: false
   - set_distributions
-  - set_obstacles
+  - setup_obstacles
+  - update_obstacles
   - macro_variables
   - end_iteration
 

@@ -35,7 +35,7 @@ namespace hippoLBM
       inline void set_dx(const double d) {dx = d;}
 
       template<Area A, Traversal Tr>
-        ONIKA_HOST_DEVICE_FUNC inline int start(const int dim)
+        ONIKA_HOST_DEVICE_FUNC inline int start(const int dim) const
         {
           //static_assert(A == Area::Local);
           int res = 0;
@@ -49,7 +49,7 @@ namespace hippoLBM
         }
 
       template<Area A, Traversal Tr>
-        ONIKA_HOST_DEVICE_FUNC inline int end(const int dim)
+        ONIKA_HOST_DEVICE_FUNC inline int end(const int dim) const
         {
           //static_assert(A == Area::Local);
           static_assert(Tr == Traversal::All || Tr == Traversal::Real || Tr == Traversal::Inside ||  Tr == Traversal::Extend );
@@ -65,7 +65,7 @@ namespace hippoLBM
 
 
       template<Area A, Traversal Tr>
-        ONIKA_HOST_DEVICE_FUNC box<3> build_box()
+        ONIKA_HOST_DEVICE_FUNC box<3> build_box() const
         {
           if constexpr (A == Area::Local && Tr == Traversal::All) return bx;
           if constexpr (A == Area::Local && Tr == Traversal::Extend) return ext;
@@ -116,7 +116,7 @@ namespace hippoLBM
       }
 
       /*** @brief Check if the point is in the local grid */ 
-      ONIKA_HOST_DEVICE_FUNC inline bool is_local(point<DIM>& p)
+      ONIKA_HOST_DEVICE_FUNC inline bool is_local(point<DIM>& p) const
       {
         for(int dim = 0 ; dim < DIM ; dim++)
         {
@@ -125,7 +125,7 @@ namespace hippoLBM
         return true;
       }
 
-      ONIKA_HOST_DEVICE_FUNC inline bool is_global(point<DIM>& p)
+      ONIKA_HOST_DEVICE_FUNC inline bool is_global(point<DIM>& p) const
       {
         point<DIM> local = p + offset;
         return is_local(local);
@@ -133,7 +133,7 @@ namespace hippoLBM
 
       /*** @brief convert a point to A area. */
       template<Area A, bool Check=false>
-        ONIKA_HOST_DEVICE_FUNC inline point<DIM> convert(int x, int y, int z)
+        ONIKA_HOST_DEVICE_FUNC inline point<DIM> convert(int x, int y, int z) const
         {
           point<DIM> res = {x, y, z};
           static_assert ( A == Area::Local || A == Area::Global);
@@ -158,14 +158,14 @@ namespace hippoLBM
       // could be optimized
       /*** convert a point to A area. */
       template<Area A, bool Check=false>
-        ONIKA_HOST_DEVICE_FUNC inline point<DIM> convert(point<3> p)
+        ONIKA_HOST_DEVICE_FUNC inline point<DIM> convert(point<3> p) const
         {
           return convert<A,Check>(p[0], p[1], p[2]);
         }
 
       /*** @brief convert a point to A area. */
       template<Area A>
-        ONIKA_HOST_DEVICE_FUNC inline int convert(int in, int dim)
+        ONIKA_HOST_DEVICE_FUNC inline int convert(int in, int dim) const
         {
           int res = in;
           static_assert ( A == Area::Local || A == Area::Global);
@@ -184,7 +184,7 @@ namespace hippoLBM
         }
 
       template<Area A>
-        ONIKA_HOST_DEVICE_FUNC onika::math::Vec3d compute_position(int x, int y, int z)
+        ONIKA_HOST_DEVICE_FUNC onika::math::Vec3d compute_position(int x, int y, int z) const
         {
           static_assert(A == Area::Global);
           onika::math::Vec3d res = {(double)(x + offset[0]),(double)(y + offset[1]),(double)(z + offset[2])};
@@ -193,7 +193,7 @@ namespace hippoLBM
         }
 
       template<Area A, Traversal Tr>
-        ONIKA_HOST_DEVICE_FUNC std::tuple<bool, box<3>> restrict_box_to_grid(const box<3>& input_box)
+        ONIKA_HOST_DEVICE_FUNC std::tuple<bool, box<3>> restrict_box_to_grid(const box<3>& input_box) const
         {
           box<3> adjusted_box;
           adjusted_box.inf = convert<A, false>(input_box.inf);

@@ -20,8 +20,8 @@ set_obstacles:
      bounds: [[0.048,0,0],[0.052,0.1,0.04]]
 
 set_distributions:
-  - init_distributions:
-     tmp_coeff: 1.5
+  - set_distribution:
+     value: 1.5
      bounds: [[0,0,0], [0.048,1,1]]
 
 post_stream_bcs:

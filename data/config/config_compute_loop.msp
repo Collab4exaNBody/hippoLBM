@@ -7,6 +7,7 @@ compute_loop_stop:
 pre_stream_bcs: nop
 post_stream_bcs: nop
 boundary_conditions: nop
+start_iteration: nop
 
 end_iteration:
   rebind: {dt: dtLB }
@@ -24,6 +25,7 @@ compute_loop:
   name: loop
   condition: compute_loop_continue
   body:
+  - start_iteration
   - macro_variables
   - collision
   - pre_stream_bcs
