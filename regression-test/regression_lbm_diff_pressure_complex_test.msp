@@ -14,21 +14,29 @@ pre_stream_bcs:
   - wall_bounce_back
 
 set_obstacles:
-  - set_wall:
+  - register_solid_wall:
+     id: 0
      bounds: [[0.024,0,0.06],[0.026,0.1,0.1]]
-  - set_wall:
+  - register_solid_wall:
+     id: 1
      bounds: [[0.024,0,0],[0.026,0.1,0.04]]
-  - set_wall:
+  - register_solid_wall:
+     id: 2
      bounds: [[0.034,0,0.025],[0.036,0.1,0.075]]
-  - set_wall:
+  - register_solid_wall:
+     id: 3
      bounds: [[0.049,0,0.06],[0.051,0.1,0.1]]
-  - set_wall:
+  - register_solid_wall:
+     id: 4
      bounds: [[0.049,0,0],[0.051,0.1,0.04]]
-  - set_wall:
+  - register_solid_wall:
+     id: 5
      bounds: [[0.068,0,0.0355],[0.072,0.1,0.065]]
-  - set_wall:
+  - register_solid_wall:
+     id: 6
      bounds: [[0.085,0,0.02],[0.1,0.1,0.03]]
-  - set_wall:
+  - register_solid_wall:
+     id: 7
      bounds: [[0.085,0,0.07],[0.1,0.1,0.08]]
 
 set_distributions:

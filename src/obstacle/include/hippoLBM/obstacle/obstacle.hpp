@@ -6,6 +6,15 @@ namespace hippoLBM
 {
   using namespace onika::math;
 
+  inline bool intersect(AABB& aabb, Vec3d& v)
+  {
+    auto& min = aabb.bmin;
+    auto& max = aabb.bmax;
+		return min.x < v.x && v.x < max.x &&
+			min.y < v.y && v.y < max.y &&
+			min.z < v.z && v.z < max.z ;
+	}
+
 	enum OBSTACLE_TYPE
 	{
 		BALL      = 0, /**< Ball driver type. */
@@ -31,7 +40,7 @@ namespace hippoLBM
 		double radius;
 		double r2;
 
-    public:
+		public:
 
 		Ball() = delete;
 		Ball(Vec3d c, double rad) : center(c), radius(rad)
@@ -50,12 +59,34 @@ namespace hippoLBM
 
 		bool solid(Vec3d&& pos)
 		{
-      Vec3d r = pos - center;
+			Vec3d r = pos - center;
 			return dot(r,r) <= r2;
 		}
 	};
 
+	class Wall : public AbstractObject
+	{
+		AABB bounds;
+
+		public:
+
+		Wall() = delete;
+		Wall(AABB bds) : bounds(bds) {	}
+
+		AABB covered()
+		{
+			return bounds;
+		}
+
+		constexpr OBSTACLE_TYPE type() { return OBSTACLE_TYPE::WALL; } 
+
+		bool solid(Vec3d&& pos)
+		{
+			return intersect(bounds, pos);
+		}
+	};
 
 	template<typename T> inline constexpr OBSTACLE_TYPE get_type();
 	template<> constexpr OBSTACLE_TYPE get_type<Ball>() { return OBSTACLE_TYPE::BALL; }
+	template<> constexpr OBSTACLE_TYPE get_type<Wall>() { return OBSTACLE_TYPE::WALL; }
 }

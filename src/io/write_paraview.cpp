@@ -9,11 +9,11 @@
 #include <onika/memory/allocator.h>
 
 #include <grid/make_variant_operator.hpp>
-#include <grid/lbm_domain.hpp>
+#include <hippoLBM/grid/lbm_domain.hpp>
 #include <grid/enum.hpp>
 #include <grid/lbm_fields.hpp>
 #include <grid/traversal_lbm.hpp>
-#include <grid/lbm_parameters.hpp>
+#include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/io/write_paraview.hpp>
 
 #include <onika/string_utils.h>
@@ -27,7 +27,7 @@ namespace hippoLBM
     class WriteParaviewLBM : public OperatorNode
   {
     public:
-      ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT);
+      ADD_SLOT( LBMDomain<Q>, lbm_domain, INPUT);
       ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT);
       ADD_SLOT( traversal_lbm, Traversals, INPUT);
       ADD_SLOT( LBMParameters, Params, INPUT);
@@ -54,7 +54,7 @@ namespace hippoLBM
         fullname += "/%06d";
         fullname = onika::format_string(fullname, rank);
 
-        auto& domain = *LBMDomain;
+        auto& domain = *lbm_domain;
         auto& data = *LBMFieds;
         auto& traversals = *Traversals;
 

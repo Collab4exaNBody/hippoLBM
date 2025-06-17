@@ -10,7 +10,7 @@
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
 #include <grid/make_variant_operator.hpp>
-#include <grid/lbm_domain.hpp>
+#include <hippoLBM/grid/lbm_domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
 #include <grid/lbm_fields.hpp>
@@ -26,13 +26,13 @@ namespace hippoLBM
     class InitObstLBM : public OperatorNode
   {
     public:
-      ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT, REQUIRED);
+      ADD_SLOT( LBMDomain<Q>, lbm_domain, INPUT, REQUIRED);
       ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT);
 
       inline void execute () override final
       {
         auto& data = *LBMFieds;
-        auto& domain = *LBMDomain;
+        auto& domain = *lbm_domain;
         init_obst func = {onika::cuda::vector_data(data.obst)};
         constexpr Area A = Area::Local;
         constexpr Traversal Tr = Traversal::All;

@@ -21,7 +21,7 @@ namespace hippoLBM
 		};
 
 		vector_t<ObstacleTypeAndIndex> m_type_index; /**< Vector storing the types of obstacles. */
-		onika::FlatTuple< vector_t<Ball> > m_data;
+		onika::FlatTuple< vector_t<Ball>, vector_t<Wall> > m_data;
 
 		inline size_t size() const { return m_type_index.size(); }
 		template<size_t obstacle_type>
@@ -68,9 +68,9 @@ namespace hippoLBM
 				assert( idx>=0 && idx<m_type_index.size() );
 				OBSTACLE_TYPE t = m_type_index[idx].m_type;
 				assert( t != OBSTACLE_TYPE::UNDEFINED );
-				if (t == OBSTACLE_TYPE::BALL)     return func( m_data.get_nth<OBSTACLE_TYPE::BALL    >()[ m_type_index[idx].m_index ] );
+				if (t == OBSTACLE_TYPE::BALL)     return func( m_data.get_nth<OBSTACLE_TYPE::BALL   >()[ m_type_index[idx].m_index ] );
+			  else if (t == OBSTACLE_TYPE::WALL)  return func( m_data.get_nth<OBSTACLE_TYPE::WALL >()[ m_type_index[idx].m_index ] );
 				/*
-					 else if (t == OBSTACLE_TYPE::WALL)  return func( m_data.get_nth<OBSTACLE_TYPE::WALL >()[ m_type_index[idx].m_index ] );
 					 else if (t == OBSTACLE_TYPE::STL_MESH) return func( m_data.get_nth<OBSTACLE_TYPE::STL_MESH>()[ m_type_index[idx].m_index ] );
 				 */
 				::onika::fatal_error() << "Internal error: unsupported obstacle type encountered"<<std::endl;
@@ -112,8 +112,8 @@ namespace hippoLBM
 		{
 			m_type_index.clear();
 			m_data.get_nth<OBSTACLE_TYPE::BALL>().clear();
+			m_data.get_nth<OBSTACLE_TYPE::WALL>().clear();
 			/*
-				 m_data.get_nth<OBSTACLE_TYPE::WALL>().clear();
 				 m_data.get_nth<OBSTACLE_TYPE::STL_MESH>().clear();
 			 */
 		}
@@ -135,8 +135,8 @@ namespace hippoLBM
 	{
 		size_t m_nb_obstacles = 0;
 		Obstacles::ObstacleTypeAndIndex * const __restrict__ m_type_index = nullptr;
-		onika::FlatTuple< Ball * __restrict__ /*, Stl_mesh* __restrict__ */ > m_data = { nullptr /*, nullptr, nullptr,*/ };
-		onika::FlatTuple< size_t /*, size_t , size_t ,*/ > m_data_size = { 0 /*, 0, 0,*/ };
+		onika::FlatTuple< Ball * __restrict__ , Wall * __restrict__ /*, Stl_mesh* __restrict__ */ > m_data = { nullptr , nullptr /*, nullptr,*/ };
+		onika::FlatTuple< size_t , size_t /*, size_t ,*/ > m_data_size = { 0 , 0/*, 0,*/ };
 
 		ObstaclesGPUAccessor() = default;
 		ObstaclesGPUAccessor(const ObstaclesGPUAccessor &) = default;
@@ -144,8 +144,8 @@ namespace hippoLBM
 		inline ObstaclesGPUAccessor(Obstacles& drvs)
 			: m_nb_obstacles( drvs.m_type_index.size() )
 				, m_type_index( drvs.m_type_index.data() )
-				 , m_data( { drvs.m_data.get_nth<0>().data() /*, drvs.m_data.get_nth<1>().data() , drvs.m_data.get_nth<2>().data() , */ } )
-				 , m_data_size( { drvs.m_data.get_nth<0>().size() /*, drvs.m_data.get_nth<1>().size() , drvs.m_data.get_nth<2>().size() */ } )
+				 , m_data( { drvs.m_data.get_nth<0>().data() , drvs.m_data.get_nth<1>().data() /*, drvs.m_data.get_nth<2>().data() , */ } )
+				 , m_data_size( { drvs.m_data.get_nth<0>().size() , drvs.m_data.get_nth<1>().size() /*, drvs.m_data.get_nth<2>().size() */ } )
 				 {}
 
 		template<class T>

@@ -5,7 +5,7 @@
 namespace hippoLBM
 {
   template<int Q, int Components, typename ParExecCtxFunc>
-    inline void update_ghost(lbm_domain<Q>& domain, FieldView<Components>& data, ParExecCtxFunc& par_exec_ctx_func)
+    inline void update_ghost(LBMDomain<Q>& domain, FieldView<Components>& data, ParExecCtxFunc& par_exec_ctx_func)
     {
       grid<3>& Grid = domain.m_grid;
       constexpr Area L = Area::Local;

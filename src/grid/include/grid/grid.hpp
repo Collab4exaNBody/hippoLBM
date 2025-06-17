@@ -19,7 +19,6 @@ namespace hippoLBM
       int ghost_layer = 2; /*** default is 2 for dem + lbm */
       double dx; /*** distance between two points   */
 
-
       grid() {};
 
       grid(box<DIM>& b, point<DIM>& o, const int g, double d) : bx(b), offset(o), ghost_layer(g), dx(d)

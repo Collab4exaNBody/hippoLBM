@@ -10,7 +10,7 @@
 #include <grid/make_variant_operator.hpp>
 #include <onika/math/basic_types.h>
 #include <grid/enum.hpp>
-#include <grid/lbm_domain.hpp>
+#include <hippoLBM/grid/lbm_domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/lbm_fields.hpp>
 #include <grid/parallel_for_core.cu>
@@ -28,7 +28,7 @@ namespace hippoLBM
 		class Cavity : public OperatorNode
 	{
 		typedef std::array<double,3> readVec3;
-		ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT, REQUIRED);
+		ADD_SLOT( LBMDomain<Q>, lbm_domain, INPUT, REQUIRED);
 		ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
 		ADD_SLOT( readVec3, U, INPUT, REQUIRED, DocString{"Prescribed velocity at the boundary (z = lz), enforcing the Cavity condition."});
 		ADD_SLOT( bounce_back_manager<Q>, bbmanager, INPUT_OUTPUT, REQUIRED);
@@ -46,7 +46,7 @@ namespace hippoLBM
 		{
 			auto& data = *LBMFieds;
 			auto& bb = *bbmanager;
-			auto& domain = *LBMDomain;
+			auto& domain = *lbm_domain;
 			auto [lx, ly, lz] = domain.domain_size;
 			auto [ux,uy,uz] = *U;
 

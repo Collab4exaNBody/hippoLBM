@@ -9,7 +9,7 @@
 
 #include <grid/make_variant_operator.hpp>
 #include <onika/math/basic_types.h>
-#include <grid/lbm_domain.hpp>
+#include <hippoLBM/grid/lbm_domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
 #include <grid/lbm_fields.hpp>
@@ -27,7 +27,7 @@ namespace hippoLBM
   {
     public:
       ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
-      ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT, REQUIRED);
+      ADD_SLOT( LBMDomain<Q>, lbm_domain, INPUT, REQUIRED);
 
       inline std::string documentation() const override final
       {
@@ -38,7 +38,7 @@ namespace hippoLBM
       inline void execute () override final
       {
         auto& data = *LBMFieds;
-        auto& domain = *LBMDomain;
+        auto& domain = *lbm_domain;
         grid<3>& Grid = domain.m_grid;
 
         // get fields

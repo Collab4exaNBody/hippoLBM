@@ -8,7 +8,7 @@
 #include <onika/parallel/parallel_for.h>
 
 #include <onika/math/basic_types.h>
-#include <grid/lbm_domain.hpp>
+#include <hippoLBM/grid/lbm_domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
 #include <grid/lbm_fields.hpp>
@@ -23,7 +23,7 @@ namespace hippoLBM
     class DefineLBMFields : public OperatorNode
   {
     public:
-      ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT, REQUIRED);
+      ADD_SLOT( LBMDomain<Q>, lbm_domain, INPUT, REQUIRED);
       ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT);
 
       inline void execute () override final
@@ -31,7 +31,7 @@ namespace hippoLBM
         constexpr Area L = Area::Local;
         constexpr Traversal Tr = Traversal::All;
         lbm_fields<Q>& grid_data = *LBMFieds;
-        lbm_domain<Q>& domain = *LBMDomain;
+        LBMDomain<Q>& domain = *lbm_domain;
         grid<3>& Grid = domain.m_grid;
         box<3>& Box = domain.m_box;
 

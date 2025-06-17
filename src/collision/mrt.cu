@@ -10,13 +10,13 @@
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
 #include <onika/math/basic_types_operators.h>
-#include <grid/lbm_domain.hpp>
+#include <hippoLBM/grid/lbm_domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
 #include <grid/lbm_fields.hpp>
 #include <grid/parallel_for_core.cu>
 #include <grid/traversal_lbm.hpp>
-#include <grid/lbm_parameters.hpp>
+#include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/collision/mrt.hpp>
 #include <grid/make_variant_operator.hpp>
 

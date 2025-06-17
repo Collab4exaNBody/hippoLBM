@@ -28,7 +28,6 @@ namespace hippoLBM
 
   class RegisterSolidBall : public OperatorNode
   {
-
     ADD_SLOT(Obstacles, obstacles, INPUT_OUTPUT, REQUIRED, DocString{"List of Obstacles"});
     ADD_SLOT(int, id, INPUT, REQUIRED, DocString{"Driver index"});
     ADD_SLOT(Vec3d, center, INPUT, REQUIRED, DocString{"Center of the ball."});
