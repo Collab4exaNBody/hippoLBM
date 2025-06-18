@@ -11,13 +11,13 @@
 #include <onika/math/basic_types_stream.h>
 #include <onika/math/basic_types_operators.h>
 #include <hippoLBM/grid/domain.hpp>
-#include <grid/comm.hpp>
-#include <grid/enum.hpp>
+#include <hippoLBM/grid/comm.hpp>
+#include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
-#include <grid/parallel_for_core.cu>
-#include <grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/parallel_for_core.cu>
+#include <hippoLBM/grid/traversal_lbm.hpp>
 #include <hippoLBM/collision/streaming.hpp>
-#include <grid/update_ghost.hpp>
+#include <hippoLBM/grid/update_ghost.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
 
 namespace hippoLBM
@@ -73,7 +73,7 @@ namespace hippoLBM
              domain.m_ghost_manager.do_pack_send(pf, Grid.bx);
 
              auto [ptr, size] = traversals.get_data<Inside>();
-             box<3> inside = Grid.build_box<Area::Local, Inside>();
+             Box3D inside = Grid.build_box<Area::Local, Inside>();
 
              parallel_for_id(ptr, size, step1, parallel_execution_context(), pf);
              parallel_for_box(inside, step2, pf, pex, pey, pez);
@@ -94,7 +94,7 @@ namespace hippoLBM
           update_ghost(*domain, pf, par_exec_ctx);
           parallel_for_simple(size, step2, parallel_execution_context("streaming_step2"));
 /*
-          box<3> extend = Grid.build_box<Area::Local, Traversal::Extend>();
+          Box3D extend = Grid.build_box<Area::Local, Traversal::Extend>();
           onika::parallel::ParallelExecutionSpace<3> parallel_range = set(extend);        
           parallel_for(parallel_range, step2, parallel_execution_context("streaming_step2"));
 */

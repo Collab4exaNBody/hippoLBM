@@ -9,13 +9,13 @@
 #include <hippoLBM/grid/make_variant_operator.hpp>
 #include <onika/math/basic_types.h>
 #include <hippoLBM/grid/domain.hpp>
-#include <grid/comm.hpp>
-#include <grid/enum.hpp>
+#include <hippoLBM/grid/comm.hpp>
+#include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
-#include <grid/parallel_for_core.cu>
-#include <grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/parallel_for_core.cu>
+#include <hippoLBM/grid/traversal_lbm.hpp>
 #include <hippoLBM/grid/set_distribution.hpp>
-#include <grid/update_ghost.hpp>
+#include <hippoLBM/grid/update_ghost.hpp>
 
 namespace hippoLBM
 {
@@ -59,10 +59,10 @@ namespace hippoLBM
           Vec3d min = bound.bmin;
           Vec3d max = bound.bmax;
           double Dx = Grid.dx;
-          LBMPoint _min = {int(min.x/Dx), int(min.y/Dx), int(min.z/Dx)};
-          LBMPoint _max = {int(max.x/Dx), int(max.y/Dx), int(max.z/Dx)};
+          Point3D _min = {int(min.x/Dx), int(min.y/Dx), int(min.z/Dx)};
+          Point3D _max = {int(max.x/Dx), int(max.y/Dx), int(max.z/Dx)};
 
-          box<3> global_wall_box = {_min, _max};
+          Box3D global_wall_box = {_min, _max};
           //global_wall_box.print();
 
           auto [is_inside_subdomain, wall_box] = Grid.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_wall_box);

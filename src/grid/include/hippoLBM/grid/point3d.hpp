@@ -13,12 +13,12 @@ namespace hippoLBM
       return res;
     }
 
-  struct LBMPoint
+  struct Point3D
   {
     int3d position;
 
-    ONIKA_HOST_DEVICE_FUNC LBMPoint() {};
-    ONIKA_HOST_DEVICE_FUNC LBMPoint(int x, int y, int z) { position[0] = x; position[1] = y; position[2] = z; }
+    ONIKA_HOST_DEVICE_FUNC Point3D() {};
+    ONIKA_HOST_DEVICE_FUNC Point3D(int x, int y, int z) { position[0] = x; position[1] = y; position[2] = z; }
     ONIKA_HOST_DEVICE_FUNC inline int get_val(int dim) {return position[dim];}
     ONIKA_HOST_DEVICE_FUNC inline void set_val(int dim, int val) { position[dim] = val;}
     ONIKA_HOST_DEVICE_FUNC inline int& operator[](int dim) {return position[dim];}
@@ -33,34 +33,34 @@ namespace hippoLBM
       onika::lout << std::endl;
     }
 
-    ONIKA_HOST_DEVICE_FUNC LBMPoint operator+(LBMPoint& p)
+    ONIKA_HOST_DEVICE_FUNC Point3D operator+(Point3D& p)
     {
-      LBMPoint res = {position[0] + p[0], position[1] + p[1], position[2] + p[2]};
+      Point3D res = {position[0] + p[0], position[1] + p[1], position[2] + p[2]};
       return res;
     } 
 
-    ONIKA_HOST_DEVICE_FUNC LBMPoint operator+(const LBMPoint& p)
+    ONIKA_HOST_DEVICE_FUNC Point3D operator+(const Point3D& p)
     {
-      LBMPoint res = {position[0] + p[0], position[1] + p[1], position[2] + p[2]};
+      Point3D res = {position[0] + p[0], position[1] + p[1], position[2] + p[2]};
       return res;
     } 
 
-    ONIKA_HOST_DEVICE_FUNC LBMPoint operator-(LBMPoint& p)
+    ONIKA_HOST_DEVICE_FUNC Point3D operator-(Point3D& p)
     {
-      LBMPoint res = {position[0] - p[0], position[1] - p[1], position[2] - p[2]};
+      Point3D res = {position[0] - p[0], position[1] - p[1], position[2] - p[2]};
       return res;
     } 
 
-    ONIKA_HOST_DEVICE_FUNC LBMPoint operator-(const LBMPoint& p)
+    ONIKA_HOST_DEVICE_FUNC Point3D operator-(const Point3D& p)
     {
-      LBMPoint res = {position[0] - p[0], position[1] - p[1], position[2] - p[2]};
+      Point3D res = {position[0] - p[0], position[1] - p[1], position[2] - p[2]};
       return res;
     } 
   };
 
-  inline ONIKA_HOST_DEVICE_FUNC LBMPoint min(LBMPoint& a, LBMPoint& b)
+  inline ONIKA_HOST_DEVICE_FUNC Point3D min(Point3D& a, Point3D& b)
   {
-    LBMPoint res;
+    Point3D res;
     for(int dim = 0 ; dim < 3 ; dim++)
     {
       res[dim] = std::min(a[dim], b[dim]);
@@ -68,9 +68,9 @@ namespace hippoLBM
     return res;
   }
 
-  inline ONIKA_HOST_DEVICE_FUNC LBMPoint max(LBMPoint& a, LBMPoint& b)
+  inline ONIKA_HOST_DEVICE_FUNC Point3D max(Point3D& a, Point3D& b)
   {
-    LBMPoint res;
+    Point3D res;
     for(int dim = 0 ; dim < 3 ; dim++)
     {
       res[dim] = std::max(a[dim], b[dim]);

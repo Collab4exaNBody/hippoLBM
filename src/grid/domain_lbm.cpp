@@ -11,7 +11,7 @@
 #include <onika/math/basic_types_yaml.h>
 #include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/make_domain.hpp>
-#include <grid/comm.hpp>
+#include <hippoLBM/grid/comm.hpp>
 
 
 namespace hippoLBM
@@ -33,7 +33,6 @@ namespace hippoLBM
 
       inline void execute () override final
       {
-        static_assert(DIM == 3);
         *domain = make_domain<Q>(*bounds, *resolution, *periodic, *mpi);
       }
   };

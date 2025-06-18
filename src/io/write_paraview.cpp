@@ -10,9 +10,9 @@
 
 #include <hippoLBM/grid/make_variant_operator.hpp>
 #include <hippoLBM/grid/domain.hpp>
-#include <grid/enum.hpp>
+#include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
-#include <grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/traversal_lbm.hpp>
 #include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/io/write_paraview.hpp>
 

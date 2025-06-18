@@ -1,7 +1,7 @@
 #include <mpi.h>
 #include <onika/math/basic_types_yaml.h>
 #include <hippoLBM/grid/domain.hpp>
-#include <grid/comm.hpp>
+#include <hippoLBM/grid/comm.hpp>
 
 namespace hippoLBM
 {
@@ -9,6 +9,7 @@ namespace hippoLBM
 	template<int Q>
 		LBMDomain<Q> make_domain(AABB& bounds, double resolution, std::vector<bool>& periodic, MPI_Comm& comm)
 		{
+      constexpr int DIM = 3;
 			double Dx;
 			Dx = (bounds.bmax.x - bounds.bmin.x) / resolution;
 			Dx = std::min( Dx, (bounds.bmax.y - bounds.bmin.y) / resolution );
@@ -61,9 +62,9 @@ namespace hippoLBM
 
 
 			/** create the box that contains the local grid indexes **/
-			box<3> local_box = {{0, 0, 0}, {subdomain[0] + 2 * ghost_layer - 1, subdomain[1] + 2 * ghost_layer - 1, subdomain[2] + 2 * ghost_layer - 1}};
+			Box3D local_box = {{0, 0, 0}, {subdomain[0] + 2 * ghost_layer - 1, subdomain[1] + 2 * ghost_layer - 1, subdomain[2] + 2 * ghost_layer - 1}};
 			/** create the extended real box to skip point that does not exist ( next points ) **/
-			box<3> ext = local_box;
+			Box3D ext = local_box;
 			for (int dim = 0; dim < DIM; dim++) {
 				if (periods[dim] == 0) // not periodic
 				{
@@ -86,7 +87,7 @@ namespace hippoLBM
 			onika::math::IJK MPI_coord = {coord[0], coord[1], coord[2]};
 			onika::math::IJK MPI_grid_size = {ndims[0], ndims[1], ndims[2]};
 
-			ghost_manager<Q, DIM> manager;
+			LBMGhostManager<Q> manager;
 			// fill ghost comm
 			int default_tag = 100;
 			for (int i = 0; i < 27; i++) {
@@ -99,22 +100,22 @@ namespace hippoLBM
 				if (relative_position[0] == 0 && relative_position[1] == 0 && relative_position[2] == 0)
 					continue;
 
-				auto [not_exist, coord_neig] = build_comm<DIM>(relative_position, coord, domain_size, periods, ndims);
+				auto [not_exist, coord_neig] = build_comm(relative_position, coord, domain_size, periods, ndims);
 				if (not_exist == false)
 					continue;
 				int neig;
 				MPI_Cart_rank(MPI_COMM_CART, coord_neig.data(), &neig);
 
-				auto [send_box, recv_box] = build_boxes<DIM>(relative_position, g);
+				auto [send_box, recv_box] = build_boxes(relative_position, g);
 
 				// need to fix send_box in periodic case if the receiver is the sender.
 				if(neig == mpi_rank) // 
 				{
-					send_box = fix_box_with_periodicity<DIM>(relative_position, g);
+					send_box = fix_box_with_periodicity(relative_position, g);
 					int send_tag = (relative_position[0] + 1) + 3 * (relative_position[1] + 1) * 3 + (relative_position[2] + 1) * 9;
 					int recv_tag = (relative_position[0] + 1) + 3 * (relative_position[1] + 1) * 3 + (relative_position[2] + 1) * 9;
-					hippoLBM::comm<Q, DIM> send(neig, default_tag + neig * 27 + send_tag, send_box);
-					hippoLBM::comm<Q, DIM> recv(neig, default_tag + mpi_rank * 27 + recv_tag, recv_box);
+					hippoLBM::LBMComm<Q> send(neig, default_tag + neig * 27 + send_tag, send_box);
+					hippoLBM::LBMComm<Q> recv(neig, default_tag + mpi_rank * 27 + recv_tag, recv_box);
 					assert(recv.get_size() == send.get_size());
 					if (recv.get_size() != 0)
 						manager.add_comm(send, recv);
@@ -124,8 +125,8 @@ namespace hippoLBM
 
 					int send_tag = (relative_position[0] + 1) + 3 * (relative_position[1] + 1) * 3 + (relative_position[2] + 1) * 9;
 					int recv_tag = (2 - (relative_position[0] + 1)) + 3 * (2 - (relative_position[1] + 1)) * 3 + (2 - (relative_position[2] + 1)) * 9;
-					hippoLBM::comm<Q, DIM> send(neig, default_tag + neig * 27 + send_tag, send_box);
-					hippoLBM::comm<Q, DIM> recv(neig, default_tag + mpi_rank * 27 + recv_tag, recv_box);
+					hippoLBM::LBMComm<Q> send(neig, default_tag + neig * 27 + send_tag, send_box);
+					hippoLBM::LBMComm<Q> recv(neig, default_tag + mpi_rank * 27 + recv_tag, recv_box);
 					assert(recv.get_size() == send.get_size());
 					if (recv.get_size() != 0)
 						manager.add_comm(send, recv);

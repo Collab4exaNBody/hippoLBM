@@ -9,8 +9,8 @@
 
 #include <onika/math/basic_types.h>
 #include <hippoLBM/grid/domain.hpp>
-#include <grid/comm.hpp>
-#include <grid/enum.hpp>
+#include <hippoLBM/grid/comm.hpp>
+#include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
 
 
@@ -32,7 +32,7 @@ namespace hippoLBM
         constexpr Traversal Tr = Traversal::All;
         LBMFields<Q>& grid_data = *fields;
         LBMGrid& Grid = domain->m_grid;
-        box<3>& Box = domain->m_box;
+        Box3D& Box = domain->m_box;
 
         // compute sizes
         constexpr int Un = 5;

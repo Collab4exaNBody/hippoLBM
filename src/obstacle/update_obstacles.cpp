@@ -20,7 +20,7 @@ under the License.
 #include <onika/scg/operator_slot.h>
 #include <onika/scg/operator_factory.h>
 
-#include <grid/enum.hpp>
+#include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
 #include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/fields.hpp>
@@ -46,9 +46,9 @@ namespace hippoLBM
 					AABB bounds = obj.covered();
 					Vec3d min = bounds.bmin;
 					Vec3d max = bounds.bmax;
-					LBMPoint _min = {int(min.x/_dx), int(min.y/_dx), int(min.z/_dx)};
-					LBMPoint _max = {int(max.x/_dx), int(max.y/_dx), int(max.z/_dx)};
-					box<3> global_box = {_min, _max};
+					Point3D _min = {int(min.x/_dx), int(min.y/_dx), int(min.z/_dx)};
+					Point3D _max = {int(max.x/_dx), int(max.y/_dx), int(max.z/_dx)};
+					Box3D global_box = {_min, _max};
 
 					auto [is_inside_subdomain, local_box] = _grid.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_box);
 					for(int z = local_box.start(2) ; z <= local_box.end(2) ; z++)

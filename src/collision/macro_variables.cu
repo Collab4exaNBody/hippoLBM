@@ -11,16 +11,16 @@
 #include <onika/math/basic_types_stream.h>
 #include <onika/math/basic_types_operators.h>
 #include <hippoLBM/grid/domain.hpp>
-#include <grid/comm.hpp>
-#include <grid/enum.hpp>
+#include <hippoLBM/grid/comm.hpp>
+#include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
-#include <grid/parallel_for_core.cu>
-#include <grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/parallel_for_core.cu>
+#include <hippoLBM/grid/traversal_lbm.hpp>
 #include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/collision/macro_variables.hpp>
 
 #include <hippoLBM/grid/domain.hpp>
-#include <grid/update_ghost.hpp>
+#include <hippoLBM/grid/update_ghost.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
 
 namespace hippoLBM

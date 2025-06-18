@@ -2,7 +2,7 @@
 
 #include <hippoLBM/io/writer.hpp>
 #include <onika/string_utils.h>
-#include <grid/parallel_for_core.cu>
+#include <hippoLBM/grid/parallel_for_core.cu>
 
 
 namespace hippoLBM
@@ -28,12 +28,12 @@ namespace hippoLBM
       obst.resize(size);
     }
  
-    void sim_data_to_stream(box<3>& Box, double dx)
+    void sim_data_to_stream(Box3D& Box, double dx)
     {  
       // todo
     }
 
-    void sim_header_to_stream(box<3>& Box, double dx)
+    void sim_header_to_stream(Box3D& Box, double dx)
     {
       for(int x = Box.start(0) ; x <= Box.end(0) ; x++) i << (double)(x*dx) << " ";
       for(int y = Box.start(1) ; y <= Box.end(1) ; y++) j << (double)(y*dx) << " ";
@@ -50,9 +50,9 @@ namespace hippoLBM
       LBMGrid& Grid = domain.m_grid;
       auto [lx, ly, lz] = domain.domain_size;
       // I could be smarter here
-      int box_size = sizeof(box<3>);
+      int box_size = sizeof(Box3D);
       auto global = Grid.build_box<Area::Global, PARAVIEW_TR>();// Traversal::Extend>(); //Traversal::Real>();
-      std::vector<box<3>> recv;
+      std::vector<Box3D> recv;
       recv.resize(number_of_files);
       MPI_Gather(&global, box_size, MPI_CHAR, recv.data(), box_size, MPI_CHAR, 0, MPI_COMM_WORLD);
       MPI_Barrier(MPI_COMM_WORLD);

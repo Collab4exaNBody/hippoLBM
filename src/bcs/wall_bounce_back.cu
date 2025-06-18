@@ -10,10 +10,10 @@
 #include <hippoLBM/grid/make_variant_operator.hpp>
 #include <onika/math/basic_types.h>
 #include <hippoLBM/grid/domain.hpp>
-#include <grid/comm.hpp>
-#include <grid/enum.hpp>
+#include <hippoLBM/grid/comm.hpp>
+#include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
-#include <grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/traversal_lbm.hpp>
 #include <hippoLBM/bcs/bounce_back.hpp>
 
 namespace hippoLBM
@@ -49,7 +49,7 @@ namespace hippoLBM
         wall_bounce_back<Q> func = {Grid, pobst, pf, pex, pey, pez};
 
         // run kernel
-        box<3> extend = Grid.build_box<Area::Local, Traversal::Extend>();
+        Box3D extend = Grid.build_box<Area::Local, Traversal::Extend>();
         onika::parallel::ParallelExecutionSpace<3> parallel_range = set(extend);
         parallel_for(parallel_range, func, parallel_execution_context("wall_bounce_back"));
       }

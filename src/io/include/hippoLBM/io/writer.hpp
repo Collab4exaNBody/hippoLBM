@@ -71,7 +71,7 @@ namespace hippoLBM
 	struct write_vec3d
 	{
     Func func;
-		box<3> b;
+		Box3D b;
 		inline void operator()(const int x, const int y, const int z, std::stringstream& output, onika::math::Vec3d* const ptr) const
 		{
 			const int idx = b(x,y,z);

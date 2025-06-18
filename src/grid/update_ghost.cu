@@ -8,11 +8,11 @@
 #include <onika/parallel/parallel_for.h>
 
 #include <hippoLBM/grid/domain.hpp>
-#include <grid/comm.hpp>
-#include <grid/enum.hpp>
+#include <hippoLBM/grid/comm.hpp>
+#include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/domain.hpp>
-#include <grid/update_ghost.hpp>
+#include <hippoLBM/grid/update_ghost.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
 
 namespace hippoLBM

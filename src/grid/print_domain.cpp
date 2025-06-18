@@ -12,9 +12,9 @@
 
 #include <hippoLBM/grid/make_variant_operator.hpp>
 #include <hippoLBM/grid/domain.hpp>
-#include <grid/comm.hpp>
-#include <grid/enum.hpp>
-#include <grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/comm.hpp>
+#include <hippoLBM/grid/enum.hpp>
+#include <hippoLBM/grid/traversal_lbm.hpp>
 
 
 namespace hippoLBM

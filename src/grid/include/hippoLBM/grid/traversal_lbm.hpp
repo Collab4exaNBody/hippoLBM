@@ -85,7 +85,7 @@ namespace hippoLBM
 			for (int z = ba.start(2); z <= ba.end(2); z++) {
 				for (int y = ba.start(1); y <= ba.end(1); y++) {
 					for (int x = ba.start(0); x <= ba.end(0); x++) {
-						LBMPoint p = {x, y, z};
+						Point3D p = {x, y, z};
 						int idx = G(x, y, z);
 						all[shift_a++] = idx;
 						level[idx] = 3; // ALL

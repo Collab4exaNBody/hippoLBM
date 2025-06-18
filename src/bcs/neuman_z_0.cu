@@ -10,11 +10,11 @@
 #include <hippoLBM/grid/make_variant_operator.hpp>
 #include <onika/math/basic_types.h>
 #include <hippoLBM/grid/domain.hpp>
-#include <grid/comm.hpp>
-#include <grid/enum.hpp>
+#include <hippoLBM/grid/comm.hpp>
+#include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
-#include <grid/parallel_for_core.cu>
-#include <grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/parallel_for_core.cu>
+#include <hippoLBM/grid/traversal_lbm.hpp>
 #include <hippoLBM/bcs/neumann.hpp>
 
 namespace hippoLBM

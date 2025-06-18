@@ -11,7 +11,7 @@
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
 #include <hippoLBM/grid/domain.hpp>
-#include <grid/enum.hpp>
+#include <hippoLBM/grid/enum.hpp>
 #include <onika/string_utils.h>
 
 #include<chrono>
