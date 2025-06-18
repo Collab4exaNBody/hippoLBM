@@ -43,7 +43,6 @@ namespace hippoLBM
         const size_t np = Box.number_of_points();
 
         grid_data.grid_size = np;
-
         if(grid_data.obst.size() != np)
         {
           grid_data.f.resize(np*Q);

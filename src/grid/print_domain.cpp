@@ -58,6 +58,7 @@ namespace hippoLBM
 	ONIKA_AUTORUN_INIT(print_domain)
 	{
 		OperatorNodeFactory::instance()->register_factory( "print_domain", make_variant_operator<PrintDomainLBM>);
+		OperatorNodeFactory::instance()->register_factory( "hippoLBM_print_domain", make_variant_operator<PrintDomainLBM>);
 	}
 }
 
