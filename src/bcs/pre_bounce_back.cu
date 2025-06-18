@@ -7,9 +7,9 @@
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
 
-#include <grid/make_variant_operator.hpp>
+#include <hippoLBM/grid/make_variant_operator.hpp>
 #include <onika/math/basic_types.h>
-#include <hippoLBM/grid/lbm_domain.hpp>
+#include <hippoLBM/grid/domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
 #include <grid/lbm_fields.hpp>
@@ -30,7 +30,7 @@ namespace hippoLBM
   {
     ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
     ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
-    ADD_SLOT( LBMDomain<Q>, lbm_domain, INPUT, REQUIRED);
+    ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
     ADD_SLOT( bounce_back_manager<Q>, bbmanager, INPUT_OUTPUT);
     ADD_SLOT( BoolVector, periodic   , INPUT , REQUIRED );
     public:
@@ -65,8 +65,7 @@ namespace hippoLBM
     {
       auto& data = *LBMFieds;
       auto& traversals = *Traversals;
-      auto& domain = *lbm_domain;
-      grid<3>& Grid = domain.m_grid;
+      grid<3>& Grid = domain->m_grid;
 
       // fill grid size;
       constexpr Area L = Area::Local;
@@ -77,7 +76,7 @@ namespace hippoLBM
 
       // storage
       auto& bb = *bbmanager;
-      bb.resize_data(*periodic, local_grid_size, domain.MPI_coord, domain.MPI_grid_size);
+      bb.resize_data(*periodic, local_grid_size, domain->MPI_coord, domain->MPI_grid_size);
 
       // get fields
       FieldView<Q> pf = data.distributions();

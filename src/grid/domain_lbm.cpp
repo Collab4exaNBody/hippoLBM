@@ -7,9 +7,9 @@
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
 
-#include <grid/make_variant_operator.hpp>
+#include <hippoLBM/grid/make_variant_operator.hpp>
 #include <onika/math/basic_types_yaml.h>
-#include <hippoLBM/grid/lbm_domain.hpp>
+#include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/make_domain.hpp>
 #include <grid/comm.hpp>
 
@@ -26,7 +26,7 @@ namespace hippoLBM
   {
     public:
       ADD_SLOT( MPI_Comm, mpi, INPUT , MPI_COMM_WORLD);
-      ADD_SLOT( LBMDomain<Q>, lbm_domain, OUTPUT);
+      ADD_SLOT( LBMDomain<Q>, domain, OUTPUT);
       ADD_SLOT( BoolVector, periodic   , INPUT_OUTPUT , REQUIRED );
       ADD_SLOT( double, resolution, INPUT_OUTPUT, REQUIRED, DocString{"Resolution"});
       ADD_SLOT( AABB, bounds, INPUT_OUTPUT, REQUIRED, DocString{"Domain's bounds"});
@@ -34,7 +34,7 @@ namespace hippoLBM
       inline void execute () override final
       {
         static_assert(DIM == 3);
-        *lbm_domain = make_domain<Q>(*bounds, *resolution, *periodic, *mpi);
+        *domain = make_domain<Q>(*bounds, *resolution, *periodic, *mpi);
       }
   };
 

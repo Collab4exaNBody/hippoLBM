@@ -1,6 +1,6 @@
 #include <mpi.h>
 #include <onika/math/basic_types_yaml.h>
-#include <hippoLBM/grid/lbm_domain.hpp>
+#include <hippoLBM/grid/domain.hpp>
 #include <grid/comm.hpp>
 
 namespace hippoLBM

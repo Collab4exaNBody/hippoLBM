@@ -10,8 +10,8 @@
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
 
-#include <grid/make_variant_operator.hpp>
-#include <hippoLBM/grid/lbm_domain.hpp>
+#include <hippoLBM/grid/make_variant_operator.hpp>
+#include <hippoLBM/grid/domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
 #include <grid/traversal_lbm.hpp>
@@ -26,16 +26,15 @@ namespace hippoLBM
 		class PrintDomainLBM : public OperatorNode
 	{
 		public:
-			ADD_SLOT( LBMDomain<Q>, lbm_domain, INPUT);
+			ADD_SLOT( LBMDomain<Q>, domain, INPUT);
 			inline void execute () override final
 			{
         constexpr Area G = Area::Global;
         constexpr Traversal R = Traversal::Real;
 
-        LBMDomain<Q>& domain = *lbm_domain; 
-        grid<3>& g = domain.m_grid;
-        const onika::math::AABB& bounds = domain.bounds;
-        const int3d& domain_size = domain.domain_size;
+        grid<3>& g = domain->m_grid;
+        const onika::math::AABB& bounds = domain->bounds;
+        const int3d& domain_size = domain->domain_size;
 
 
         lout      << "=================================" << std::endl;

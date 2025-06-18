@@ -7,9 +7,9 @@
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
 
-#include <grid/make_variant_operator.hpp>
+#include <hippoLBM/grid/make_variant_operator.hpp>
 #include <onika/math/basic_types.h>
-#include <hippoLBM/grid/lbm_domain.hpp>
+#include <hippoLBM/grid/domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
 #include <grid/lbm_fields.hpp>

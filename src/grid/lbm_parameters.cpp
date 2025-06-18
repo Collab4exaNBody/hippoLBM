@@ -9,9 +9,9 @@
 
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
-#include <grid/make_variant_operator.hpp>
+#include <hippoLBM/grid/make_variant_operator.hpp>
 #include <hippoLBM/grid/lbm_parameters.hpp>
-#include <hippoLBM/grid/lbm_domain.hpp>
+#include <hippoLBM/grid/domain.hpp>
 
 
 namespace hippoLBM
@@ -24,7 +24,7 @@ namespace hippoLBM
     class LBMParametersOp : public OperatorNode
   {
     public:
-      ADD_SLOT( LBMDomain<Q>, lbm_domain, INPUT, REQUIRED);
+      ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
       ADD_SLOT( Vec3d, Fext, INPUT, Vec3d{0,0,0});
       ADD_SLOT( double, celerity, INPUT, 1);
       ADD_SLOT( double, nuth, INPUT, 1e-4);
@@ -35,7 +35,7 @@ namespace hippoLBM
 
       inline void execute () override final
       {
-        double Dx = lbm_domain->dx();
+        double Dx = domain->dx();
         LBMParameters params;
         params.Fext = *Fext;
         params.celerity = *celerity;

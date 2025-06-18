@@ -10,7 +10,7 @@
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
 #include <onika/math/basic_types_operators.h>
-#include <hippoLBM/grid/lbm_domain.hpp>
+#include <hippoLBM/grid/domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
 #include <grid/lbm_fields.hpp>
@@ -19,9 +19,9 @@
 #include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/collision/macro_variables.hpp>
 
-#include <hippoLBM/grid/lbm_domain.hpp>
+#include <hippoLBM/grid/domain.hpp>
 #include <grid/update_ghost.hpp>
-#include <grid/make_variant_operator.hpp>
+#include <hippoLBM/grid/make_variant_operator.hpp>
 
 namespace hippoLBM
 {

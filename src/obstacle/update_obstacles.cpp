@@ -21,8 +21,8 @@ under the License.
 #include <onika/scg/operator_factory.h>
 
 #include <grid/enum.hpp>
-#include <grid/make_variant_operator.hpp>
-#include <hippoLBM/grid/lbm_domain.hpp>
+#include <hippoLBM/grid/make_variant_operator.hpp>
+#include <hippoLBM/grid/domain.hpp>
 #include <grid/lbm_fields.hpp>
 #include <hippoLBM/obstacle/obstacles.hpp>
 
@@ -69,7 +69,7 @@ namespace hippoLBM
 		class UpdateObstacles : public OperatorNode
 	{
 
-		ADD_SLOT( LBMDomain<Q>, lbm_domain, INPUT, REQUIRED);
+		ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
 		ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT);
 		ADD_SLOT( Obstacles, obstacles, INPUT_OUTPUT, REQUIRED, DocString{"List of Obstacles"});
 
@@ -89,9 +89,8 @@ namespace hippoLBM
 		{
 			auto& obs = *obstacles;
 			lbm_fields<Q>& grid_data = *LBMFieds;
-			LBMDomain<Q>& domain = *lbm_domain;
 
-			UpdateObstaclesFunc<Q> func = { domain.m_grid, domain.dx(), grid_data.obstacles() };
+			UpdateObstaclesFunc<Q> func = { domain->m_grid, domain->dx(), grid_data.obstacles() };
 
 			for(size_t i = 0 ; i < obs.size() ; i++)
 			{
