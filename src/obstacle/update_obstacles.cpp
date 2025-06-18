@@ -35,7 +35,7 @@ namespace hippoLBM
 	template<int Q>
 		struct UpdateObstaclesFunc
 		{
-			grid<3> _grid;
+			LBMGrid _grid;
 			double _dx;
 			int * const _obst;
 
@@ -46,8 +46,8 @@ namespace hippoLBM
 					AABB bounds = obj.covered();
 					Vec3d min = bounds.bmin;
 					Vec3d max = bounds.bmax;
-					point<3> _min = {int(min.x/_dx), int(min.y/_dx), int(min.z/_dx)};
-					point<3> _max = {int(max.x/_dx), int(max.y/_dx), int(max.z/_dx)};
+					LBMPoint _min = {int(min.x/_dx), int(min.y/_dx), int(min.z/_dx)};
+					LBMPoint _max = {int(max.x/_dx), int(max.y/_dx), int(max.z/_dx)};
 					box<3> global_box = {_min, _max};
 
 					auto [is_inside_subdomain, local_box] = _grid.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_box);

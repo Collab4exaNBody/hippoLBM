@@ -1,7 +1,7 @@
 #pragma once
 
 #include <grid/box.hpp>
-#include <grid/grid.hpp>
+#include <hippoLBM/grid/grid.hpp>
 
 namespace hippoLBM
 {
@@ -49,7 +49,7 @@ namespace hippoLBM
 	 * @return A tuple containing the send and receive boxes.
 	 */
 	template<int DIM>
-		std::tuple<box<DIM>, box<DIM>> build_boxes(const int3d& shift, grid<3>& g)
+		std::tuple<box<DIM>, box<DIM>> build_boxes(const int3d& shift, LBMGrid& g)
 		{
 			auto real = g.build_box<Local, Real>();
 			const int ghost_layer = g.ghost_layer;
@@ -81,7 +81,7 @@ namespace hippoLBM
 		}
 
 	template<int DIM>
-		box<DIM> fix_box_with_periodicity(const int3d& shift, grid<3>& g)
+		box<DIM> fix_box_with_periodicity(const int3d& shift, LBMGrid& g)
 		{
 			auto real = g.build_box<Local, Real>();
 			const int ghost_layer = g.ghost_layer;

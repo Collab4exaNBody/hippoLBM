@@ -1,6 +1,6 @@
 #pragma once
 
-#include <grid/point.hpp>
+#include <hippoLBM/grid/point.hpp>
 
 namespace hippoLBM
 {
@@ -23,8 +23,8 @@ namespace hippoLBM
     struct box
     {
       static_assert(DIM > 0);
-      point<DIM> inf; /**< The lower-left corner of the box. */
-      point<DIM> sup; /**< The upper-right corner of the box. */
+      LBMPoint inf; /**< The lower-left corner of the box. */
+      LBMPoint sup; /**< The upper-right corner of the box. */
 
       /**
        * @brief Get the length of the box along a specified dimension.
@@ -69,7 +69,7 @@ namespace hippoLBM
         return res;
       }
 
-      ONIKA_HOST_DEVICE_FUNC inline bool contains(point<3>& p)
+      ONIKA_HOST_DEVICE_FUNC inline bool contains(LBMPoint& p)
       {
         for( int dim = 0 ; dim < DIM ; dim++ )
         {
@@ -78,7 +78,7 @@ namespace hippoLBM
         return true;
       }
 
-      ONIKA_HOST_DEVICE_FUNC inline bool contains(point<3>&& p)
+      ONIKA_HOST_DEVICE_FUNC inline bool contains(LBMPoint&& p)
       {
         for( int dim = 0 ; dim < DIM ; dim++ )
         {
@@ -161,19 +161,19 @@ namespace hippoLBM
       /** 
        * @brief accessor to the `inf` member
        */
-      ONIKA_HOST_DEVICE_FUNC inline point<DIM>& lower() { return inf;} 
+      ONIKA_HOST_DEVICE_FUNC inline LBMPoint& lower() { return inf;} 
       /** 
        * @brief accessor to the `inf` member
        */
-      ONIKA_HOST_DEVICE_FUNC inline point<DIM>& lower() const { return inf;} 
+      ONIKA_HOST_DEVICE_FUNC inline const LBMPoint& lower() const { return inf;} 
       /** 
        * @brief accessor to the `sup` member
        */
-      ONIKA_HOST_DEVICE_FUNC inline point<DIM>& upper() { return sup;} 
+      ONIKA_HOST_DEVICE_FUNC inline LBMPoint& upper() { return sup;} 
       /** 
        * @brief accessor to the `sup` member
        */
-      ONIKA_HOST_DEVICE_FUNC inline point<DIM>& upper() const { return sup;} 
+      ONIKA_HOST_DEVICE_FUNC inline const LBMPoint& upper() const { return sup;} 
 
     };
 

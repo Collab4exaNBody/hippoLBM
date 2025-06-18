@@ -65,7 +65,7 @@ namespace hippoLBM
     {
       auto& data = *fields;
       auto& traversals = *Traversals;
-      grid<3>& Grid = domain->m_grid;
+      LBMGrid& Grid = domain->m_grid;
 
       // fill grid size;
       constexpr Area L = Area::Local;

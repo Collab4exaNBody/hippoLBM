@@ -32,7 +32,7 @@ namespace hippoLBM
         constexpr Area G = Area::Global;
         constexpr Traversal R = Traversal::Real;
 
-        grid<3>& g = domain->m_grid;
+        LBMGrid& g = domain->m_grid;
         const onika::math::AABB& bounds = domain->bounds;
         const int3d& domain_size = domain->domain_size;
 

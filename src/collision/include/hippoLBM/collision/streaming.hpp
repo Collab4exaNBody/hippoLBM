@@ -46,7 +46,7 @@ namespace hippoLBM
     struct streaming_step2
     {
       const int * __restrict__ levels; // It contains the traversal level (0 inside, 0 1 Real, 0 1 2 Extend, and 0 1 2 3 All 
-      grid<3> g;
+      LBMGrid g;
       const FieldView<Q> f;
       const int* __restrict__ const ex;
       const int* __restrict__ const ey; 

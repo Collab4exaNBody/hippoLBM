@@ -53,14 +53,14 @@ namespace hippoLBM
 
         if(bounds.has_value())
         {
-          grid<3>& Grid = Domain.m_grid;
+          LBMGrid& Grid = Domain.m_grid;
 
           auto& bound = *bounds;
           Vec3d min = bound.bmin;
           Vec3d max = bound.bmax;
           double Dx = Grid.dx;
-          point<3> _min = {int(min.x/Dx), int(min.y/Dx), int(min.z/Dx)};
-          point<3> _max = {int(max.x/Dx), int(max.y/Dx), int(max.z/Dx)};
+          LBMPoint _min = {int(min.x/Dx), int(min.y/Dx), int(min.z/Dx)};
+          LBMPoint _max = {int(max.x/Dx), int(max.y/Dx), int(max.z/Dx)};
 
           box<3> global_wall_box = {_min, _max};
           //global_wall_box.print();

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <onika/math/basic_types_def.h>
-#include <grid/grid.hpp>
+#include <hippoLBM/grid/grid.hpp>
 
 #define LEVEL_EXTEND 2
 #define LEVEL_REAL 1
@@ -63,7 +63,7 @@ namespace hippoLBM
       return{ vector_data(level), vector_size(level)}; 
     }  
 
-    void build_traversal(grid<DIM>& G, const IJK MPI_coord, const IJK MPI_grid)
+    void build_traversal(LBMGrid& G, const IJK MPI_coord, const IJK MPI_grid)
     {
       constexpr Area L = Area::Local;
       constexpr Traversal A = Traversal::All;
@@ -85,7 +85,7 @@ namespace hippoLBM
 			for (int z = ba.start(2); z <= ba.end(2); z++) {
 				for (int y = ba.start(1); y <= ba.end(1); y++) {
 					for (int x = ba.start(0); x <= ba.end(0); x++) {
-						point<3> p = {x, y, z};
+						LBMPoint p = {x, y, z};
 						int idx = G(x, y, z);
 						all[shift_a++] = idx;
 						level[idx] = 3; // ALL

@@ -47,7 +47,7 @@ namespace hippoLBM
   template<typename LBMDomain>
     inline void write_pvtr( std::string basedir,  std::string basename, size_t number_of_files, LBMDomain& domain, bool print_distributions)
     {
-      grid<3>& Grid = domain.m_grid;
+      LBMGrid& Grid = domain.m_grid;
       auto [lx, ly, lz] = domain.domain_size;
       // I could be smarter here
       int box_size = sizeof(box<3>);
@@ -103,7 +103,7 @@ namespace hippoLBM
   template<typename LBMDomain, typename LBMFieds>
     inline void write_vtr(std::string name, LBMDomain& domain, LBMFieds& data, traversal_lbm& traversals, LBMParameters params, bool print_distributions)
     {
-      grid<3>& Grid = domain.m_grid;
+      LBMGrid& Grid = domain.m_grid;
       auto [lx, ly, lz] = domain.domain_size;
       const double dx = Grid.dx;
       name = name + ".vtr";

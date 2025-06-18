@@ -45,7 +45,7 @@ namespace hippoLBM
       {
         auto& data = *fields;
         auto& traversals = *Traversals;
-        grid<3>& Grid = domain->m_grid;
+        LBMGrid& Grid = domain->m_grid;
         auto [ptr, size] = traversals.get_levels();
 
         // get fields

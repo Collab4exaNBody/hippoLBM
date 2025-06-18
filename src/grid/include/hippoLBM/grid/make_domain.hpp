@@ -75,7 +75,7 @@ namespace hippoLBM
 			}
 
 			// set grid
-			grid<DIM> g;
+			LBMGrid g;
 			g.set_box(local_box);
 			g.set_ext(ext);
 			g.set_offset({offset[0], offset[1], offset[2]});

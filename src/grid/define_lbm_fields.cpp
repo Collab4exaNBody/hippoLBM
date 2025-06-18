@@ -31,7 +31,7 @@ namespace hippoLBM
         constexpr Area L = Area::Local;
         constexpr Traversal Tr = Traversal::All;
         LBMFields<Q>& grid_data = *fields;
-        grid<3>& Grid = domain->m_grid;
+        LBMGrid& Grid = domain->m_grid;
         box<3>& Box = domain->m_box;
 
         // compute sizes

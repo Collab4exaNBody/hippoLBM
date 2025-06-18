@@ -2,7 +2,7 @@
 #include <mpi.h>
 #include <cstring>
 #include <onika/cuda/cuda_context.h>
-#include <grid/point.hpp>
+#include <hippoLBM/grid/point.hpp>
 #include <grid/box.hpp>
 #include <grid/comm.hpp>
 #include <grid/operator_ghost_manager.hpp>

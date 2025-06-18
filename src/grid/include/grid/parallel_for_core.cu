@@ -50,7 +50,7 @@ namespace hippoLBM
     };
 
   template<Area A, Traversal Tr, typename Func, typename... Args>
-    inline void for_all(grid<3>& Grid, Func& a_func, Args&&... a_args)
+    inline void for_all(LBMGrid& Grid, Func& a_func, Args&&... a_args)
     {
       auto bx = Grid.build_box<A,Tr>();
 
@@ -72,7 +72,7 @@ namespace hippoLBM
     }
 
   template<Area A, Traversal Tr, typename Func, typename... Args>
-    static inline ParallelExecutionWrapper parallel_for_id(grid<3>& g, Func& func, ParallelExecutionContext *exec_ctx, Args &&...args)
+    static inline ParallelExecutionWrapper parallel_for_id(LBMGrid& g, Func& func, ParallelExecutionContext *exec_ctx, Args &&...args)
     {
       static_assert(A == Area::Local && Tr == Traversal::All);
       if constexpr (A == Area::Local && Tr == Traversal::All)

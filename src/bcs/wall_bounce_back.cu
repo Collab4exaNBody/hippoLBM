@@ -38,7 +38,7 @@ namespace hippoLBM
       inline void execute () override final
       {
         auto& data = *fields;
-        grid<3>& Grid = domain->m_grid;
+        LBMGrid& Grid = domain->m_grid;
 
         // get fields
         const int* const pobst = data.obstacles();
