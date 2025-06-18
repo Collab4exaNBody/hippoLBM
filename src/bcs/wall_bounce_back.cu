@@ -12,7 +12,7 @@
 #include <hippoLBM/grid/domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
-#include <grid/lbm_fields.hpp>
+#include <hippoLBM/grid/fields.hpp>
 #include <grid/traversal_lbm.hpp>
 #include <hippoLBM/bcs/bounce_back.hpp>
 
@@ -26,7 +26,7 @@ namespace hippoLBM
     class WallBounceBack : public OperatorNode
   {
     public:
-      ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+      ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
       ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
 
       inline std::string documentation() const override final
@@ -37,7 +37,7 @@ namespace hippoLBM
 
       inline void execute () override final
       {
-        auto& data = *LBMFieds;
+        auto& data = *fields;
         grid<3>& Grid = domain->m_grid;
 
         // get fields

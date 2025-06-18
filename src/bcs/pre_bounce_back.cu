@@ -12,7 +12,7 @@
 #include <hippoLBM/grid/domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
-#include <grid/lbm_fields.hpp>
+#include <hippoLBM/grid/fields.hpp>
 #include <grid/parallel_for_core.cu>
 #include <grid/traversal_lbm.hpp>
 #include <hippoLBM/bcs/bounce_back.hpp>
@@ -28,7 +28,7 @@ namespace hippoLBM
   template<int Q>
     class PreBounceBack : public OperatorNode
   {
-    ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+    ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
     ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
     ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
     ADD_SLOT( bounce_back_manager<Q>, bbmanager, INPUT_OUTPUT);
@@ -63,7 +63,7 @@ namespace hippoLBM
 
     inline void execute () override final
     {
-      auto& data = *LBMFieds;
+      auto& data = *fields;
       auto& traversals = *Traversals;
       grid<3>& Grid = domain->m_grid;
 

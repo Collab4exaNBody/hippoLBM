@@ -12,7 +12,7 @@
 #include <grid/enum.hpp>
 #include <hippoLBM/grid/domain.hpp>
 #include <grid/comm.hpp>
-#include <grid/lbm_fields.hpp>
+#include <hippoLBM/grid/fields.hpp>
 #include <grid/parallel_for_core.cu>
 #include <grid/traversal_lbm.hpp>
 #include <hippoLBM/bcs/bounce_back_manager.hpp>
@@ -29,7 +29,7 @@ namespace hippoLBM
 	{
 		typedef std::array<double,3> readVec3;
 		ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
-		ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+		ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
 		ADD_SLOT( readVec3, U, INPUT, REQUIRED, DocString{"Prescribed velocity at the boundary (z = lz), enforcing the Cavity condition."});
 		ADD_SLOT( bounce_back_manager<Q>, bbmanager, INPUT_OUTPUT, REQUIRED);
 
@@ -44,7 +44,7 @@ namespace hippoLBM
 
 		inline void execute () override final
 		{
-			auto& data = *LBMFieds;
+			auto& data = *fields;
 			auto& bb = *bbmanager;
 			auto [lx, ly, lz] = domain->domain_size;
 			auto [ux,uy,uz] = *U;

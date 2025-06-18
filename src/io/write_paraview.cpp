@@ -11,7 +11,7 @@
 #include <hippoLBM/grid/make_variant_operator.hpp>
 #include <hippoLBM/grid/domain.hpp>
 #include <grid/enum.hpp>
-#include <grid/lbm_fields.hpp>
+#include <hippoLBM/grid/fields.hpp>
 #include <grid/traversal_lbm.hpp>
 #include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/io/write_paraview.hpp>
@@ -28,7 +28,7 @@ namespace hippoLBM
   {
     public:
       ADD_SLOT( LBMDomain<Q>, domain, INPUT);
-      ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT);
+      ADD_SLOT( LBMFields<Q>, fields, INPUT);
       ADD_SLOT( traversal_lbm, Traversals, INPUT);
       ADD_SLOT( LBMParameters, Params, INPUT);
       ADD_SLOT( MPI_Comm, mpi, INPUT , MPI_COMM_WORLD);
@@ -54,7 +54,7 @@ namespace hippoLBM
         fullname += "/%06d";
         fullname = onika::format_string(fullname, rank);
 
-        auto& data = *LBMFieds;
+        auto& data = *fields;
         auto& traversals = *Traversals;
 
         MPI_Barrier(comm);

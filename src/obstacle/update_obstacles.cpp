@@ -23,7 +23,7 @@ under the License.
 #include <grid/enum.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
 #include <hippoLBM/grid/domain.hpp>
-#include <grid/lbm_fields.hpp>
+#include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/obstacle/obstacles.hpp>
 
 
@@ -70,7 +70,7 @@ namespace hippoLBM
 	{
 
 		ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
-		ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT);
+		ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT);
 		ADD_SLOT( Obstacles, obstacles, INPUT_OUTPUT, REQUIRED, DocString{"List of Obstacles"});
 
 
@@ -88,7 +88,7 @@ namespace hippoLBM
 		inline void execute() override final
 		{
 			auto& obs = *obstacles;
-			lbm_fields<Q>& grid_data = *LBMFieds;
+			LBMFields<Q>& grid_data = *fields;
 
 			UpdateObstaclesFunc<Q> func = { domain->m_grid, domain->dx(), grid_data.obstacles() };
 

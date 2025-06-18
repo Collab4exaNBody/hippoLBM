@@ -10,7 +10,7 @@
 #include <hippoLBM/grid/domain.hpp>
 #include <grid/comm.hpp>
 #include <grid/enum.hpp>
-#include <grid/lbm_fields.hpp>
+#include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/domain.hpp>
 #include <grid/update_ghost.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
@@ -24,7 +24,7 @@ namespace hippoLBM
   template<int Q>
     class UpdateGhost : public OperatorNode
   {
-      ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+      ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
       ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
 
     public:
@@ -37,7 +37,7 @@ namespace hippoLBM
 
       inline void execute () override final
       {
-        auto& data = *LBMFieds;
+        auto& data = *fields;
 
         // capture the parallel execution context
         auto par_exec_ctx = [this] (const char* exec_name)
