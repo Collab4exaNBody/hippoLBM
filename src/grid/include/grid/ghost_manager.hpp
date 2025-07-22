@@ -1,3 +1,23 @@
+/*
+   Licensed to the Apache Software Foundation (ASF) under one
+   or more contributor license agreements.  See the NOTICE file
+   distributed with this work for additional information
+   regarding copyright ownership.  The ASF licenses this file
+   to you under the Apache License, Version 2.0 (the
+   "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+ */
+
+
 #pragma once
 #include <mpi.h>
 #include <cstring>
@@ -28,7 +48,7 @@ namespace hippoLBM
       void debug_print_comm()
       {
         onika::lout << "Debug Print Comms, number of comms" << m_data.size() << " Components: " << 
- Components << " DIM: " << DIM << std::endl;
+          Components << " DIM: " << DIM << std::endl;
         for(auto it: m_data) it.debug_print_comm();
       }
 
@@ -93,7 +113,7 @@ namespace hippoLBM
           bool do_recv = !((send.get_tag() == recv.get_tag()) && (send.get_dest() == recv.get_dest()));
           if(do_recv) // NOT (periodic case && himself)
           {
-           MPI_Irecv(recv.get_data(), nb_bytes, MPI_CHAR, recv.get_dest(), recv.get_tag(), MPI_COMM_WORLD, &(this->m_request[acc++]));
+            MPI_Irecv(recv.get_data(), nb_bytes, MPI_CHAR, recv.get_dest(), recv.get_tag(), MPI_COMM_WORLD, &(this->m_request[acc++]));
           }
         }
       }
@@ -105,25 +125,25 @@ namespace hippoLBM
        * @param mesh_box The box representing the mesh.
        */
       template<typename ParExecCtxFunc>
-	void do_unpack(
-	    FieldView<Components>& mesh, 
-	    box<DIM>& mesh_box, 
-	    ParExecCtxFunc& par_exec_ctx)
-	{
-	  for (auto& it : this->m_data)
-	  {
-	    auto& recv = it.recv;
-	    // Wrap data
-	    FieldView<Components> wrecv = {recv.get_data() , recv.get_size() / Components};
-	    // Define kernel
-	    unpacker<Components, DIM> unpack = {mesh, wrecv, recv.get_box(), mesh_box};
-	    // Define cuda/omp grid
-	    ParExecSpace3d parallel_range = set(recv.get_box());        
-	    // Run kernel
-	    parallel_for(parallel_range, unpack, par_exec_ctx("unpack"));
-	  }
-	  ONIKA_CU_DEVICE_SYNCHRONIZE();
-	}
+        void do_unpack(
+            FieldView<Components>& mesh, 
+            box<DIM>& mesh_box, 
+            ParExecCtxFunc& par_exec_ctx)
+        {
+          for (auto& it : this->m_data)
+          {
+            auto& recv = it.recv;
+            // Wrap data
+            FieldView<Components> wrecv = {recv.get_data() , recv.get_size() / Components};
+            // Define kernel
+            unpacker<Components, DIM> unpack = {mesh, wrecv, recv.get_box(), mesh_box};
+            // Define cuda/omp grid
+            ParExecSpace3d parallel_range = set(recv.get_box());        
+            // Run kernel
+            parallel_for(parallel_range, unpack, par_exec_ctx("unpack"));
+          }
+          ONIKA_CU_DEVICE_SYNCHRONIZE();
+        }
 
       /**
        * @brief Pack and send ghost cell data from the mesh.
@@ -132,41 +152,41 @@ namespace hippoLBM
        * @param mesh_box The box representing the mesh.
        */
       template<typename ParExecCtxFunc>
-	void do_pack_send(
-	    FieldView<Components>& mesh, 
-	    box<DIM>& mesh_box,
-	    ParExecCtxFunc& par_exec_ctx)
-	{
-	  const int size = this->get_size();
-	  int acc = size;
-	  for (auto& it : this->m_data)
-	  {
-	    auto& send = it.send;
-	    // Wrap data
-	    FieldView<Components> wsend = {send.get_data() , send.get_size() / Components};
-	    // Define kernel
-	    packer<Components, DIM> pack = {wsend, mesh, send.get_box(), mesh_box};
-	    // Define cuda/omp grid
-	    ParExecSpace3d parallel_range = set(send.get_box());
-	    // Run kernel
-	    parallel_for(parallel_range, pack, par_exec_ctx("pack"));
-	  }
-	  ONIKA_CU_DEVICE_SYNCHRONIZE();
+        void do_pack_send(
+            FieldView<Components>& mesh, 
+            box<DIM>& mesh_box,
+            ParExecCtxFunc& par_exec_ctx)
+        {
+          const int size = this->get_size();
+          int acc = size;
+          for (auto& it : this->m_data)
+          {
+            auto& send = it.send;
+            // Wrap data
+            FieldView<Components> wsend = {send.get_data() , send.get_size() / Components};
+            // Define kernel
+            packer<Components, DIM> pack = {wsend, mesh, send.get_box(), mesh_box};
+            // Define cuda/omp grid
+            ParExecSpace3d parallel_range = set(send.get_box());
+            // Run kernel
+            parallel_for(parallel_range, pack, par_exec_ctx("pack"));
+          }
+          ONIKA_CU_DEVICE_SYNCHRONIZE();
 
-	  for (auto& it : this->m_data)
-	  {
-	    auto& send = it.send;
-      auto& recv = it.recv; 
-	    int nb_bytes = send.get_size() * sizeof(double);
-      if((send.get_tag() == recv.get_tag()) && (send.get_dest() == recv.get_dest())) // periodic case && himself
-      {
-        ONIKA_CU_MEMCPY(recv.get_data(), send.get_data(), nb_bytes); // cudaMemcpyDefault, 0 /** default stream */);
-      }
-      else
-      {
-	      MPI_Isend(send.get_data(), nb_bytes, MPI_CHAR, send.get_dest(), send.get_tag(), MPI_COMM_WORLD, &(this->m_request[acc++]));
-      }
-	  }
-	}
+          for (auto& it : this->m_data)
+          {
+            auto& send = it.send;
+            auto& recv = it.recv; 
+            int nb_bytes = send.get_size() * sizeof(double);
+            if((send.get_tag() == recv.get_tag()) && (send.get_dest() == recv.get_dest())) // periodic case && himself
+            {
+              ONIKA_CU_MEMCPY(recv.get_data(), send.get_data(), nb_bytes); // cudaMemcpyDefault, 0 /** default stream */);
+            }
+            else
+            {
+              MPI_Isend(send.get_data(), nb_bytes, MPI_CHAR, send.get_dest(), send.get_tag(), MPI_COMM_WORLD, &(this->m_request[acc++]));
+            }
+          }
+        }
     };
 }

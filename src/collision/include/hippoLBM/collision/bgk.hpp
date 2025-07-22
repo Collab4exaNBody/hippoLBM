@@ -1,3 +1,23 @@
+/*
+   Licensed to the Apache Software Foundation (ASF) under one
+   or more contributor license agreements.  See the NOTICE file
+   distributed with this work for additional information
+   regarding copyright ownership.  The ASF licenses this file
+   to you under the Apache License, Version 2.0 (the
+   "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+ */
+
+
 #pragma once
 
 #include <grid/field_view.hpp>
@@ -29,26 +49,26 @@ namespace hippoLBM
       ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx) const 
       {
 
-	bool update = check_level<TR>(levels[idx]) && (obst[idx] == FLUIDE_); 
-	const double& rho = m0[idx];
-	const double& ux = m1(idx,0);
-	const double& uy = m1(idx,1);
-	const double& uz = m1(idx,2);
-	const double ___u_squ = -1.5 * (ux * ux + uy * uy + uz * uz);
+        bool update = check_level<TR>(levels[idx]) && (obst[idx] == FLUIDE_); 
+        const double& rho = m0[idx];
+        const double& ux = m1(idx,0);
+        const double& uy = m1(idx,1);
+        const double& uz = m1(idx,2);
+        const double ___u_squ = -1.5 * (ux * ux + uy * uy + uz * uz);
 
-	for (int iLB = 0; iLB < Q; iLB++) 
-	{
-	  const int &exiLB = ex[iLB];
-	  const int &eyiLB = ey[iLB];
-	  const int &eziLB = ez[iLB];
-	  const double &wiLB = w[iLB];
-	  double &fiLB = f(idx,iLB);
-	  double ef  = exiLB * m_Fext.x + eyiLB * m_Fext.y + eziLB * m_Fext.z;
-	  double eu  = exiLB * ux + eyiLB * uy + eziLB * uz;
-	  //double feq = wiLB * rho * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
-	  double feq = wiLB * rho * (1. +  eu * (3. + 4.5 * eu) + ___u_squ);
-	  fiLB += update * ((feq - fiLB) + 3. * wiLB * ef)/tau;
-	}
+        for (int iLB = 0; iLB < Q; iLB++) 
+        {
+          const int &exiLB = ex[iLB];
+          const int &eyiLB = ey[iLB];
+          const int &eziLB = ez[iLB];
+          const double &wiLB = w[iLB];
+          double &fiLB = f(idx,iLB);
+          double ef  = exiLB * m_Fext.x + eyiLB * m_Fext.y + eziLB * m_Fext.z;
+          double eu  = exiLB * ux + eyiLB * uy + eziLB * uz;
+          //double feq = wiLB * rho * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
+          double feq = wiLB * rho * (1. +  eu * (3. + 4.5 * eu) + ___u_squ);
+          fiLB += update * ((feq - fiLB) + 3. * wiLB * ef)/tau;
+        }
       }
     };
 }

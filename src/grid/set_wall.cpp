@@ -1,3 +1,22 @@
+/*
+   Licensed to the Apache Software Foundation (ASF) under one
+   or more contributor license agreements.  See the NOTICE file
+   distributed with this work for additional information
+   regarding copyright ownership.  The ASF licenses this file
+   to you under the Apache License, Version 2.0 (the
+   "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+ */
+
 #include <mpi.h>
 #include <onika/scg/operator.h>
 #include <onika/scg/operator_slot.h>
@@ -17,25 +36,25 @@
 
 namespace hippoLBM
 {
-	using namespace onika;
-	using namespace scg;
+  using namespace onika;
+  using namespace scg;
   using onika::math::AABB;
 
-	template<int Q>
-		class SetWall : public OperatorNode
-	{
-		public:
+  template<int Q>
+    class SetWall : public OperatorNode
+  {
+    public:
       ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT, REQUIRED);
       ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT);
-			ADD_SLOT( AABB, bounds, INPUT, REQUIRED, DocString{"Domain's bounds"});
-			ADD_SLOT( double, dx, INPUT, REQUIRED, DocString{"Space step"});
+      ADD_SLOT( AABB, bounds, INPUT, REQUIRED, DocString{"Domain's bounds"});
+      ADD_SLOT( double, dx, INPUT, REQUIRED, DocString{"Space step"});
 
-			inline void execute () override final
-			{
+      inline void execute () override final
+      {
         lbm_fields<Q>& grid_data = *LBMFieds;
         lbm_domain<Q>& domain = *LBMDomain;
         grid<3>& Grid = domain.m_grid;
-       
+
         auto& bound = *bounds;
         Vec3d min = bound.bmin;
         Vec3d max = bound.bmax;
@@ -49,23 +68,23 @@ namespace hippoLBM
         auto [is_inside_subdomain, wall_box] = Grid.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_wall_box);
         wall_box.print();
         if( !is_inside_subdomain ) return;
- 
 
-				int * const obst = grid_data.obstacles();
-				for(int z = wall_box.start(2) ; z <= wall_box.end(2) ; z++)
-					for(int y = wall_box.start(1) ; y <= wall_box.end(1) ; y++)
-						for(int x = wall_box.start(0) ; x <= wall_box.end(0) ; x++)
-						{
+
+        int * const obst = grid_data.obstacles();
+        for(int z = wall_box.start(2) ; z <= wall_box.end(2) ; z++)
+          for(int y = wall_box.start(1) ; y <= wall_box.end(1) ; y++)
+            for(int x = wall_box.start(0) ; x <= wall_box.end(0) ; x++)
+            {
               const int idx = Grid(x,y,z);
               obst[idx] = WALL_;
-						}
-			}
-	};
+            }
+      }
+  };
 
-	// === register factories ===  
-	ONIKA_AUTORUN_INIT(set_wall)
-	{
-		OperatorNodeFactory::instance()->register_factory( "set_wall", make_variant_operator<SetWall>);
-	}
+  // === register factories ===  
+  ONIKA_AUTORUN_INIT(set_wall)
+  {
+    OperatorNodeFactory::instance()->register_factory( "set_wall", make_variant_operator<SetWall>);
+  }
 }
 
