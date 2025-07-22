@@ -23,6 +23,12 @@ For more details, see CONTRIBUTING.md. Main guidelines are:
 
 # Authors and acknowledgment
 
-Main developers
+Main developers:
   - Raphaël Prat (CEA/DES) (raphael.prat@cea.fr)
   - Lhassan Amarsid (CEA/DES)
+
+Contributors:
+  - Guillaume bareigts (CEA/DES)
+  - Jean-Yves delenne (INRAE)
+  - Farhang Radjaï (LMGC/CNRS)
+  - Abdelbarie El Metni 
