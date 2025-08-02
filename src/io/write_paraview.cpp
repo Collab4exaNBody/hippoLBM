@@ -86,6 +86,7 @@ namespace hippoLBM
   ONIKA_AUTORUN_INIT(write_paraview)
   {
     OperatorNodeFactory::instance()->register_factory( "write_paraview", make_variant_operator<WriteParaviewLBM>);
+    OperatorNodeFactory::instance()->register_factory( "hippolbm_write_paraview", make_variant_operator<WriteParaviewLBM>);
   }
 }
 
