@@ -9,6 +9,22 @@
 
 namespace hippoLBM
 {
+  // helper
+  struct GridIKJtoIdx // local
+  {
+    Box3D bx = 0;
+ 
+    GridIJKToIdx() = delete;
+    GridIJKToIdx(const LBMGrid& grid) { bx = grid.bx; }
+    GridIJKToIdx(const Box3D& in) { bx = in; }
+		ONIKA_HOST_DEVICE_FUNC int operator()(Point3D& p) const  { return bx(p[0], p[1], p[2]); }  
+		ONIKA_HOST_DEVICE_FUNC int operator()(Point3D&& p) const { return bx(p[0], p[1], p[2]); }  
+		ONIKA_HOST_DEVICE_FUNC int operator()(int x, int y, int z) const { return bx(x, y, z); }  
+		ONIKA_HOST_DEVICE_FUNC inline std::tuple<int,int,int> operator()(int idx) const { return bx(idx);	}  
+  };
+
+  // grid
+
 	struct LBMGrid
 	{
 		static constexpr int DIM = 3;

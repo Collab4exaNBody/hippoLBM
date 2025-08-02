@@ -11,6 +11,7 @@ namespace hippoLBM
     struct init_distributions
     {
       double coeff = 1;
+      GridIJKtoIdx ijk_to_idx;;
       /**
        * @brief Operator to initialize distributions at a given index.
        *
@@ -18,13 +19,18 @@ namespace hippoLBM
        * @param f Pointer to the distribution function.
        * @param w Pointer to the weight coefficients.
        */
-      ONIKA_HOST_DEVICE_FUNC void operator()(const int idx, const FieldView<Q>& f, const double* const w) const
+      ONIKA_HOST_DEVICE_FUNC void kernel(const int idx, const FieldView<Q>& f, const double* const w) const
       {
         for (int iLB = 0; iLB < Q; iLB++)
         {
           f(idx,iLB) = coeff * w[iLB];
         }
       };
+
+      ONIKA_HOST_DEVICE_FUNC void operator()(int i, int j, int k, const FieldView<Q>& f, const double* const w) const
+      {
+        kernel(ijk_to_idx(i,j,k), f, w);
+      }
     };
 }
 

@@ -38,12 +38,14 @@ namespace hippoLBM
         auto& data = *fields;
         auto& traversals = *Traversals;
         LBMDomain<Q>& Domain = *domain;
+        LBMGrid& Grid = Domain.m_grid;
+        GridIjkToIdx ijk_to_idx(Grid);
 
         FieldView pf = data.distributions();
         const double * const pw = data.weights();
 
         // define kernel
-        init_distributions<Q> func = {*value};
+        init_distributions<Q> func = {*value, ijk_to_idx};
 
         // capture the parallel execution context
         auto par_exec_ctx = [this] (const char* exec_name)
@@ -53,7 +55,6 @@ namespace hippoLBM
 
         if(bounds.has_value())
         {
-          LBMGrid& Grid = Domain.m_grid;
 
           auto& bound = *bounds;
           Vec3d min = bound.bmin;
@@ -69,13 +70,7 @@ namespace hippoLBM
           //wall_box.print();
           if( !is_inside_subdomain ) return;
 
-          for(int z = wall_box.start(2) ; z <= wall_box.end(2) ; z++)
-            for(int y = wall_box.start(1) ; y <= wall_box.end(1) ; y++)
-              for(int x = wall_box.start(0) ; x <= wall_box.end(0) ; x++)
-              {
-                const int idx = Grid(x,y,z);
-                func(idx, pf, pw);
-              }
+          parallel_for(wall_box, func, parallel_execution_context());
 
         }
         else  // all domain
