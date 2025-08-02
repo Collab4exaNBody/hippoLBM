@@ -27,10 +27,10 @@ under the License.
 #include <onika/parallel/parallel_for.h>
 
 #include <onika/math/basic_types.h>
-#include <grid/lbm_domain.hpp>
-#include <grid/comm.hpp>
-#include <grid/enum.hpp>
-#include <grid/lbm_fields.hpp>
+#include <hippoLBM/grid/domain.hpp>
+#include <hippoLBM/grid/comm.hpp>
+#include <hippoLBM/grid/enum.hpp>
+#include <hippoLBM/grid/fields.hpp>
 
 
 namespace hippoLBM
@@ -42,17 +42,16 @@ namespace hippoLBM
     class DefineLBMFields : public OperatorNode
   {
     public:
-      ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT, REQUIRED);
-      ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT);
+      ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
+      ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT);
 
       inline void execute () override final
       {
         constexpr Area L = Area::Local;
         constexpr Traversal Tr = Traversal::All;
-        lbm_fields<Q>& grid_data = *LBMFieds;
-        lbm_domain<Q>& domain = *LBMDomain;
-        grid<3>& Grid = domain.m_grid;
-        box<3>& Box = domain.m_box;
+        LBMFields<Q>& grid_data = *fields;
+        LBMGrid& Grid = domain->m_grid;
+        Box3D& Box = domain->m_box;
 
         // compute sizes
         constexpr int Un = 5;
@@ -63,7 +62,6 @@ namespace hippoLBM
         const size_t np = Box.number_of_points();
 
         grid_data.grid_size = np;
-
         if(grid_data.obst.size() != np)
         {
           grid_data.f.resize(np*Q);
@@ -86,7 +84,7 @@ namespace hippoLBM
   ONIKA_AUTORUN_INIT(define_grid)
   {
     OperatorNodeFactory::instance()->register_factory( "define_grid_3dq19", make_compatible_operator<DefineLBMFields<19>>);
-    //OperatorNodeFactory::instance()->register_factory( "define_grid_3dq15", make_compatible_operator<DefineLBMFields<15>>);
+    //OperatorNodeFactory::instance()->register_factory( "define_grid_3dq15", make_compatible_operator<DefineLBMFields<Q><15>>);
   }
 }
 

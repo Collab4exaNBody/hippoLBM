@@ -27,12 +27,12 @@ under the License.
 #include <onika/cuda/cuda.h>
 #include <onika/memory/allocator.h>
 
-#include <grid/make_variant_operator.hpp>
-#include <grid/lbm_domain.hpp>
-#include <grid/enum.hpp>
-#include <grid/lbm_fields.hpp>
-#include <grid/traversal_lbm.hpp>
-#include <grid/lbm_parameters.hpp>
+#include <hippoLBM/grid/make_variant_operator.hpp>
+#include <hippoLBM/grid/domain.hpp>
+#include <hippoLBM/grid/enum.hpp>
+#include <hippoLBM/grid/fields.hpp>
+#include <hippoLBM/grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/io/write_paraview.hpp>
 
 #include <onika/string_utils.h>
@@ -46,8 +46,8 @@ namespace hippoLBM
     class WriteParaviewLBM : public OperatorNode
   {
     public:
-      ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT);
-      ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT);
+      ADD_SLOT( LBMDomain<Q>, domain, INPUT);
+      ADD_SLOT( LBMFields<Q>, fields, INPUT);
       ADD_SLOT( traversal_lbm, Traversals, INPUT);
       ADD_SLOT( LBMParameters, Params, INPUT);
       ADD_SLOT( MPI_Comm, mpi, INPUT , MPI_COMM_WORLD);
@@ -73,13 +73,12 @@ namespace hippoLBM
         fullname += "/%06d";
         fullname = onika::format_string(fullname, rank);
 
-        auto& domain = *LBMDomain;
-        auto& data = *LBMFieds;
+        auto& data = *fields;
         auto& traversals = *Traversals;
 
         MPI_Barrier(comm);
-        write_pvtr(*basedir, file_name, size, domain, *distributions);
-        write_vtr( fullname, domain, data, traversals, *Params, *distributions);
+        write_pvtr(*basedir, file_name, size, *domain, *distributions);
+        write_vtr( fullname, *domain, data, traversals, *Params, *distributions);
       }
   };
 

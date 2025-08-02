@@ -19,7 +19,8 @@ under the License.
 
 #pragma once
 
-#include<grid/field_view.hpp>
+#include<hippoLBM/grid/field_view.hpp>
+#include<hippoLBM/grid/grid_helper.hpp>
 
 namespace hippoLBM
 {
@@ -29,7 +30,8 @@ namespace hippoLBM
   template<int Q>
     struct init_distributions
     {
-      double coeff = 1;
+      double coeff;
+      GridIJKtoIdx ijk_to_idx;
       /**
        * @brief Operator to initialize distributions at a given index.
        *
@@ -37,13 +39,18 @@ namespace hippoLBM
        * @param f Pointer to the distribution function.
        * @param w Pointer to the weight coefficients.
        */
-      ONIKA_HOST_DEVICE_FUNC void operator()(const int idx, const FieldView<Q>& f, const double* const w) const
+      ONIKA_HOST_DEVICE_FUNC inline void operator()(const int idx, const FieldView<Q>& f, const double* const w) const
       {
         for (int iLB = 0; iLB < Q; iLB++)
         {
           f(idx,iLB) = coeff * w[iLB];
         }
       };
+
+      ONIKA_HOST_DEVICE_FUNC inline void operator()(int i, int j, int k, const FieldView<Q>& f, const double* const w) const
+      {
+        this->operator()(ijk_to_idx(i,j,k), f, w);
+      }
     };
 }
 

@@ -19,7 +19,7 @@ under the License.
 
 #pragma once
 
-#include <grid/enum.hpp>
+#include <hippoLBM/grid/enum.hpp>
 
 namespace hippoLBM
 {
@@ -111,7 +111,7 @@ namespace hippoLBM
   template<>
     struct wall_bounce_back<19>
     {
-      grid<3> g;
+      LBMGrid g;
       const int * const obst;
       const FieldView<19> f;
       const int* ex;

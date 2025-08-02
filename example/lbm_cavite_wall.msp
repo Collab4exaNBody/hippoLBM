@@ -16,7 +16,8 @@ pre_stream_bcs:
   - wall_bounce_back
 
 set_obstacles:
-  - set_wall:
+  - register_solid_wall:
+     id: 0
      bounds: [[0.048,0,0],[0.052,0.1,0.08]]
 
 post_stream_bcs:

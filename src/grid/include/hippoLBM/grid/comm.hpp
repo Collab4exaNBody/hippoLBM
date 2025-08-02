@@ -19,7 +19,7 @@ under the License.
 
 #pragma once
 
-#include <grid/box.hpp>
+#include <hippoLBM/grid/box3d.hpp>
 #include <onika/cuda/stl_adaptors.h>
 
 namespace hippoLBM
@@ -29,15 +29,14 @@ namespace hippoLBM
   /**
    * @brief A communication container for sending and receiving data between processes.
    *
-   * @tparam N The number of data elements per point.
-   * @tparam DIM The dimension of the communication box.
+   * @tparam Components The number of data elements per point.
    */
-  template<int N, int DIM>
-    struct comm
+  template<int Components>
+    struct LBMComm
     {
       int m_dest; ///< The destination process ID.
       int m_tag; ///< The MPI communication tag.
-      box<DIM> m_box;
+      Box3D m_box;
       vector_t<double> m_data; ///< The communication buffer.
 
       // used for debuging
@@ -55,14 +54,14 @@ namespace hippoLBM
        * @param tag The MPI communication tag.
        * @param b The communication box.
        */
-      comm(const int dest, const int tag, const box<DIM>& b) : m_dest(dest), m_tag(tag), m_box(b), m_data()
+      LBMComm(const int dest, const int tag, const Box3D& b) : m_dest(dest), m_tag(tag), m_box(b), m_data()
       {
         int size = b.number_of_points();
         allocate(size);
       }
 
       // default
-      comm() {}
+      LBMComm() {}
 
       /**
        * @brief Get the size of the data buffer.
@@ -90,7 +89,7 @@ namespace hippoLBM
        *
        * @return Reference to the communication box.
        */
-      box<DIM>& get_box() { return m_box; }
+      Box3D& get_box() { return m_box; }
 
       /**
        * @brief Get a pointer to the data buffer.
@@ -106,30 +105,30 @@ namespace hippoLBM
        */
       void allocate(int size)
       {
-        m_data.resize(size * N);
+        m_data.resize(size * Components);
       }
     };
 
   /**
    * @brief A container for ghost cell communication consisting of send and receive communications.
    *
-   * @tparam N The number of data elements per point.
+   * @tparam Components The number of data elements per point.
    * @tparam DIM The dimension of the communication box.
    */
-  template<int N, int DIM>
-    struct ghost_comm
+  template<int Components>
+    struct LBMGhostComm
     {
-      comm<N, DIM> send; ///< The send communication.
-      comm<N, DIM> recv; ///< The receive communication.
+      LBMComm<Components> send; ///< The send communication.
+      LBMComm<Components> recv; ///< The receive communication.
 
-      ghost_comm() {}
+      LBMGhostComm() {}
       /**
-       * @brief Constructor for the ghost_comm struct.
+       * @brief Constructor for the LBMGhostComm struct.
        *
        * @param s The send communication.
        * @param r The receive communication.
        */
-      ghost_comm(comm<N, DIM>& s, comm<N, DIM>& r) : send(s), recv(r) {}
+      LBMGhostComm(LBMComm<Components>& s, LBMComm<Components>& r) : send(s), recv(r) {}
 
       // used for debuging
       void debug_print_comm()

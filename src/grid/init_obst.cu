@@ -28,13 +28,13 @@ under the License.
 
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
-#include <grid/make_variant_operator.hpp>
-#include <grid/lbm_domain.hpp>
-#include <grid/comm.hpp>
-#include <grid/enum.hpp>
-#include <grid/lbm_fields.hpp>
-#include <grid/parallel_for_core.cu>
-#include <grid/init_obst.hpp>
+#include <hippoLBM/grid/make_variant_operator.hpp>
+#include <hippoLBM/grid/domain.hpp>
+#include <hippoLBM/grid/comm.hpp>
+#include <hippoLBM/grid/enum.hpp>
+#include <hippoLBM/grid/fields.hpp>
+#include <hippoLBM/grid/parallel_for_core.cu>
+#include <hippoLBM/grid/init_obst.hpp>
 
 namespace hippoLBM
 {
@@ -45,17 +45,16 @@ namespace hippoLBM
     class InitObstLBM : public OperatorNode
   {
     public:
-      ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT, REQUIRED);
-      ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT);
+      ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
+      ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT);
 
       inline void execute () override final
       {
-        auto& data = *LBMFieds;
-        auto& domain = *LBMDomain;
+        auto& data = *fields;
         init_obst func = {onika::cuda::vector_data(data.obst)};
         constexpr Area A = Area::Local;
         constexpr Traversal Tr = Traversal::All;
-        parallel_for_id<A,Tr>(domain.m_grid, func, parallel_execution_context());       
+        parallel_for_id<A,Tr>(domain->m_grid, func, parallel_execution_context());       
       }
   };
 

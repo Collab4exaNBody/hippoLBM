@@ -27,13 +27,13 @@ under the License.
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
 
-#include <grid/make_variant_operator.hpp>
+#include <hippoLBM/grid/make_variant_operator.hpp>
 #include <onika/math/basic_types.h>
-#include <grid/lbm_domain.hpp>
-#include <grid/comm.hpp>
-#include <grid/enum.hpp>
-#include <grid/lbm_fields.hpp>
-#include <grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/domain.hpp>
+#include <hippoLBM/grid/comm.hpp>
+#include <hippoLBM/grid/enum.hpp>
+#include <hippoLBM/grid/fields.hpp>
+#include <hippoLBM/grid/traversal_lbm.hpp>
 #include <hippoLBM/bcs/bounce_back.hpp>
 
 namespace hippoLBM
@@ -46,8 +46,8 @@ namespace hippoLBM
     class WallBounceBack : public OperatorNode
   {
     public:
-      ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
-      ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT, REQUIRED);
+      ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+      ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
 
       inline std::string documentation() const override final
       {
@@ -57,9 +57,8 @@ namespace hippoLBM
 
       inline void execute () override final
       {
-        auto& data = *LBMFieds;
-        auto& domain = *LBMDomain;
-        grid<3>& Grid = domain.m_grid;
+        auto& data = *fields;
+        LBMGrid& Grid = domain->m_grid;
 
         // get fields
         const int* const pobst = data.obstacles();
@@ -70,7 +69,7 @@ namespace hippoLBM
         wall_bounce_back<Q> func = {Grid, pobst, pf, pex, pey, pez};
 
         // run kernel
-        box<3> extend = Grid.build_box<Area::Local, Traversal::Extend>();
+        Box3D extend = Grid.build_box<Area::Local, Traversal::Extend>();
         onika::parallel::ParallelExecutionSpace<3> parallel_range = set(extend);
         parallel_for(parallel_range, func, parallel_execution_context("wall_bounce_back"));
       }

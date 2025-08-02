@@ -19,8 +19,8 @@ under the License.
 
 #pragma once
 
-#include <grid/enum.hpp>
-#include <grid/field_view.hpp>
+#include <hippoLBM/grid/enum.hpp>
+#include <hippoLBM/grid/field_view.hpp>
 
 namespace hippoLBM
 {

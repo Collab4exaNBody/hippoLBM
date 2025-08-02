@@ -26,14 +26,14 @@ under the License.
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
 
-#include <grid/make_variant_operator.hpp>
+#include <hippoLBM/grid/make_variant_operator.hpp>
 #include <onika/math/basic_types.h>
-#include <grid/lbm_domain.hpp>
-#include <grid/comm.hpp>
-#include <grid/enum.hpp>
-#include <grid/lbm_fields.hpp>
-#include <grid/parallel_for_core.cu>
-#include <grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/domain.hpp>
+#include <hippoLBM/grid/comm.hpp>
+#include <hippoLBM/grid/enum.hpp>
+#include <hippoLBM/grid/fields.hpp>
+#include <hippoLBM/grid/parallel_for_core.cu>
+#include <hippoLBM/grid/traversal_lbm.hpp>
 #include <hippoLBM/bcs/bounce_back.hpp>
 #include <hippoLBM/bcs/bounce_back_manager.hpp>
 
@@ -46,7 +46,7 @@ namespace hippoLBM
   template<int Q>
     class PostBounceBack : public OperatorNode
   {
-    ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+    ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
     ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
     ADD_SLOT( bounce_back_manager<Q>, bbmanager, INPUT_OUTPUT);
     public:
@@ -80,7 +80,7 @@ namespace hippoLBM
 
   inline void execute () override final
   {
-    auto& data = *LBMFieds;
+    auto& data = *fields;
     auto& traversals = *Traversals;
 
     // storage

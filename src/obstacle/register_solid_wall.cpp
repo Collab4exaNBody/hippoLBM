@@ -17,45 +17,34 @@ specific language governing permissions and limitations
 under the License.
  */
 
-#include <mpi.h>
 #include <onika/scg/operator.h>
 #include <onika/scg/operator_slot.h>
 #include <onika/scg/operator_factory.h>
-#include <onika/log.h>
-#include <onika/cuda/cuda.h>
-#include <onika/memory/allocator.h>
-#include <onika/parallel/parallel_for.h>
-
-#include <hippoLBM/grid/make_variant_operator.hpp>
-#include <hippoLBM/grid/domain.hpp>
-#include <hippoLBM/grid/comm.hpp>
-#include <hippoLBM/grid/enum.hpp>
-#include <hippoLBM/grid/traversal_lbm.hpp>
-
-
+#include <hippoLBM/obstacle/obstacles.hpp>
 namespace hippoLBM
 {
   using namespace onika;
   using namespace scg;
+  using onika::math::AABB;
 
-  template<int Q>
-    class BuildTraversalLBM : public OperatorNode
+  class RegisterSolidWall : public OperatorNode
   {
     public:
-      ADD_SLOT( LBMDomain<Q>, domain, INPUT);
-      ADD_SLOT( traversal_lbm, Traversals, OUTPUT);
+      ADD_SLOT(Obstacles, obstacles, INPUT_OUTPUT, REQUIRED, DocString{"List of Obstacles"});
+      ADD_SLOT(int, id, INPUT, REQUIRED, DocString{"Driver index"});
+      ADD_SLOT( AABB, bounds, INPUT, REQUIRED, DocString{"Domain's bounds"});
+
       inline void execute () override final
       {
-        traversal_lbm traversal;
-        traversal.build_traversal(domain->m_grid, domain->MPI_coord, domain->MPI_grid_size);
-        *Traversals = traversal;
+        Wall obj {*bounds};
+        obstacles->add(*id, obj);
       }
   };
 
   // === register factories ===  
-  ONIKA_AUTORUN_INIT(build_traversal)
+  ONIKA_AUTORUN_INIT(register_solid_wall)
   {
-    OperatorNodeFactory::instance()->register_factory( "build_traversal", make_variant_operator<BuildTraversalLBM>);
+    OperatorNodeFactory::instance()->register_factory("register_solid_wall", make_simple_operator<RegisterSolidWall>); 
   }
 }
 

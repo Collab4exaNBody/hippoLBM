@@ -90,18 +90,18 @@ namespace hippoLBM
   struct write_vec3d
   {
     Func func;
-    box<3> b;
-    inline void operator()(const int x, const int y, const int z, std::stringstream& output, onika::math::Vec3d* const ptr) const
-    {
-      const int idx = b(x,y,z);
-      onika::math::Vec3d tmp = func(idx, ptr[idx]);
-      output << (float)tmp.x << " " << (float)tmp.y << " " << (float)tmp.z << " ";
-    }
-    inline void operator()(const int x, const int y, const int z, std::stringstream& output, const FieldView<3>& WF) const
-    {
-      const int idx = b(x,y,z);
-      onika::math::Vec3d tmp = func(idx, WF);
-      output << (float)tmp.x << " " << (float)tmp.y << " " << (float)tmp.z << " ";
-    }
-  };
+		Box3D b;
+		inline void operator()(const int x, const int y, const int z, std::stringstream& output, onika::math::Vec3d* const ptr) const
+		{
+			const int idx = b(x,y,z);
+			onika::math::Vec3d tmp = func(idx, ptr[idx]);
+			output << (float)tmp.x << " " << (float)tmp.y << " " << (float)tmp.z << " ";
+		}
+		inline void operator()(const int x, const int y, const int z, std::stringstream& output, const FieldView<3>& WF) const
+		{
+			const int idx = b(x,y,z);
+			onika::math::Vec3d tmp = func(idx, WF);
+			output << (float)tmp.x << " " << (float)tmp.y << " " << (float)tmp.z << " ";
+		}
+	};
 }

@@ -29,18 +29,18 @@ under the License.
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
 #include <onika/math/basic_types_operators.h>
-#include <grid/lbm_domain.hpp>
-#include <grid/comm.hpp>
-#include <grid/enum.hpp>
-#include <grid/lbm_fields.hpp>
-#include <grid/parallel_for_core.cu>
-#include <grid/traversal_lbm.hpp>
-#include <grid/lbm_parameters.hpp>
+#include <hippoLBM/grid/domain.hpp>
+#include <hippoLBM/grid/comm.hpp>
+#include <hippoLBM/grid/enum.hpp>
+#include <hippoLBM/grid/fields.hpp>
+#include <hippoLBM/grid/parallel_for_core.cu>
+#include <hippoLBM/grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/collision/macro_variables.hpp>
 
-#include <grid/lbm_domain.hpp>
-#include <grid/update_ghost.hpp>
-#include <grid/make_variant_operator.hpp>
+#include <hippoLBM/grid/domain.hpp>
+#include <hippoLBM/grid/update_ghost.hpp>
+#include <hippoLBM/grid/make_variant_operator.hpp>
 
 namespace hippoLBM
 {
@@ -51,7 +51,7 @@ namespace hippoLBM
   template<int Q>
     class MacroVariables : public OperatorNode
   {
-    ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+    ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
     ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
     ADD_SLOT( LBMParameters, Params, INPUT, REQUIRED, DocString{"Contains global LBM simulation parameters"});
 
@@ -65,7 +65,7 @@ namespace hippoLBM
 
     inline void execute () override final
     {
-      auto& data = *LBMFieds;
+      auto& data = *fields;
       auto& traversals = *Traversals;
       auto& params = *Params;
 

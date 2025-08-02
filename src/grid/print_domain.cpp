@@ -29,11 +29,11 @@ under the License.
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
 
-#include <grid/make_variant_operator.hpp>
-#include <grid/lbm_domain.hpp>
-#include <grid/comm.hpp>
-#include <grid/enum.hpp>
-#include <grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/make_variant_operator.hpp>
+#include <hippoLBM/grid/domain.hpp>
+#include <hippoLBM/grid/comm.hpp>
+#include <hippoLBM/grid/enum.hpp>
+#include <hippoLBM/grid/traversal_lbm.hpp>
 
 
 namespace hippoLBM
@@ -41,20 +41,19 @@ namespace hippoLBM
   using namespace onika;
   using namespace scg;
 
-  template<int Q>
-    class PrintDomainLBM : public OperatorNode
-  {
-    public:
-      ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT);
-      inline void execute () override final
-      {
+	template<int Q>
+		class PrintDomainLBM : public OperatorNode
+	{
+		public:
+			ADD_SLOT( LBMDomain<Q>, domain, INPUT);
+			inline void execute () override final
+			{
         constexpr Area G = Area::Global;
         constexpr Traversal R = Traversal::Real;
 
-        lbm_domain<Q>& domain = *LBMDomain; 
-        grid<3>& g = domain.m_grid;
-        const onika::math::AABB& bounds = domain.bounds;
-        const int3d& domain_size = domain.domain_size;
+        LBMGrid& g = domain->m_grid;
+        const onika::math::AABB& bounds = domain->bounds;
+        const int3d& domain_size = domain->domain_size;
 
 
         lout      << "=================================" << std::endl;
@@ -74,10 +73,11 @@ namespace hippoLBM
       }
   };
 
-  // === register factories ===  
-  ONIKA_AUTORUN_INIT(print_domain)
-  {
-    OperatorNodeFactory::instance()->register_factory( "print_domain", make_variant_operator<PrintDomainLBM>);
-  }
+	// === register factories ===  
+	ONIKA_AUTORUN_INIT(print_domain)
+	{
+		OperatorNodeFactory::instance()->register_factory( "print_domain", make_variant_operator<PrintDomainLBM>);
+		OperatorNodeFactory::instance()->register_factory( "hippoLBM_print_domain", make_variant_operator<PrintDomainLBM>);
+	}
 }
 

@@ -20,7 +20,7 @@ under the License.
 
 #pragma once
 
-#include <grid/field_view.hpp>
+#include <hippoLBM/grid/field_view.hpp>
 #define FLUIDE_ -1
 
 namespace hippoLBM

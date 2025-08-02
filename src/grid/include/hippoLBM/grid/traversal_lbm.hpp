@@ -20,7 +20,7 @@ under the License.
 #pragma once
 
 #include <onika/math/basic_types_def.h>
-#include <grid/grid.hpp>
+#include <hippoLBM/grid/grid.hpp>
 
 #define LEVEL_EXTEND 2
 #define LEVEL_REAL 1
@@ -82,7 +82,7 @@ namespace hippoLBM
       return{ vector_data(level), vector_size(level)}; 
     }  
 
-    void build_traversal(grid<DIM>& G, const IJK MPI_coord, const IJK MPI_grid)
+    void build_traversal(LBMGrid& G, const IJK MPI_coord, const IJK MPI_grid)
     {
       constexpr Area L = Area::Local;
       constexpr Traversal A = Traversal::All;
@@ -100,27 +100,27 @@ namespace hippoLBM
       ghost_edge.resize(all.size() - inside.size());
       extend.resize(ex.number_of_points());
 
-      size_t shift_a(0), shift_r(0), shift_i(0), shift_ge(0), shift_ex(0);
-      for (int z = ba.start(2); z <= ba.end(2); z++) {
-        for (int y = ba.start(1); y <= ba.end(1); y++) {
-          for (int x = ba.start(0); x <= ba.end(0); x++) {
-            point<3> p = {x, y, z};
-            int idx = G(x, y, z);
-            all[shift_a++] = idx;
-            level[idx] = 3; // ALL
-            if (ex.contains(p))
-            {
-              extend[shift_ex++] = idx;
-              level[idx] = LEVEL_EXTEND;
-              if (br.contains(p)) {
-                real[shift_r++] = idx;
-                level[idx] = LEVEL_REAL;
-                if (bi.contains(p)) {
-                  inside[shift_i++] = idx;
-                  level[idx] = LEVEL_INSIDE;
-                }
-              }
-            }
+			size_t shift_a(0), shift_r(0), shift_i(0), shift_ge(0), shift_ex(0);
+			for (int z = ba.start(2); z <= ba.end(2); z++) {
+				for (int y = ba.start(1); y <= ba.end(1); y++) {
+					for (int x = ba.start(0); x <= ba.end(0); x++) {
+						Point3D p = {x, y, z};
+						int idx = G(x, y, z);
+						all[shift_a++] = idx;
+						level[idx] = 3; // ALL
+						if (ex.contains(p))
+						{
+							extend[shift_ex++] = idx;
+							level[idx] = LEVEL_EXTEND;
+							if (br.contains(p)) {
+								real[shift_r++] = idx;
+								level[idx] = LEVEL_REAL;
+								if (bi.contains(p)) {
+									inside[shift_i++] = idx;
+									level[idx] = LEVEL_INSIDE;
+								}
+							}
+						}
 
             if (!bi.contains(p)) {
               ghost_edge[shift_ge++] = idx;

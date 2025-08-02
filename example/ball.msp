@@ -1,0 +1,35 @@
+do_domain:
+  - domain:
+     bounds: [[0,0,0],[0.5,0.1,0.2]]
+     resolution: 100
+     periodic: [false, true, true]
+
+set_lbm_parameters:
+  - lbm_parameters:
+     Fext: [0,0.000000e+00,0.000000e+00]
+     nuth: 1e-4
+
+set_obstacles:
+  - register_solid_ball:
+     id: 0
+     center: [0.1, 0.0543, 0.1]
+     radius: 0.01323
+
+set_distributions:
+  - set_distribution:
+     value: 1.0
+     bounds: [[0,0,0], [0.5,0.1,0.2]]
+
+start_iteration:
+  - set_distribution:
+     value: 1.2
+     bounds: [[0,0,0.0], [0.02,0.1,0.2]]
+
+collision: mrt # default model
+
+pre_stream_bcs:
+  - wall_bounce_back
+
+global:
+    simulation_paraview_freq: 20
+    simulation_end_iteration: 10000

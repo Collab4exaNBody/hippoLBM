@@ -29,15 +29,15 @@ under the License.
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
 #include <onika/math/basic_types_operators.h>
-#include <grid/lbm_domain.hpp>
-#include <grid/comm.hpp>
-#include <grid/enum.hpp>
-#include <grid/lbm_fields.hpp>
-#include <grid/parallel_for_core.cu>
-#include <grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/domain.hpp>
+#include <hippoLBM/grid/comm.hpp>
+#include <hippoLBM/grid/enum.hpp>
+#include <hippoLBM/grid/fields.hpp>
+#include <hippoLBM/grid/parallel_for_core.cu>
+#include <hippoLBM/grid/traversal_lbm.hpp>
 #include <hippoLBM/collision/streaming.hpp>
-#include <grid/update_ghost.hpp>
-#include <grid/make_variant_operator.hpp>
+#include <hippoLBM/grid/update_ghost.hpp>
+#include <hippoLBM/grid/make_variant_operator.hpp>
 
 namespace hippoLBM
 {
@@ -49,9 +49,9 @@ namespace hippoLBM
     class StreamingLBM : public OperatorNode
   {
     public:
-      ADD_SLOT( lbm_fields<Q>, LBMFieds, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+      ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
       ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
-      ADD_SLOT( lbm_domain<Q>, LBMDomain, INPUT, REQUIRED);
+      ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
       ADD_SLOT( bool, asynchrone, INPUT, false, DocString{"The asynchrone option controls the execution style: when true, it allows asynchronous operations with overlapping computation and communication, improving parallel performance. When false, it runs synchronously, ensuring sequential execution of operations and data updates."});
 
       inline std::string documentation() const override final
@@ -62,10 +62,9 @@ namespace hippoLBM
 
       inline void execute () override final
       {
-        auto& data = *LBMFieds;
-        auto& domain = *LBMDomain;
+        auto& data = *fields;
         auto& traversals = *Traversals;
-        grid<3>& Grid = domain.m_grid;
+        LBMGrid& Grid = domain->m_grid;
         auto [ptr, size] = traversals.get_levels();
 
         // get fields
@@ -93,7 +92,7 @@ namespace hippoLBM
              domain.m_ghost_manager.do_pack_send(pf, Grid.bx);
 
              auto [ptr, size] = traversals.get_data<Inside>();
-             box<3> inside = Grid.build_box<Area::Local, Inside>();
+             Box3D inside = Grid.build_box<Area::Local, Inside>();
 
              parallel_for_id(ptr, size, step1, parallel_execution_context(), pf);
              parallel_for_box(inside, step2, pf, pex, pey, pez);
@@ -111,13 +110,13 @@ namespace hippoLBM
         {
           // run kernel
           parallel_for_simple(size, step1, parallel_execution_context("streaming_step1"));
-          update_ghost(domain, pf, par_exec_ctx);
+          update_ghost(*domain, pf, par_exec_ctx);
           parallel_for_simple(size, step2, parallel_execution_context("streaming_step2"));
-          /*
-             box<3> extend = Grid.build_box<Area::Local, Traversal::Extend>();
-             onika::parallel::ParallelExecutionSpace<3> parallel_range = set(extend);        
-             parallel_for(parallel_range, step2, parallel_execution_context("streaming_step2"));
-           */
+/*
+          Box3D extend = Grid.build_box<Area::Local, Traversal::Extend>();
+          onika::parallel::ParallelExecutionSpace<3> parallel_range = set(extend);        
+          parallel_for(parallel_range, step2, parallel_execution_context("streaming_step2"));
+*/
         }
       }
   };
