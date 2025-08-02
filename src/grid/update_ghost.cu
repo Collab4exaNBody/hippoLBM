@@ -74,6 +74,7 @@ namespace hippoLBM
   ONIKA_AUTORUN_INIT(update_ghost)
   {
     OperatorNodeFactory::instance()->register_factory( "update_ghost", make_variant_operator<UpdateGhost>);
+    OperatorNodeFactory::instance()->register_factory( "hippolbm_update_ghost", make_variant_operator<UpdateGhost>); // used for couplings
   }
 }
 
