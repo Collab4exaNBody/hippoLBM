@@ -1,3 +1,22 @@
+/*
+   Licensed to the Apache Software Foundation (ASF) under one
+   or more contributor license agreements.  See the NOTICE file
+   distributed with this work for additional information
+   regarding copyright ownership.  The ASF licenses this file
+   to you under the Apache License, Version 2.0 (the
+   "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+ */
+
 #pragma once
 
 #include <hippoLBM/io/writer.hpp>
@@ -134,71 +153,71 @@ namespace hippoLBM
       PressionWriter pression = {obst, c_c_avg_rho_div_three};
       write_file writer_double = {pression};
 
-			assert( local.get_length(0) == global.get_length(0) );
-			assert( local.get_length(1) == global.get_length(1) );
-			assert( local.get_length(2) == global.get_length(2) );
+      assert( local.get_length(0) == global.get_length(0) );
+      assert( local.get_length(1) == global.get_length(1) );
+      assert( local.get_length(2) == global.get_length(2) );
 
-			paraview_buffer paraview_streams;
-			paraview_streams.sim_header_to_stream(global, dx);
+      paraview_buffer paraview_streams;
+      paraview_streams.sim_header_to_stream(global, dx);
 
-			outFile << "<VTKFile type=\"RectilinearGrid\">"  << std::endl;
-			outFile << " <RectilinearGrid WholeExtent=\" 0 " << lx - 1 << " 0 " << ly - 1 << " 0 " << lz - 1<< "\">"  << std::endl;
-			outFile << "      <Piece Extent=\""<< global.start(0) << " " << global.end(0) << " " << global.start(1) << " " << global.end(1) << " " << global.start(2) << " " << global.end(2) << " \">" << std::endl;
-			outFile << "      <Coordinates>" << std::endl;
-			outFile << "          <DataArray type=\"Float32\" Name=\"X\" format=\"ascii\">" <<std::endl;
-			outFile << paraview_streams.i.rdbuf();
-			outFile << std::endl;
-			outFile << "          </DataArray>"  << std::endl;
-			outFile << "          <DataArray type=\"Float32\" Name=\"Y\" format=\"ascii\">" <<std::endl;
-			outFile << paraview_streams.j.rdbuf();
-			outFile << std::endl;
-			outFile << "          </DataArray>"  << std::endl;
-			outFile << "          <DataArray type=\"Float32\" Name=\"Z\" format=\"ascii\">" <<std::endl;
-			outFile << paraview_streams.k.rdbuf();
-			outFile << std::endl;
-			outFile << "          </DataArray>"  << std::endl;
-			outFile << "      </Coordinates>" << std::endl;
-			outFile << "      <PointData>"  << std::endl;
-			outFile << "          <DataArray type=\"Float32\" Name=\"P\" format=\"ascii\">" << std::endl;
-			{ 
-				std::stringstream paraview_stream_buffer;
-				for_all(traversal_ptr, traversal_size, writer_double, paraview_stream_buffer, onika::cuda::vector_data(data.m0));
-				outFile << paraview_stream_buffer.rdbuf();
-			} 
-			outFile << std::endl;
-			outFile << "          </DataArray>"  << std::endl;
-			outFile << "          <DataArray type=\"Float32\" Name=\"U\" format=\"ascii\" NumberOfComponents=\"3\">" << std::endl;
-			{ 
-				std::stringstream paraview_stream_buffer;
-				for_all<L, PARAVIEW_TR>(Grid, writer_vec3d, paraview_stream_buffer, data.flux());
-				outFile << paraview_stream_buffer.rdbuf();
-			} 
-			outFile << std::endl;
-			outFile << "          </DataArray>"  << std::endl;
-			outFile << "          <DataArray type=\"Float32\" Name=\"OBST\" format=\"ascii\">" << std::endl;
-			{
-				std::stringstream paraview_stream_buffer;
-				for_all(traversal_ptr, traversal_size, writer_obst, paraview_stream_buffer, onika::cuda::vector_data(data.obst));
-				outFile << paraview_stream_buffer.rdbuf();
-			}
-			outFile << std::endl;
-			outFile << "          </DataArray>"  << std::endl;
+      outFile << "<VTKFile type=\"RectilinearGrid\">"  << std::endl;
+      outFile << " <RectilinearGrid WholeExtent=\" 0 " << lx - 1 << " 0 " << ly - 1 << " 0 " << lz - 1<< "\">"  << std::endl;
+      outFile << "      <Piece Extent=\""<< global.start(0) << " " << global.end(0) << " " << global.start(1) << " " << global.end(1) << " " << global.start(2) << " " << global.end(2) << " \">" << std::endl;
+      outFile << "      <Coordinates>" << std::endl;
+      outFile << "          <DataArray type=\"Float32\" Name=\"X\" format=\"ascii\">" <<std::endl;
+      outFile << paraview_streams.i.rdbuf();
+      outFile << std::endl;
+      outFile << "          </DataArray>"  << std::endl;
+      outFile << "          <DataArray type=\"Float32\" Name=\"Y\" format=\"ascii\">" <<std::endl;
+      outFile << paraview_streams.j.rdbuf();
+      outFile << std::endl;
+      outFile << "          </DataArray>"  << std::endl;
+      outFile << "          <DataArray type=\"Float32\" Name=\"Z\" format=\"ascii\">" <<std::endl;
+      outFile << paraview_streams.k.rdbuf();
+      outFile << std::endl;
+      outFile << "          </DataArray>"  << std::endl;
+      outFile << "      </Coordinates>" << std::endl;
+      outFile << "      <PointData>"  << std::endl;
+      outFile << "          <DataArray type=\"Float32\" Name=\"P\" format=\"ascii\">" << std::endl;
+      { 
+        std::stringstream paraview_stream_buffer;
+        for_all(traversal_ptr, traversal_size, writer_double, paraview_stream_buffer, onika::cuda::vector_data(data.m0));
+        outFile << paraview_stream_buffer.rdbuf();
+      } 
+      outFile << std::endl;
+      outFile << "          </DataArray>"  << std::endl;
+      outFile << "          <DataArray type=\"Float32\" Name=\"U\" format=\"ascii\" NumberOfComponents=\"3\">" << std::endl;
+      { 
+        std::stringstream paraview_stream_buffer;
+        for_all<L, PARAVIEW_TR>(Grid, writer_vec3d, paraview_stream_buffer, data.flux());
+        outFile << paraview_stream_buffer.rdbuf();
+      } 
+      outFile << std::endl;
+      outFile << "          </DataArray>"  << std::endl;
+      outFile << "          <DataArray type=\"Float32\" Name=\"OBST\" format=\"ascii\">" << std::endl;
+      {
+        std::stringstream paraview_stream_buffer;
+        for_all(traversal_ptr, traversal_size, writer_obst, paraview_stream_buffer, onika::cuda::vector_data(data.obst));
+        outFile << paraview_stream_buffer.rdbuf();
+      }
+      outFile << std::endl;
+      outFile << "          </DataArray>"  << std::endl;
 
-			if(print_distributions)
-			{
-				outFile << "          <DataArray type=\"Float32\" Name=\"Fi\" format=\"ascii\" NumberOfComponents=\"19\">" << std::endl;
-				{
-					std::stringstream paraview_stream_buffer;
-					for_all(traversal_ptr, traversal_size, writer_Q, paraview_stream_buffer, data.distributions());
-					outFile << paraview_stream_buffer.rdbuf();
-				}
-				outFile << std::endl;
-				outFile << "          </DataArray>"  << std::endl;
-			}
+      if(print_distributions)
+      {
+        outFile << "          <DataArray type=\"Float32\" Name=\"Fi\" format=\"ascii\" NumberOfComponents=\"19\">" << std::endl;
+        {
+          std::stringstream paraview_stream_buffer;
+          for_all(traversal_ptr, traversal_size, writer_Q, paraview_stream_buffer, data.distributions());
+          outFile << paraview_stream_buffer.rdbuf();
+        }
+        outFile << std::endl;
+        outFile << "          </DataArray>"  << std::endl;
+      }
 
-			outFile << "      </PointData>"  << std::endl;
-			outFile << "      </Piece>" << std::endl;
-			outFile << " </RectilinearGrid>"  << std::endl;
-			outFile << "</VTKFile>"  << std::endl;
-		}
+      outFile << "      </PointData>"  << std::endl;
+      outFile << "      </Piece>" << std::endl;
+      outFile << " </RectilinearGrid>"  << std::endl;
+      outFile << "</VTKFile>"  << std::endl;
+    }
 }

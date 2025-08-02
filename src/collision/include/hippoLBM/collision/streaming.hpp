@@ -1,3 +1,23 @@
+/*
+   Licensed to the Apache Software Foundation (ASF) under one
+   or more contributor license agreements.  See the NOTICE file
+   distributed with this work for additional information
+   regarding copyright ownership.  The ASF licenses this file
+   to you under the Apache License, Version 2.0 (the
+   "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+ */
+
+
 #pragma once
 
 #include <hippoLBM/grid/field_view.hpp>
@@ -14,14 +34,14 @@ namespace hippoLBM
    * @param f Pointer to an array of doubles representing distribution functions.
    */
   /*      ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, const FieldView<Q>& f) const
-	  {
-	  for (int iLB = 1; iLB < Q; iLB += 2)
-	  {
-	  std::swap(f(idx,iLB), f(idx,iLB+1));
-	  }
-	  }
-	  };
-	  */
+          {
+          for (int iLB = 1; iLB < Q; iLB += 2)
+          {
+          std::swap(f(idx,iLB), f(idx,iLB+1));
+          }
+          }
+          };
+   */
   template<int Q, Traversal Tr>
     struct streaming_step1
     {
@@ -29,13 +49,13 @@ namespace hippoLBM
       const FieldView<Q> f;
       ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx) const
       {
-	if(check_level<Tr>(levels[idx]))
-	{
-	  for (int iLB = 1; iLB < Q; iLB += 2)
-	  {
-	    std::swap(f(idx,iLB), f(idx,iLB+1));
-	  }
-	}
+        if(check_level<Tr>(levels[idx]))
+        {
+          for (int iLB = 1; iLB < Q; iLB += 2)
+          {
+            std::swap(f(idx,iLB), f(idx,iLB+1));
+          }
+        }
       }
     };
 
@@ -65,39 +85,39 @@ namespace hippoLBM
       ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t&& coord) const
       {
 
-	const int idx = g(coord.x,coord.y,coord.z);
-	for (int iLB = 1; iLB < Q; iLB += 2)
-	{
-	  const int next_x = coord.x + ex[iLB];
-	  const int next_y = coord.y + ey[iLB];
-	  const int next_z = coord.z + ez[iLB];
+        const int idx = g(coord.x,coord.y,coord.z);
+        for (int iLB = 1; iLB < Q; iLB += 2)
+        {
+          const int next_x = coord.x + ex[iLB];
+          const int next_y = coord.y + ey[iLB];
+          const int next_z = coord.z + ez[iLB];
 
-	  if(g.is_defined(next_x, next_y, next_z))
-	  {
-	    const int next_idx = g(next_x, next_y, next_z);
-	    std::swap(f(idx,iLB+1), f(next_idx, iLB));
-	  } 
-	}
+          if(g.is_defined(next_x, next_y, next_z))
+          {
+            const int next_idx = g(next_x, next_y, next_z);
+            std::swap(f(idx,iLB+1), f(next_idx, iLB));
+          } 
+        }
       }
 
       ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx) const
       {
-	if(check_level<Tr>(levels[idx]))
-	{
-	  auto [x,y,z] = g(idx);
-	  for (int iLB = 1; iLB < Q; iLB += 2)
-	  {
-	    const int next_x = x + ex[iLB];
-	    const int next_y = y + ey[iLB];
-	    const int next_z = z + ez[iLB];
+        if(check_level<Tr>(levels[idx]))
+        {
+          auto [x,y,z] = g(idx);
+          for (int iLB = 1; iLB < Q; iLB += 2)
+          {
+            const int next_x = x + ex[iLB];
+            const int next_y = y + ey[iLB];
+            const int next_z = z + ez[iLB];
 
-	    if(g.is_defined(next_x, next_y, next_z))
-	    {
-	      const int next_idx = g(next_x, next_y, next_z);
-	      std::swap(f(idx,iLB+1), f(next_idx, iLB));
-	    } 
-	  }
-	}
+            if(g.is_defined(next_x, next_y, next_z))
+            {
+              const int next_idx = g(next_x, next_y, next_z);
+              std::swap(f(idx,iLB+1), f(next_idx, iLB));
+            } 
+          }
+        }
       } 
     };
 }

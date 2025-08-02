@@ -1,3 +1,23 @@
+/*
+   Licensed to the Apache Software Foundation (ASF) under one
+   or more contributor license agreements.  See the NOTICE file
+   distributed with this work for additional information
+   regarding copyright ownership.  The ASF licenses this file
+   to you under the Apache License, Version 2.0 (the
+   "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+ */
+
+
 #include <mpi.h>
 #include <onika/scg/operator.h>
 #include <onika/scg/operator_slot.h>
@@ -33,14 +53,14 @@ namespace hippoLBM
 		ADD_SLOT( readVec3, U, INPUT, REQUIRED, DocString{"Prescribed velocity at the boundary (z = lz), enforcing the Cavity condition."});
 		ADD_SLOT( bounce_back_manager<Q>, bbmanager, INPUT_OUTPUT, REQUIRED);
 
-		public:
-		inline std::string documentation() const override final
-		{
-			return R"EOF( This operator enforces a Cavity boundary condition at z = lz in an LBM simulation. 
+    public:
+    inline std::string documentation() const override final
+    {
+      return R"EOF( This operator enforces a Cavity boundary condition at z = lz in an LBM simulation. 
                       The Cavity boundary condition ensures that the gradient of the distribution function 
                       follows a prescribed value
         )EOF";
-		}
+    }
 
 		inline void execute () override final
 		{
@@ -49,34 +69,34 @@ namespace hippoLBM
 			auto [lx, ly, lz] = domain->domain_size;
 			auto [ux,uy,uz] = *U;
 
-			// define functors
-			cavity<Dim, S, Q> bcs = {};
+      // define functors
+      cavity<Dim, S, Q> bcs = {};
 
-			// get fields
-			constexpr int idx = helper_dim_idx<Dim,S>();
-			FieldView<5> pfi = bb.get_data(idx);
-			int * const pobst = data.obstacles();
-			auto [pex, pey, pez] = data.exyz();
-			const double * const pw = data.weights();
+      // get fields
+      constexpr int idx = helper_dim_idx<Dim,S>();
+      FieldView<5> pfi = bb.get_data(idx);
+      int * const pobst = data.obstacles();
+      auto [pex, pey, pez] = data.exyz();
+      const double * const pw = data.weights();
 
-			// initialize coefficients
-			bcs.compute_coeff(ux, uy, uz, pw, pex, pey, pez, lx, ly, lz);
+      // initialize coefficients
+      bcs.compute_coeff(ux, uy, uz, pw, pex, pey, pez, lx, ly, lz);
 
-			// run kernel
-			auto params = make_tuple(pobst, pfi);
-			parallel_for_id_runner runner = {bcs, params};
-			parallel_for(pfi.num_elements, runner, parallel_execution_context(), ParallelForOptions());
-		}
-	};
+      // run kernel
+      auto params = make_tuple(pobst, pfi);
+      parallel_for_id_runner runner = {bcs, params};
+      parallel_for(pfi.num_elements, runner, parallel_execution_context(), ParallelForOptions());
+    }
+  };
 
-	template<int Q> using CavityZ0_3D19Q = Cavity<DIMZ, Side::Left, Q>;
-	template<int Q> using CavityZL_3D19Q = Cavity<DIMZ, Side::Right,Q>;
+  template<int Q> using CavityZ0_3D19Q = Cavity<DIMZ, Side::Left, Q>;
+  template<int Q> using CavityZL_3D19Q = Cavity<DIMZ, Side::Right,Q>;
 
-	// === register factories ===  
-	ONIKA_AUTORUN_INIT(cavity)
-	{
-		OperatorNodeFactory::instance()->register_factory( "cavity_z_0", make_variant_operator<CavityZ0_3D19Q>);
-		OperatorNodeFactory::instance()->register_factory( "cavity_z_l", make_variant_operator<CavityZL_3D19Q>);
-	}
+  // === register factories ===  
+  ONIKA_AUTORUN_INIT(cavity)
+  {
+    OperatorNodeFactory::instance()->register_factory( "cavity_z_0", make_variant_operator<CavityZ0_3D19Q>);
+    OperatorNodeFactory::instance()->register_factory( "cavity_z_l", make_variant_operator<CavityZL_3D19Q>);
+  }
 }
 

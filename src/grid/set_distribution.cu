@@ -1,3 +1,22 @@
+/*
+   Licensed to the Apache Software Foundation (ASF) under one
+   or more contributor license agreements.  See the NOTICE file
+   distributed with this work for additional information
+   regarding copyright ownership.  The ASF licenses this file
+   to you under the Apache License, Version 2.0 (the
+   "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+ */
+
 #include <onika/scg/operator.h>
 #include <onika/scg/operator_slot.h>
 #include <onika/scg/operator_factory.h>
@@ -39,7 +58,7 @@ namespace hippoLBM
         auto& traversals = *Traversals;
         LBMDomain<Q>& Domain = *domain;
         LBMGrid& Grid = Domain.m_grid;
-        GridIjkToIdx ijk_to_idx(Grid);
+        GridIJKtoIdx ijk_to_idx(Grid);
 
         FieldView pf = data.distributions();
         const double * const pw = data.weights();
@@ -64,13 +83,11 @@ namespace hippoLBM
           Point3D _max = {int(max.x/Dx), int(max.y/Dx), int(max.z/Dx)};
 
           Box3D global_wall_box = {_min, _max};
-          //global_wall_box.print();
 
           auto [is_inside_subdomain, wall_box] = Grid.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_wall_box);
-          //wall_box.print();
           if( !is_inside_subdomain ) return;
 
-          parallel_for(wall_box, func, parallel_execution_context());
+          parallel_for(wall_box, func, parallel_execution_context(), pf, pw);
 
         }
         else  // all domain

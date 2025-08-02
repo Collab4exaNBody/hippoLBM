@@ -52,6 +52,8 @@ endif()
 
 set( CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS}" "--expt-relaxed-constexpr" )
 
+find_package(MPI REQUIRED)
+
 add_executable(hippoLBM hippoLBM.cpp)
 target_compile_options(hippoLBM PUBLIC ${ONIKA_COMPILE_OPTIONS})
 target_compile_definitions(hippoLBM PUBLIC ${ONIKA_COMPILE_DEFINITIONS})

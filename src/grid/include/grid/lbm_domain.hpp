@@ -17,44 +17,28 @@ specific language governing permissions and limitations
 under the License.
  */
 
-
 #pragma once
+
+#include <grid/box.hpp>
+#include <grid/ghost_manager.hpp>
+#include <grid/grid.hpp>
 
 namespace hippoLBM
 {
-  enum Area
-  {
-    Local,
-    Global
-  };
+  constexpr int DIM = 3;
 
-  enum Side
-  {
-    Left, 
-    Right
-  };
-
-  enum Traversal
-  {
-    All, ///< All points into a grid
-    Real, ///< All points - ghost layer
-    Inside, ///< All points - ghost layer - 1 layer of size 1
-    Edge, ///< Read whithout Inside
-    Ghost_Edge, ///< All without Inside
-    Plan_xy_0,
-    Plan_xy_l,
-    Plan_xz_0,
-    Plan_xz_l,
-    Plan_yz_0,
-    Plan_yz_l,
-    Extend ///< used for paraview and test if the grid have a point
-  };
-
-  constexpr int DIMX = 0;
-  constexpr int DIMY = 1;
-  constexpr int DIMZ = 2;
-  constexpr int DIM_MAX = 3;
-}
-
-#define FLUIDE_ -1
-#define WALL_ -2
+  template<int Q>
+    struct lbm_domain
+    {
+      ghost_manager<Q,DIM> m_ghost_manager;
+      box<DIM> m_box;
+      grid<DIM> m_grid;
+      onika::math::AABB bounds;
+      int3d domain_size;
+      onika::math::IJK MPI_coord;
+      onika::math::IJK MPI_grid_size;
+      lbm_domain() {};
+      lbm_domain(ghost_manager<Q,DIM>& g, box<DIM>& b, grid<DIM>& gr, onika::math::AABB& bd, int3d& ds, onika::math::IJK& mc, onika::math::IJK& mgs)
+        : m_ghost_manager(g), m_box(b), m_grid(gr), bounds(bd), domain_size(ds), MPI_coord(mc), MPI_grid_size(mgs) {} 
+    };
+};

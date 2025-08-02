@@ -1,3 +1,22 @@
+/*
+   Licensed to the Apache Software Foundation (ASF) under one
+   or more contributor license agreements.  See the NOTICE file
+   distributed with this work for additional information
+   regarding copyright ownership.  The ASF licenses this file
+   to you under the Apache License, Version 2.0 (the
+   "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+ */
+
 #include <mpi.h>
 #include <onika/scg/operator.h>
 #include <onika/scg/operator_slot.h>
@@ -24,31 +43,31 @@ namespace hippoLBM
   template<int Q>
     class UpdateGhost : public OperatorNode
   {
-      ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
-      ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
+    ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+    ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
 
     public:
 
-      inline std::string documentation() const override final
-      {
-        return R"EOF(  A functor for computing macroscopic variables (densities and flux) for lattice Boltzmann method.
+    inline std::string documentation() const override final
+    {
+      return R"EOF(  A functor for computing macroscopic variables (densities and flux) for lattice Boltzmann method.
         )EOF";
-      }
+    }
 
-      inline void execute () override final
-      {
-        auto& data = *fields;
+    inline void execute () override final
+    {
+      auto& data = *fields;
 
-        // capture the parallel execution context
-        auto par_exec_ctx = [this] (const char* exec_name)
-        { 
-          return this->parallel_execution_context(exec_name);
-        };
+      // capture the parallel execution context
+      auto par_exec_ctx = [this] (const char* exec_name)
+      { 
+        return this->parallel_execution_context(exec_name);
+      };
 
-        // get fields
-        FieldView<Q> pf = data.distributions();
-        update_ghost(*domain, pf, par_exec_ctx);
-      }
+      // get fields
+      FieldView<Q> pf = data.distributions();
+      update_ghost(*domain, pf, par_exec_ctx);
+    }
   };
 
   // === register factories ===  
