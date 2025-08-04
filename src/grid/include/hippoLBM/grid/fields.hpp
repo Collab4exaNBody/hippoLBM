@@ -45,7 +45,7 @@ namespace hippoLBM
   template<int Q>
     struct LBMFields 
     {
-      int grid_size;
+      size_t grid_size;
       LBMScheme<Q> scheme;
 
       // fields
@@ -60,6 +60,7 @@ namespace hippoLBM
       LBMFields() {}
 
       // accessors
+      size_t size() { return grid_size; }
       FieldView<Q> distributions() { 
         return FieldView<Q>{onika::cuda::vector_data(f), grid_size}; 
       }

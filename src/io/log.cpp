@@ -25,13 +25,13 @@ under the License.
 #include <onika/cuda/cuda.h>
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
-
-#include <hippoLBM/grid/make_variant_operator.hpp>
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
+#include <onika/string_utils.h>
+
+#include <hippoLBM/grid/make_variant_operator.hpp>
 #include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/enum.hpp>
-#include <onika/string_utils.h>
 
 #include<chrono>
 

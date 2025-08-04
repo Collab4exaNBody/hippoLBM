@@ -21,5 +21,6 @@ namespace hippoLBM
 	: m_ghost_manager(g), m_box(b), m_grid(gr), bounds(bd), domain_size(ds), MPI_coord(mc), MPI_grid_size(mgs) {} 
 
       double dx() { return m_grid.dx; }
+      LBMGrid& grid() { return m_grid; }
     };
 };

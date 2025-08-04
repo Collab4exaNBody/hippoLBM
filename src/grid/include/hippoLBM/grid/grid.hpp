@@ -158,6 +158,16 @@ namespace hippoLBM
 			}
 
 		// could be optimized
+    template<Area A, bool Check=false>
+      ONIKA_HOST_DEVICE_FUNC inline Point3D project(onika::math::Vec3d&& r) const
+      {
+        Point3D p = {int(r.x / dx), int(r.y / dx), int(r.z / dx)};
+        return convert<A,Check>(p[0], p[1], p[2]);
+      }
+
+
+
+
 		/*** convert a point to A area. */
 		template<Area A, bool Check=false>
 			ONIKA_HOST_DEVICE_FUNC inline Point3D convert(Point3D p) const

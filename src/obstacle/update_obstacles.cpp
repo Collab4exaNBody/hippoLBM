@@ -38,6 +38,7 @@ namespace hippoLBM
 			LBMGrid _grid;
 			double _dx;
 			int * const _obst;
+      int _value = WALL_;
 
 			template<typename Obj>
 				inline void operator()(Obj& obj) const
@@ -58,7 +59,7 @@ namespace hippoLBM
 								if( obj.solid( _grid.compute_position<Area::Global>(x,y,z) ))
 								{
 									const int idx = _grid(x,y,z);
-									_obst[idx] = WALL_;
+									_obst[idx] = _value;
 								}
 							}
 
