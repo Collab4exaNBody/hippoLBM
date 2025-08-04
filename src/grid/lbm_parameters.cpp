@@ -51,7 +51,7 @@ namespace hippoLBM
       ADD_SLOT( double, avg_rho, INPUT, 1000.0);
 
       ADD_SLOT( LBMParameters, Params, OUTPUT);
-      ADD_SLOT( double , dtLB, OUTPUT);
+      ADD_SLOT( double , dt, INPUT_OUTPUT);
 
       inline void execute () override final
       {
@@ -60,9 +60,9 @@ namespace hippoLBM
         params.Fext = *Fext;
         params.celerity = *celerity;
 
-        if( dtLB.has_value() )
+        if( dt.has_value() )
         {
-          params.dtLB = *dtLB;
+          params.dtLB = *dt;
           if( params.dtLB > Dx / params.celerity )
           {
             lout << "\033[31m[lbm_parameters, Error] The LBM time step is not set correctly for this LBM mesh size. Please set a time step below: " << Dx / params.celerity << " s" << std::endl;
@@ -78,7 +78,7 @@ namespace hippoLBM
         params.tau = 3. * params.nu + 0.5;
         params.avg_rho = *avg_rho;
         params.print();
-        *dtLB = params.dtLB;
+        *dt = params.dtLB;
         *Params = params;
       }
   };
