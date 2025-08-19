@@ -46,7 +46,7 @@ namespace hippoLBM
   {
     public:
       ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
-      ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT);
+      ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED);
 
       inline void execute () override final
       {

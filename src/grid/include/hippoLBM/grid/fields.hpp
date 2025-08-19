@@ -45,7 +45,7 @@ namespace hippoLBM
   template<int Q>
     struct LBMFields 
     {
-      size_t grid_size;
+      uint64_t grid_size;
       LBMScheme<Q> scheme;
 
       // fields
@@ -60,7 +60,7 @@ namespace hippoLBM
       LBMFields() {}
 
       // accessors
-      size_t size() { return grid_size; }
+      uint64_t size() { return grid_size; }
       FieldView<Q> distributions() { 
         return FieldView<Q>{onika::cuda::vector_data(f), grid_size}; 
       }
@@ -71,6 +71,7 @@ namespace hippoLBM
       }
       int * obstacles() { return onika::cuda::vector_data(obst); }
       const double * weights() { return onika::cuda::vector_data(scheme.w); }
+      const int * iopp() { return onika::cuda::vector_data(scheme.iopp); }
       std::tuple<const int *, const int * , const int *> exyz() 
       {
         const int * ex = onika::cuda::vector_data(scheme.ex); 
@@ -78,5 +79,8 @@ namespace hippoLBM
         const int * ez = onika::cuda::vector_data(scheme.ez); 
         return {ex,ey,ez}; 
       }
+      const int * ex() { return onika::cuda::vector_data(scheme.ex); }
+      const int * ey() { return onika::cuda::vector_data(scheme.ey); }
+      const int * ez() { return onika::cuda::vector_data(scheme.ez); }
     };
 }

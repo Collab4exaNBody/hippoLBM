@@ -26,18 +26,9 @@ under the License.
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
 
-#include <onika/math/basic_types_yaml.h>
-#include <onika/math/basic_types_stream.h>
-#include <onika/math/basic_types_operators.h>
-#include <hippoLBM/grid/domain.hpp>
-#include <hippoLBM/grid/comm.hpp>
-#include <hippoLBM/grid/enum.hpp>
-#include <hippoLBM/grid/fields.hpp>
-#include <hippoLBM/grid/parallel_for_core.cu>
-#include <hippoLBM/grid/traversal_lbm.hpp>
-#include <hippoLBM/collision/streaming.hpp>
 #include <hippoLBM/grid/update_ghost.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
+#include <hippoLBM/collision/streaming.hpp>
 
 namespace hippoLBM
 {

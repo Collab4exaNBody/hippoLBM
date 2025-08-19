@@ -53,13 +53,13 @@ namespace hippoLBM
     FieldView<Un> get_data(int i)
     {
       assert( onika::cuda::vector_size(_data[i]) % Un == 0 );
-      int size = onika::cuda::vector_size(_data[i]) / Un;
+      uint64_t size = onika::cuda::vector_size(_data[i]) / Un;
       double * ptr = onika::cuda::vector_data(_data[i]);
       return FieldView<Un>{ptr, size}; 
     }
 
     template<int dim>
-      int get_size(const onika::math::IJK lgs)
+      uint64_t get_size(const onika::math::IJK lgs)
       {
         if constexpr(dim == DIMX) return lgs.j * lgs.k;
         if constexpr(dim == DIMY) return lgs.i * lgs.k;
@@ -69,7 +69,7 @@ namespace hippoLBM
     template<int Dim, Side S>
       void resize_data(const onika::math::IJK& lgs)
       {
-        const size_t size_dim = get_size<Dim>(lgs) * Un; 
+        const uint64_t size_dim = get_size<Dim>(lgs) * Un; 
         int i = helper_dim_idx<Dim,S>();
         auto& data = _data[i];
         if(size_dim != onika::cuda::vector_size(data))

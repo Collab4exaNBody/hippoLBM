@@ -36,31 +36,34 @@ namespace hippoLBM
 
 	class Ball : public AbstractObject
 	{
-		Vec3d center;
-		double radius;
-		double r2;
+		Vec3d m_center;
+		double m_radius;
+		double m_r2;
 
 		public:
 
-		Ball() = delete;
-		Ball(Vec3d c, double rad) : center(c), radius(rad)
+		Ball(Vec3d c, double rad) : m_center(c), m_radius(rad)
 		{
-			r2 = rad * rad;
+			m_r2 = rad * rad;
 		}
 
 		AABB covered()
 		{
-			AABB res = { center - radius , center + radius };
+			AABB res = { m_center - m_radius , m_center + m_radius };
 			return res;
 		}
 
 		constexpr OBSTACLE_TYPE type() { return OBSTACLE_TYPE::BALL; } 
 
+    ONIKA_HOST_DEVICE_FUNC inline Vec3d& center()             { return m_center; }
+    ONIKA_HOST_DEVICE_FUNC inline const Vec3d& center() const { return m_center; }
+    ONIKA_HOST_DEVICE_FUNC inline double rcut2()              { return m_r2; }
+    ONIKA_HOST_DEVICE_FUNC inline const double rcut2() const  { return m_r2; }
 
-		bool solid(Vec3d&& pos)
+		ONIKA_HOST_DEVICE_FUNC bool solid(Vec3d&& pos)
 		{
-			Vec3d r = pos - center;
-			return dot(r,r) <= r2;
+			Vec3d r = pos - m_center;
+			return dot(r,r) <= m_r2;
 		}
 	};
 
@@ -70,7 +73,6 @@ namespace hippoLBM
 
 		public:
 
-		Wall() = delete;
 		Wall(AABB bds) : bounds(bds) {	}
 
 		AABB covered()
@@ -80,7 +82,7 @@ namespace hippoLBM
 
 		constexpr OBSTACLE_TYPE type() { return OBSTACLE_TYPE::WALL; } 
 
-		bool solid(Vec3d&& pos)
+		ONIKA_HOST_DEVICE_FUNC bool solid(Vec3d&& pos)
 		{
 			return intersect(bounds, pos);
 		}

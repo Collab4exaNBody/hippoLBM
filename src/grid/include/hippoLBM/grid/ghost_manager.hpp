@@ -37,7 +37,7 @@ namespace hippoLBM
 			 *
 			 * @return The number of ghost communications.
 			 */
-			int get_size() { return m_data.size(); }
+			uint64_t get_size() { return m_data.size(); }
 
 			/**
 			 * @brief Add a send and receive communication pair to the manager.
@@ -61,7 +61,7 @@ namespace hippoLBM
 			 */
 			void resize_request()
 			{
-				const int nb_request = this->get_size() * 2;
+				const uint64_t nb_request = this->get_size() * 2;
 				m_request.resize(nb_request);
 			}
 
@@ -86,7 +86,7 @@ namespace hippoLBM
 				{
 					auto& send = it.recv;
 					auto& recv = it.recv;
-					int nb_bytes = recv.get_size() * sizeof(double);
+					uint64_t nb_bytes = recv.get_size() * sizeof(double);
 #ifdef PRINT_DEBUG_MPI
 					std::cout << "I recv " << nb_bytes << " bytes from " << recv.get_dest() << " with tag " << recv.get_tag() << std::endl;
 #endif
@@ -114,7 +114,7 @@ namespace hippoLBM
 					{
 						auto& recv = it.recv;
 						// Wrap data
-						FieldView<Components> wrecv = {recv.get_data() , recv.get_size() / Components};
+						FieldView<Components> wrecv = {recv.get_data() , uint64_t(recv.get_size() / Components)};
 						// Define kernel
 						unpacker<Components> unpack = {mesh, wrecv, recv.get_box(), mesh_box};
 						// Define cuda/omp grid
@@ -137,13 +137,13 @@ namespace hippoLBM
 						Box3D& mesh_box,
 						ParExecCtxFunc& par_exec_ctx)
 				{
-					const int size = this->get_size();
+					const uint64_t size = this->get_size();
 					int acc = size;
 					for (auto& it : this->m_data)
 					{
 						auto& send = it.send;
 						// Wrap data
-						FieldView<Components> wsend = {send.get_data() , send.get_size() / Components};
+						FieldView<Components> wsend = {send.get_data() , uint64_t(send.get_size() / Components)};
 						// Define kernel
 						packer<Components> pack = {wsend, mesh, send.get_box(), mesh_box};
 						// Define cuda/omp grid
@@ -157,7 +157,7 @@ namespace hippoLBM
 					{
 						auto& send = it.send;
 						auto& recv = it.recv; 
-						int nb_bytes = send.get_size() * sizeof(double);
+						uint64_t nb_bytes = send.get_size() * sizeof(double);
 						if((send.get_tag() == recv.get_tag()) && (send.get_dest() == recv.get_dest())) // periodic case && himself
 						{
 							ONIKA_CU_MEMCPY(recv.get_data(), send.get_data(), nb_bytes); // cudaMemcpyDefault, 0 /** default stream */);

@@ -25,8 +25,9 @@ namespace hippoLBM
   template<int Components>
     struct FieldView
     {
-      double * const __restrict__ data;
-      int num_elements;
+      double * const data = nullptr;
+      uint64_t num_elements = 0;
+
       ONIKA_HOST_DEVICE_FUNC 
         inline double& operator()(
             size_t idx, 
@@ -59,6 +60,11 @@ namespace hippoLBM
 #endif
         }
 
+      inline void operator=(FieldView<Components>& fv)
+      {
+        this->data = fv.data;
+        this->num_elements = fv.num_elements;
+      }
     };
 
   template<int Components>

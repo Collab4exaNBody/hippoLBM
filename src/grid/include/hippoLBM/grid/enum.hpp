@@ -22,38 +22,41 @@ under the License.
 
 namespace hippoLBM
 {
-  enum Area
-  {
-    Local,
-    Global
-  };
+	enum Area
+	{
+		Local,  /**< Refers to a local region or domain */
+		Global  /**< Refers to the entire system or global domain */
+	};
 
-  enum Side
-  {
-    Left, 
-    Right
-  };
+	enum Side
+	{
+		Left,   /**< Refers to the left side */
+		Right   /**< Refers to the right side */
+	};
 
-  enum Traversal
-  {
-    All, ///< All points into a grid
-    Real, ///< All points - ghost layer
-    Inside, ///< All points - ghost layer - 1 layer of size 1
-    Edge, ///< Read whithout Inside
-    Ghost_Edge, ///< All without Inside
-    Plan_xy_0,
-    Plan_xy_l,
-    Plan_xz_0,
-    Plan_xz_l,
-    Plan_yz_0,
-    Plan_yz_l,
-    Extend ///< used for paraview and test if the grid have a point
-  };
+	enum Traversal
+	{
+		All,         ///< All points in the grid
+		Real,        ///< All points excluding the ghost layer
+		Inside,      ///< All points excluding the ghost layer and an additional layer of size 1
+		Edge,        ///< Boundary points only (excluding Inside)
+		Ghost_Edge,  ///< Boundary points including the ghost layer
+		Plan_xy_0,   ///< Plane at z = 0 in the XY direction
+		Plan_xy_l,   ///< Plane at z = L in the XY direction
+		Plan_xz_0,   ///< Plane at y = 0 in the XZ direction
+		Plan_xz_l,   ///< Plane at y = L in the XZ direction
+		Plan_yz_0,   ///< Plane at x = 0 in the YZ direction
+		Plan_yz_l,   ///< Plane at x = L in the YZ direction
+		Extend       ///< Used for ParaView output or to test if the grid contains a point
+	};
 
-  constexpr int DIMX = 0;
-  constexpr int DIMY = 1;
-  constexpr int DIMZ = 2;
-  constexpr int DIM_MAX = 3;
+	/**
+	 * @brief Dimension identifiers used for indexing in 3D space.
+	 */
+	constexpr int DIMX = 0; ///< X dimension index
+	constexpr int DIMY = 1; ///< Y dimension index
+	constexpr int DIMZ = 2; ///< Z dimension index
+	constexpr int DIM_MAX = 3; ///< Total number of spatial dimensions
 }
 
 #define FLUIDE_ -1
