@@ -17,7 +17,6 @@ pre_stream_bcs:
 post_stream_bcs:
   - post_bounce_back
 
-
 global:
    simulation_paraview_freq: 50
    simulation_end_iteration: 1000

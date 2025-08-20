@@ -10,7 +10,6 @@ boundary_conditions: nop
 start_iteration: nop
 
 end_iteration:
-  rebind: {dt: dtLB }
   body:
     - trigger_dump_paraview
     - dump_paraview_if_triggered

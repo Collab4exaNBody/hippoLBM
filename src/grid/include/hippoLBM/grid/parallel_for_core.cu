@@ -38,16 +38,21 @@ namespace hippoLBM
   } // namespace tuple_helper
 
   // CPU
-  template<Area A, Traversal Tr, typename Func, typename... Args>
-    inline void for_all(LBMGrid& Grid, Func& a_func, Args&&... a_args)
-    {
-      auto bx = Grid.build_box<A,Tr>();
+  template<typename Func> struct ForAllGridTraits
+  {
+    static inline constexpr bool UsedIJK = true;
+  };
 
+  template<Area A, Traversal Tr, typename Func, typename... Args>
+    inline void for_all(const LBMGrid& grid, Func& a_func, Args&&... a_args)
+    {
+      const auto bx = grid.build_box<A,Tr>();
       for(int k = bx.start(2) ; k <= bx.end(2) ; k++)
         for(int j = bx.start(1) ; j <= bx.end(1) ; j++)
           for(int i = bx.start(0) ; i <= bx.end(0) ; i++)
           {
-            a_func(i, j , k, std::forward<Args>(a_args)...);
+            if constexpr (ForAllGridTraits<Func>::UsedIJK) a_func(i, j , k, std::forward<Args>(a_args)...);
+            else a_func(grid(i,j,k), std::forward<Args>(a_args)...);
           }
     }
 

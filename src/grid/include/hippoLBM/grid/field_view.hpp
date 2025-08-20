@@ -25,7 +25,7 @@ namespace hippoLBM
   template<int Components>
     struct FieldView
     {
-      double * const data = nullptr;
+      double* const data = nullptr;
       uint64_t num_elements = 0;
 
       ONIKA_HOST_DEVICE_FUNC 

@@ -51,7 +51,7 @@ namespace hippoLBM
       ADD_SLOT( double, avg_rho, INPUT, 1000.0);
 
       ADD_SLOT( LBMParameters, Params, OUTPUT);
-      ADD_SLOT( double , dt, INPUT_OUTPUT);
+      ADD_SLOT( double , dt, INPUT_OUTPUT, 0.0);
 
       inline void execute () override final
       {
@@ -60,7 +60,7 @@ namespace hippoLBM
         params.Fext = *Fext;
         params.celerity = *celerity;
 
-        if( dt.has_value() )
+        if( *dt > 0.0 )
         {
           params.dtLB = *dt;
           if( params.dtLB > Dx / params.celerity )

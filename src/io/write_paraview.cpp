@@ -76,9 +76,15 @@ namespace hippoLBM
         auto& data = *fields;
         auto& traversals = *Traversals;
 
+        ExternalParaviewFields external_paraview_fields;
+        if( *distributions ) { 
+          FieldView<Q> distributions = data.distributions();
+          external_paraview_fields.register_field("Fi", distributions.data, Q, distributions.num_elements);        
+        }
+
         MPI_Barrier(comm);
-        write_pvtr(*basedir, file_name, size, *domain, *distributions);
-        write_vtr( fullname, *domain, data, traversals, *Params, *distributions);
+        write_pvtr(*basedir, file_name, size, *domain, external_paraview_fields);
+        write_vtr( fullname, *domain, data, traversals, *Params, external_paraview_fields);
       }
   };
 
