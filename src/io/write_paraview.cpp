@@ -57,6 +57,7 @@ namespace hippoLBM
       ADD_SLOT( bool, distributions, INPUT, false);
       inline void execute () override final
       {
+/*
         auto& comm = *mpi;
         int rank, size;
         MPI_Comm_rank(comm, &rank);
@@ -75,16 +76,17 @@ namespace hippoLBM
 
         auto& data = *fields;
         auto& traversals = *Traversals;
-
+*/
         ExternalParaviewFields external_paraview_fields;
         if( *distributions ) { 
-          FieldView<Q> distributions = data.distributions();
+          FieldView<Q> distributions = fields->distributions();
           external_paraview_fields.register_field("Fi", distributions.data, Q, distributions.num_elements);        
         }
-
+/*
         MPI_Barrier(comm);
         write_pvtr(*basedir, file_name, size, *domain, external_paraview_fields);
-        write_vtr( fullname, *domain, data, traversals, *Params, external_paraview_fields);
+        write_vtr( fullname, *domain, data, traversals, *Params, external_paraview_fields);*/
+        write_paraview(*mpi, *filename, *basedir, *timestep, *fields, *Params, *Traversals, *domain, external_paraview_fields);
       }
   };
 

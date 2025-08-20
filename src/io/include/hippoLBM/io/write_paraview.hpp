@@ -117,7 +117,7 @@ namespace hippoLBM
 	template<typename LBMDomain, typename EPF>
 		inline void write_pvtr( std::string basedir,  std::string basename, size_t number_of_files, LBMDomain& domain,  const EPF& external_paraview_fields = ExternalParaviewFieldsNullOp{} )
 		{
-			LBMGrid& grid = domain.m_grid;
+			const LBMGrid& grid = domain.m_grid;
 			auto [lx, ly, lz] = domain.domain_size;
 			// I could be smarter here
 			int box_size = sizeof(Box3D);
@@ -169,9 +169,9 @@ namespace hippoLBM
 
 
 	template<typename LBMDomain, typename LBMFieds, typename EPF>
-		inline void write_vtr(std::string name, LBMDomain& domain, LBMFieds& data, traversal_lbm& traversals, LBMParameters params, const EPF& external_paraview_fields = ExternalParaviewFieldsNullOp{} )
+		inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data, const traversal_lbm& traversals, const LBMParameters& params, const EPF& external_paraview_fields = ExternalParaviewFieldsNullOp{} )
 		{
-			LBMGrid& grid = domain.m_grid;
+			const LBMGrid& grid = domain.m_grid;
 			auto [lx, ly, lz] = domain.domain_size;
 			const double dx = grid.dx;
 			name = name + ".vtr";
@@ -260,5 +260,37 @@ namespace hippoLBM
 			outFile << "      </Piece>" << std::endl;
 			outFile << " </RectilinearGrid>"  << std::endl;
 			outFile << "</VTKFile>"  << std::endl;
+		}
+
+	template<int Q>
+		void write_paraview(MPI_Comm& comm, 
+				std::string filename,
+				std::string basedir,
+				long timestep,
+				LBMFields<Q>& fields, 
+				const LBMParameters& parameters,
+				const traversal_lbm& traversals,
+				const LBMDomain<Q>& domain, 
+				const ExternalParaviewFields& external_paraview_fields)
+		{
+			int rank, size;
+			MPI_Comm_rank(comm, &rank);
+			MPI_Comm_size(comm, &size);
+
+			std::string file_name = filename;
+			file_name = onika::format_string(file_name, timestep);
+			std::string fullname = basedir + file_name;
+
+			if(rank == 0)
+			{
+				std::filesystem::create_directories( fullname );
+			}
+
+			fullname += "/%06d";
+			fullname = onika::format_string(fullname, rank);
+
+			MPI_Barrier(comm);
+			write_pvtr(basedir, file_name, size, domain, external_paraview_fields);
+			write_vtr( fullname, domain, fields, traversals, parameters, external_paraview_fields);
 		}
 }
