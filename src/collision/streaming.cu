@@ -41,7 +41,7 @@ namespace hippoLBM
   {
     public:
       ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
-      ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
+      ADD_SLOT( LBMGridRegion, grid_region, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
       ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
       ADD_SLOT( bool, asynchrone, INPUT, false, DocString{"The asynchrone option controls the execution style: when true, it allows asynchronous operations with overlapping computation and communication, improving parallel performance. When false, it runs synchronously, ensuring sequential execution of operations and data updates."});
 
@@ -54,7 +54,7 @@ namespace hippoLBM
       inline void execute () override final
       {
         auto& data = *fields;
-        auto& traversals = *Traversals;
+        auto& traversals = *grid_region;
         LBMGrid& Grid = domain->m_grid;
         auto [ptr, size] = traversals.get_levels();
 

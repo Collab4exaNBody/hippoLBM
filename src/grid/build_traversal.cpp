@@ -30,7 +30,7 @@ under the License.
 #include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/enum.hpp>
-#include <hippoLBM/grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/grid_region.hpp>
 
 
 namespace hippoLBM
@@ -43,12 +43,12 @@ namespace hippoLBM
   {
     public:
       ADD_SLOT( LBMDomain<Q>, domain, INPUT);
-      ADD_SLOT( traversal_lbm, Traversals, OUTPUT);
+      ADD_SLOT( LBMGridRegion, grid_region, OUTPUT);
       inline void execute () override final
       {
-        traversal_lbm traversal;
+        LBMGridRegion traversal;
         traversal.build_traversal(domain->m_grid, domain->MPI_coord, domain->MPI_grid_size);
-        *Traversals = traversal;
+        *grid_region = traversal;
       }
   };
 

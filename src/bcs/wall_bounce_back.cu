@@ -33,7 +33,7 @@ under the License.
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
-#include <hippoLBM/grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/bcs/bounce_back.hpp>
 
 namespace hippoLBM

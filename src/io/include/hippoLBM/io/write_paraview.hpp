@@ -19,10 +19,15 @@ under the License.
 
 #pragma once
 
+#include <filesystem>
+#include <hippoLBM/grid/domain.hpp>
+#include <hippoLBM/grid/enum.hpp>
+#include <hippoLBM/grid/fields.hpp>
+#include <hippoLBM/grid/grid_region.hpp>
+#include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/io/writer.hpp>
 #include <onika/string_utils.h>
 #include <hippoLBM/grid/parallel_for_core.cu>
-
 
 namespace hippoLBM
 {
@@ -169,7 +174,7 @@ namespace hippoLBM
 
 
 	template<typename LBMDomain, typename LBMFieds, typename EPF>
-		inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data, const traversal_lbm& traversals, const LBMParameters& params, const EPF& external_paraview_fields = ExternalParaviewFieldsNullOp{} )
+		inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data, const LBMGridRegion& traversals, const LBMParameters& params, const EPF& external_paraview_fields = ExternalParaviewFieldsNullOp{} )
 		{
 			const LBMGrid& grid = domain.m_grid;
 			auto [lx, ly, lz] = domain.domain_size;
@@ -269,7 +274,7 @@ namespace hippoLBM
 				long timestep,
 				LBMFields<Q>& fields, 
 				const LBMParameters& parameters,
-				const traversal_lbm& traversals,
+				const LBMGridRegion& traversals,
 				const LBMDomain<Q>& domain, 
 				const ExternalParaviewFields& external_paraview_fields)
 		{

@@ -60,7 +60,7 @@ namespace hippoLBM
 
     }
 
-  struct traversal_lbm
+  struct LBMGridRegion
   {
     vector_t<int> level; // 0 inside, 1 real, 2 extend ,3 All
     vector_t<int> ghost_edge;
@@ -73,7 +73,7 @@ namespace hippoLBM
     vector_t<int> plane_xz_0, plane_xz_l;
     vector_t<int> plane_yz_0, plane_yz_l;
 
-    traversal_lbm() {};
+    LBMGridRegion() {};
 
     template<Traversal Tr> traversal_data get_data();
     template<Traversal Tr> const traversal_data get_data() const;
@@ -212,28 +212,28 @@ namespace hippoLBM
   };
 
 
-  template<> inline traversal_data traversal_lbm::get_data<Traversal::All>()        { return{ vector_data(all), vector_size(all)}; }  
-  template<> inline traversal_data traversal_lbm::get_data<Traversal::Real>()       { return{ vector_data(real), vector_size(real)}; }  
-  template<> inline traversal_data traversal_lbm::get_data<Traversal::Extend>()     { return{ vector_data(extend), vector_size(extend)}; }  
-  template<> inline traversal_data traversal_lbm::get_data<Traversal::Inside>()     { return{ vector_data(inside), vector_size(inside)}; }  
-  template<> inline traversal_data traversal_lbm::get_data<Traversal::Edge>()       { return{ vector_data(edge), vector_size(edge)}; }  
-  template<> inline traversal_data traversal_lbm::get_data<Traversal::Ghost_Edge>() { return{ vector_data(ghost_edge), vector_size(ghost_edge)}; }  
-  template<> inline traversal_data traversal_lbm::get_data<Traversal::Plan_xy_0>()  { return{ vector_data(plane_xy_0), vector_size(plane_xy_0)}; }  
-  template<> inline traversal_data traversal_lbm::get_data<Traversal::Plan_xy_l>()  { return{ vector_data(plane_xy_l), vector_size(plane_xy_l)}; }  
-  template<> inline traversal_data traversal_lbm::get_data<Traversal::Plan_xz_0>()  { return{ vector_data(plane_xz_0), vector_size(plane_xz_0)}; }  
-  template<> inline traversal_data traversal_lbm::get_data<Traversal::Plan_xz_l>()  { return{ vector_data(plane_xz_l), vector_size(plane_xz_l)}; }  
-  template<> inline traversal_data traversal_lbm::get_data<Traversal::Plan_yz_0>()  { return{ vector_data(plane_yz_0), vector_size(plane_yz_0)}; }  
-  template<> inline traversal_data traversal_lbm::get_data<Traversal::Plan_yz_l>()  { return{ vector_data(plane_yz_l), vector_size(plane_yz_l)}; }  
-  template<> const inline traversal_data traversal_lbm::get_data<Traversal::All>() const        { return{ vector_data(all), vector_size(all)}; }  
-  template<> inline const traversal_data traversal_lbm::get_data<Traversal::Real>() const       { return{ vector_data(real), vector_size(real)}; }  
-  template<> inline const traversal_data traversal_lbm::get_data<Traversal::Extend>() const     { return{ vector_data(extend), vector_size(extend)}; }  
-  template<> inline const traversal_data traversal_lbm::get_data<Traversal::Inside>() const     { return{ vector_data(inside), vector_size(inside)}; }  
-  template<> inline const traversal_data traversal_lbm::get_data<Traversal::Edge>() const       { return{ vector_data(edge), vector_size(edge)}; }  
-  template<> inline const traversal_data traversal_lbm::get_data<Traversal::Ghost_Edge>() const { return{ vector_data(ghost_edge), vector_size(ghost_edge)}; }  
-  template<> inline const traversal_data traversal_lbm::get_data<Traversal::Plan_xy_0>() const  { return{ vector_data(plane_xy_0), vector_size(plane_xy_0)}; }  
-  template<> inline const traversal_data traversal_lbm::get_data<Traversal::Plan_xy_l>() const  { return{ vector_data(plane_xy_l), vector_size(plane_xy_l)}; }  
-  template<> inline const traversal_data traversal_lbm::get_data<Traversal::Plan_xz_0>() const  { return{ vector_data(plane_xz_0), vector_size(plane_xz_0)}; }  
-  template<> inline const traversal_data traversal_lbm::get_data<Traversal::Plan_xz_l>() const  { return{ vector_data(plane_xz_l), vector_size(plane_xz_l)}; }  
-  template<> inline const traversal_data traversal_lbm::get_data<Traversal::Plan_yz_0>() const  { return{ vector_data(plane_yz_0), vector_size(plane_yz_0)}; }  
-  template<> inline const traversal_data traversal_lbm::get_data<Traversal::Plan_yz_l>() const  { return{ vector_data(plane_yz_l), vector_size(plane_yz_l)}; }  
+  template<> inline traversal_data LBMGridRegion::get_data<Traversal::All>()        { return{ vector_data(all), vector_size(all)}; }  
+  template<> inline traversal_data LBMGridRegion::get_data<Traversal::Real>()       { return{ vector_data(real), vector_size(real)}; }  
+  template<> inline traversal_data LBMGridRegion::get_data<Traversal::Extend>()     { return{ vector_data(extend), vector_size(extend)}; }  
+  template<> inline traversal_data LBMGridRegion::get_data<Traversal::Inside>()     { return{ vector_data(inside), vector_size(inside)}; }  
+  template<> inline traversal_data LBMGridRegion::get_data<Traversal::Edge>()       { return{ vector_data(edge), vector_size(edge)}; }  
+  template<> inline traversal_data LBMGridRegion::get_data<Traversal::Ghost_Edge>() { return{ vector_data(ghost_edge), vector_size(ghost_edge)}; }  
+  template<> inline traversal_data LBMGridRegion::get_data<Traversal::Plan_xy_0>()  { return{ vector_data(plane_xy_0), vector_size(plane_xy_0)}; }  
+  template<> inline traversal_data LBMGridRegion::get_data<Traversal::Plan_xy_l>()  { return{ vector_data(plane_xy_l), vector_size(plane_xy_l)}; }  
+  template<> inline traversal_data LBMGridRegion::get_data<Traversal::Plan_xz_0>()  { return{ vector_data(plane_xz_0), vector_size(plane_xz_0)}; }  
+  template<> inline traversal_data LBMGridRegion::get_data<Traversal::Plan_xz_l>()  { return{ vector_data(plane_xz_l), vector_size(plane_xz_l)}; }  
+  template<> inline traversal_data LBMGridRegion::get_data<Traversal::Plan_yz_0>()  { return{ vector_data(plane_yz_0), vector_size(plane_yz_0)}; }  
+  template<> inline traversal_data LBMGridRegion::get_data<Traversal::Plan_yz_l>()  { return{ vector_data(plane_yz_l), vector_size(plane_yz_l)}; }  
+  template<> const inline traversal_data LBMGridRegion::get_data<Traversal::All>() const        { return{ vector_data(all), vector_size(all)}; }  
+  template<> inline const traversal_data LBMGridRegion::get_data<Traversal::Real>() const       { return{ vector_data(real), vector_size(real)}; }  
+  template<> inline const traversal_data LBMGridRegion::get_data<Traversal::Extend>() const     { return{ vector_data(extend), vector_size(extend)}; }  
+  template<> inline const traversal_data LBMGridRegion::get_data<Traversal::Inside>() const     { return{ vector_data(inside), vector_size(inside)}; }  
+  template<> inline const traversal_data LBMGridRegion::get_data<Traversal::Edge>() const       { return{ vector_data(edge), vector_size(edge)}; }  
+  template<> inline const traversal_data LBMGridRegion::get_data<Traversal::Ghost_Edge>() const { return{ vector_data(ghost_edge), vector_size(ghost_edge)}; }  
+  template<> inline const traversal_data LBMGridRegion::get_data<Traversal::Plan_xy_0>() const  { return{ vector_data(plane_xy_0), vector_size(plane_xy_0)}; }  
+  template<> inline const traversal_data LBMGridRegion::get_data<Traversal::Plan_xy_l>() const  { return{ vector_data(plane_xy_l), vector_size(plane_xy_l)}; }  
+  template<> inline const traversal_data LBMGridRegion::get_data<Traversal::Plan_xz_0>() const  { return{ vector_data(plane_xz_0), vector_size(plane_xz_0)}; }  
+  template<> inline const traversal_data LBMGridRegion::get_data<Traversal::Plan_xz_l>() const  { return{ vector_data(plane_xz_l), vector_size(plane_xz_l)}; }  
+  template<> inline const traversal_data LBMGridRegion::get_data<Traversal::Plan_yz_0>() const  { return{ vector_data(plane_yz_0), vector_size(plane_yz_0)}; }  
+  template<> inline const traversal_data LBMGridRegion::get_data<Traversal::Plan_yz_l>() const  { return{ vector_data(plane_yz_l), vector_size(plane_yz_l)}; }  
 };

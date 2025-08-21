@@ -33,7 +33,7 @@ under the License.
 #include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/parallel_for_core.cu>
-#include <hippoLBM/grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/bcs/bounce_back.hpp>
 #include <hippoLBM/bcs/bounce_back_manager.hpp>
 
@@ -47,7 +47,7 @@ namespace hippoLBM
     class PostBounceBack : public OperatorNode
   {
     ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
-    ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
+    ADD_SLOT( LBMGridRegion, grid_region, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
     ADD_SLOT( bounce_back_manager<Q>, bbmanager, INPUT_OUTPUT);
     public:
     inline std::string documentation() const override final
@@ -57,7 +57,7 @@ namespace hippoLBM
     }
 
     template<int dim, Side dir> 
-      void launcher(traversal_lbm& traversals, FieldView<Q>& pf, bounce_back_manager<Q>& bbm)
+      void launcher(LBMGridRegion& traversals, FieldView<Q>& pf, bounce_back_manager<Q>& bbm)
       {
         constexpr int idx = helper_dim_idx<dim,dir>();
         FieldView<bounce_back_manager<Q>::Un> pfi = bbm.get_data(idx);
@@ -81,7 +81,7 @@ namespace hippoLBM
   inline void execute () override final
   {
     auto& data = *fields;
-    auto& traversals = *Traversals;
+    auto& traversals = *grid_region;
 
     // storage
     auto& bb = *bbmanager;

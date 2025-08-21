@@ -34,7 +34,7 @@ under the License.
 #include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/parallel_for_core.cu>
-#include <hippoLBM/grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/collision/mrt.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
@@ -50,7 +50,7 @@ namespace hippoLBM
   {
     public:
       ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
-      ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
+      ADD_SLOT( LBMGridRegion, grid_region, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
       ADD_SLOT( LBMParameters, Params, INPUT, REQUIRED, DocString{"Contains global LBM simulation parameters"});
 
       inline std::string documentation() const override final
@@ -62,7 +62,7 @@ namespace hippoLBM
       inline void execute () override final
       {
         auto& data = *fields;
-        auto& traversals = *Traversals;
+        auto& traversals = *grid_region;
         auto& params = *Params;
 
         // define functor

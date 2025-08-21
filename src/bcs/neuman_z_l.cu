@@ -33,7 +33,7 @@ under the License.
 #include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/parallel_for_core.cu>
-#include <hippoLBM/grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/bcs/neumann.hpp>
 
@@ -48,7 +48,7 @@ namespace hippoLBM
   {
     typedef std::array<double,3> readVec3;
     ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
-    ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
+    ADD_SLOT( LBMGridRegion, grid_region, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
     ADD_SLOT( readVec3, U, INPUT, REQUIRED, DocString{"Prescribed velocity at the boundary (z = lz), enforcing the Neumann condition."});
 
     public:
@@ -63,7 +63,7 @@ namespace hippoLBM
     inline void execute () override final
     {
       auto& data = *fields;
-      auto& traversals = *Traversals;
+      auto& traversals = *grid_region;
 
       // define functors
       neumann_z_l<Q> neumann = {};

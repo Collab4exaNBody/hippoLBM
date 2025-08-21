@@ -32,7 +32,7 @@ under the License.
 #include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/parallel_for_core.cu>
-#include <hippoLBM/grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/grid/set_distribution.hpp>
 #include <hippoLBM/grid/update_ghost.hpp>
 
@@ -47,7 +47,7 @@ namespace hippoLBM
     public:
       ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
       ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT);
-      ADD_SLOT( traversal_lbm, Traversals, INPUT, REQUIRED);
+      ADD_SLOT( LBMGridRegion, grid_region, INPUT, REQUIRED);
       ADD_SLOT( AABB, bounds, INPUT, OPTIONAL, DocString{"Domain's bounds"});
       ADD_SLOT( double, value, INPUT, double(1) );
       ADD_SLOT( bool, do_update, INPUT, false);
@@ -55,7 +55,7 @@ namespace hippoLBM
       inline void execute () override final
       {
         auto& data = *fields;
-        auto& traversals = *Traversals;
+        auto& traversals = *grid_region;
         LBMDomain<Q>& Domain = *domain;
         LBMGrid& Grid = Domain.m_grid;
         GridIJKtoIdx ijk_to_idx(Grid);

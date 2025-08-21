@@ -34,7 +34,7 @@ under the License.
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/parallel_for_core.cu>
-#include <hippoLBM/grid/traversal_lbm.hpp>
+#include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/bcs/bounce_back_manager.hpp>
 #include <hippoLBM/bcs/cavity.hpp>
 
