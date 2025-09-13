@@ -20,6 +20,8 @@ under the License.
 
 #pragma once
 
+#include <onika/math/basic_types.h>
+
 namespace hippoLBM
 {
   template<int Components>
@@ -27,6 +29,15 @@ namespace hippoLBM
     {
       double* const data = nullptr;
       uint64_t num_elements = 0;
+
+      ONIKA_HOST_DEVICE_FUNC
+        inline void reset(size_t idx) const
+      {
+        for(size_t component_index = 0 ; component_index < Components ; component_index++)
+        {
+          (idx, component_index) = 0;
+        }
+      }
 
       ONIKA_HOST_DEVICE_FUNC 
         inline double& operator()(
@@ -66,6 +77,7 @@ namespace hippoLBM
         this->num_elements = fv.num_elements;
       }
     };
+
 
   template<int Components>
     ONIKA_HOST_DEVICE_FUNC inline void copyTo(

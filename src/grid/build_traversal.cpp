@@ -42,7 +42,7 @@ namespace hippoLBM
     class BuildTraversalLBM : public OperatorNode
   {
     public:
-      ADD_SLOT( LBMDomain<Q>, domain, INPUT);
+      ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
       ADD_SLOT( LBMGridRegion, grid_region, OUTPUT);
       inline void execute () override final
       {

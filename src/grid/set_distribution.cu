@@ -46,7 +46,7 @@ namespace hippoLBM
   {
     public:
       ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
-      ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT);
+      ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED);
       ADD_SLOT( LBMGridRegion, grid_region, INPUT, REQUIRED);
       ADD_SLOT( AABB, bounds, INPUT, OPTIONAL, DocString{"Domain's bounds"});
       ADD_SLOT( double, value, INPUT, double(1) );

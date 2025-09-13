@@ -46,7 +46,7 @@ namespace hippoLBM
     public:
       ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
       ADD_SLOT( Vec3d, Fext, INPUT, Vec3d{0,0,0});
-      ADD_SLOT( double, celerity, INPUT, 1);
+      ADD_SLOT( double, celerity, INPUT, 10);
       ADD_SLOT( double, nuth, INPUT, 1e-4);
       ADD_SLOT( double, avg_rho, INPUT, 1000.0);
 

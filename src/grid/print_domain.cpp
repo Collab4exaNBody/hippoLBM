@@ -45,7 +45,7 @@ namespace hippoLBM
 		class PrintDomainLBM : public OperatorNode
 	{
 		public:
-			ADD_SLOT( LBMDomain<Q>, domain, INPUT);
+			ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
 			inline void execute () override final
 			{
         constexpr Area G = Area::Global;

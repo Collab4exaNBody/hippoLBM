@@ -193,18 +193,20 @@ namespace hippoLBM
 
 			auto [traversal_ptr, traversal_size] = traversals.get_data<PARAVIEW_TR>();
 
-			const int * const obst = data.obstacles();
+			//const int * const obst = data.obstacles();
 
 			NullFuncWriter nullop;
 			write_file writer_obst = {nullop};
 
-			double ratio_dx_dtLB = dx / params.dtLB;
-			UWriter u = {obst, ratio_dx_dtLB};
-			WriteVec3d writer_vec3d = {u, local};
+			//double ratio_dx_dtLB = dx / params.dtLB;
+			//UWriter u = {obst, ratio_dx_dtLB};
+			//WriteVec3d writer_vec3d = {u, local};
+			WriteVec3d writer_vec3d = {nullop, local};
 
-			double c_c_avg_rho_div_three = 1./3. * params.celerity * params.celerity * params.avg_rho;
-			PressionWriter pression = {obst, c_c_avg_rho_div_three};
-			write_file writer_double = {pression};
+			//double c_c_avg_rho_div_three = 1./3. * params.celerity * params.celerity * params.avg_rho;
+			//PressionWriter pression = {obst, c_c_avg_rho_div_three};
+			//write_file writer_double = {pression};
+			write_file writer_double = {nullop};
 
 			assert( local.get_length(0) == global.get_length(0) );
 			assert( local.get_length(1) == global.get_length(1) );

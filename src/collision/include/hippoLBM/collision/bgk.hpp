@@ -54,7 +54,7 @@ namespace hippoLBM
         const double& ux = m1(idx,0);
         const double& uy = m1(idx,1);
         const double& uz = m1(idx,2);
-        const double ___u_squ = -1.5 * (ux * ux + uy * uy + uz * uz);
+        const double u_squ = (ux * ux + uy * uy + uz * uz);
 
         for (int iLB = 0; iLB < Q; iLB++) 
         {
@@ -65,9 +65,9 @@ namespace hippoLBM
           double &fiLB = f(idx,iLB);
           double ef  = exiLB * m_Fext.x + eyiLB * m_Fext.y + eziLB * m_Fext.z;
           double eu  = exiLB * ux + eyiLB * uy + eziLB * uz;
-          //double feq = wiLB * rho * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
-          double feq = wiLB * rho * (1. +  eu * (3. + 4.5 * eu) + ___u_squ);
-          fiLB += update * ((feq - fiLB) + 3. * wiLB * ef)/tau;
+          double feq = wiLB * rho * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
+          //double feq = wiLB * rho * (1. +  eu * (3. + 4.5 * eu) + - 1.5 * u_squ);
+          fiLB += update * ((feq - fiLB) / tau + 3. * rho * wiLB * ef);
         }
       }
     };

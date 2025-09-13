@@ -54,12 +54,14 @@ namespace hippoLBM
     ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
     ADD_SLOT( LBMGridRegion, grid_region, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
     ADD_SLOT( LBMParameters, Params, INPUT, REQUIRED, DocString{"Contains global LBM simulation parameters"});
-
     public:
 
     inline std::string documentation() const override final
     {
-      return R"EOF(  A functor for computing macroscopic variables (densities and flux) for lattice Boltzmann method.
+      return R"EOF(  
+      A functor for computing macroscopic variables (densities and flux) for lattice Boltzmann method.
+      YAML example:
+        - macro_variables
         )EOF";
     }
 

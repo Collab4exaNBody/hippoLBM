@@ -30,6 +30,7 @@ namespace hippoLBM
   {
     template<typename T>
     inline T& operator()(const int idx, T& data) const{ return data; }
+    inline Vec3d operator()(const int idx, const FieldView<3>& data) const{ return Vec3d{data(idx,0), data(idx,1), data(idx,2)}; }
   }; 
 
   struct UWriter

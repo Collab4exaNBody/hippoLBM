@@ -42,10 +42,14 @@ namespace hippoLBM
           const int* pey, 
           const int* pez) const
       {
-        double rho, ux, uy, uz;
-        if (pobst[idx] == FLUIDE_) {
-          rho = ux = uy = uz = 0.;
-          for (int iLB = 0; iLB < Q; iLB++) {
+        if (pobst[idx] >= FLUIDE_) 
+        {
+          double rho = 0.0;
+          double ux  = 0.0;
+          double uy  = 0.0;
+          double uz  = 0.0;
+          for (int iLB = 0; iLB < Q; iLB++) 
+          {
             const double s = pf(idx,iLB);
             ux += s * pex[iLB];
             uy += s * pey[iLB];
@@ -53,7 +57,8 @@ namespace hippoLBM
             rho += s;
           }
 
-          if (rho != 0.) {
+          if (rho > 1.0e-14) 
+          {
             ux /= rho;
             uy /= rho;
             uz /= rho;
@@ -63,6 +68,12 @@ namespace hippoLBM
           pm1(idx, 0) = ux;
           pm1(idx, 1) = uy;
           pm1(idx, 2) = uz;
+        }
+        else
+        {
+          pm1(idx, 0) = 0;
+          pm1(idx, 1) = 0;
+          pm1(idx, 2) = 0;
         }
       }
     };
