@@ -1,2 +1,2 @@
 set(hippo_io_LINK_LIBRARIES hippo_grid)
-onika_add_plugin(hippo_io ${CMAKE_CURRENT_SOURCE_DIR})
+hippolbm_add_plugin(hippo_io ${CMAKE_CURRENT_SOURCE_DIR})

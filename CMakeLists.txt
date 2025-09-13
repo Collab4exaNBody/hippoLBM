@@ -16,8 +16,14 @@ if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
 endif()
 
-## options
+## setup hippolbm-config.cmake
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+message(STATUS "module " ${CMAKE_MODULE_PATH})
 
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/hippolbm-config-step1.cmake")
+include(${CMAKE_MODULE_PATH}/hippolbm_add_plugins.cmake)
+
+## options
 option(USE_AOS "Use Array Of Structure  data storage" OFF)
 if(USE_AOS)
   message(STATUS "Use Array Of Structure data storage (Fi). Please do not use this option with GPU")
@@ -38,18 +44,6 @@ endif()
 
 add_subdirectory(src)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES Intel)
-  set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} -Wall")
-  set(CMAKE_CXX_FLAGS_DEBUG   "-g -traceback")
-  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -xHOST")
-endif()
-
-if(CMAKE_CXX_COMPILER_ID MATCHES GNU)
-  set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} -Wall")
-  set(CMAKE_CXX_FLAGS_DEBUG   "-O0 -g3")
-  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -DNDEBUG")
-endif()
-
 set( CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS}" "--expt-relaxed-constexpr" )
 
 find_package(MPI REQUIRED)
@@ -63,6 +57,8 @@ target_link_libraries(hippoLBM PUBLIC ${ONIKA_LIBRARIES})
 
 ## non-regression tests
 add_subdirectory(regression-test)
+
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/hippolbm-config-step2.cmake")
 
 ## CREATE env.sh
 if(DEFINED ONIKA_PLUGIN_PATH)
