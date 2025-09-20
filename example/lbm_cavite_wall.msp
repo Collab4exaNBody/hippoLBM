@@ -1,8 +1,8 @@
 do_domain:
   - domain:
-     bounds: [[0,0,0],[0.1,0.1,0.1]]
-     resolution: 100
-     periodic: [false, false, false]
+     bounds:    [ [ 0 , 0 , 0 ] , [ 0.1 , 0.1 , 0.1 ] ]
+     grid_dims: [ 100, 100, 100 ]
+     periodic:  [ false, false, false ]
 
 set_lbm_parameters:
   - lbm_parameters:
@@ -18,7 +18,7 @@ pre_stream_bcs:
 set_obstacles:
   - register_solid_wall:
      id: 0
-     bounds: [[0.048,0,0],[0.052,0.1,0.08]]
+     bounds: [ [ 0.048 , 0 , 0 ] , [ 0.052 , 0.1 , 0.08 ] ]
 
 post_stream_bcs:
   - post_bounce_back

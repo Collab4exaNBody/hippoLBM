@@ -83,7 +83,7 @@ namespace hippoLBM
   // === register factories ===  
   ONIKA_AUTORUN_INIT(define_grid)
   {
-    OperatorNodeFactory::instance()->register_factory( "define_grid_3dq19", make_compatible_operator<DefineLBMFields<19>>);
+    OperatorNodeFactory::instance()->register_factory( "define_grid_3dq19", make_simple_operator<DefineLBMFields<19>>);
     //OperatorNodeFactory::instance()->register_factory( "define_grid_3dq15", make_compatible_operator<DefineLBMFields<Q><15>>);
   }
 }

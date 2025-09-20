@@ -17,7 +17,7 @@ namespace hippoLBM
    * @return A tuple containing a boolean flag indicating whether the communication coordinate is valid and the computed communication coordinate.
    */
   inline
-    std::tuple<bool, int3d> build_comm(const int3d& relative_pos, const int* coord, const int3d& domain_size, const int* periods, const int* ndims)
+    std::tuple<bool, int3d> build_comm(const int3d& relative_pos, std::span<int> coord, const int3d& domain_size, std::span<bool> periods, std::span<int> ndims)
     {
       constexpr int DIM = 3;
       int3d coord_neig;

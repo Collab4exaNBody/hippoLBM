@@ -1,7 +1,7 @@
 do_domain:
   - domain:
      bounds: [[0,0,0],[0.1,0.1,0.1]]
-     resolution: 30
+     grid_dims: [ 30, 30, 30 ]
      periodic: [false, false, false]
 
 set_lbm_parameters:

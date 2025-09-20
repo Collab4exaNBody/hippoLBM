@@ -1,8 +1,8 @@
 do_domain:
   - domain:
-     bounds: [[0,0,0],[0.1,0.1,0.1]]
-     resolution: 200
-     periodic: [false, false, false]
+     bounds:    [ [0,0,0],[0.1,0.1,0.1] ]
+     grid_dims: [ 200 , 200 , 200 ]
+     periodic:  [ false, false, false ]
 
 set_lbm_parameters:
   - lbm_parameters:

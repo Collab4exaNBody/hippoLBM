@@ -5,53 +5,88 @@
 
 namespace hippoLBM
 {
+
 	using namespace onika::math;
-	template<int Q>
-		LBMDomain<Q> make_domain(AABB& bounds, double resolution, std::vector<bool>& periodic, MPI_Comm& comm)
+
+	struct hippoLBMGridDetails
+	{
+		static constexpr int dim = 3;
+		static constexpr bool ghost_layer = 2;
+	};
+
+	struct GridDetails
+	{
+		IJK dims;
+		AABB bounds;
+		std::array<bool, hippoLBMGridDetails::dim> periodic;
+	};
+
+	struct SubGridDetails
+	{
+		double Dx;
+		IJK cart_coordinate;
+		IJK cart_dims;
+    MPI_Comm cart_comm;
+		Vec3d offset;
+		GridBlock block;
+		std::array<bool, hippoLBMGridDetails::dim> periodic;
+	};
+
+	inline SubGridDetails sub_grid_resolution(const SubGridDetails& coarse_grid, ssize_t resolution)
+	{
+		SubGridDetails refined_grid = coarse_grid;
+		refined_grid.block.start =  refined_grid.block.start * resolution;
+		refined_grid.block.end = refined_grid.block.end * resolution;
+		return refined_grid;
+	}
+
+	template<typename A, typename B> inline A convert(const B& in) { return A(in); } 
+
+	template<>
+		inline int3d convert<int3d, IJK>(const IJK& b)
 		{
-      constexpr int DIM = 3;
-			double Dx;
-			Dx = (bounds.bmax.x - bounds.bmin.x) / resolution;
-			Dx = std::min( Dx, (bounds.bmax.y - bounds.bmin.y) / resolution );
-			Dx = std::min( Dx, (bounds.bmax.z - bounds.bmin.z) / resolution );
-			int lx = (bounds.bmax.x - bounds.bmin.x) / Dx; 
-			int ly = (bounds.bmax.y - bounds.bmin.y) / Dx; 
-			int lz = (bounds.bmax.z - bounds.bmin.z) / Dx; 
+			int3d a;
+			a[0] = b.i;
+			a[1] = b.j;
+			a[2] = b.k;
+			return a;
+		}
 
-			bounds.bmax.x = bounds.bmin.x + lx * Dx;
-			bounds.bmax.y = bounds.bmin.y + ly * Dx;
-			bounds.bmax.z = bounds.bmin.z + lz * Dx;
+	template<>
+		inline IJK convert<IJK, int3d>(const int3d& b)
+		{
+			IJK a;
+			a.i = b[0];
+			a.j = b[1];
+			a.k = b[2];
+			return a;
+		}
 
-			//lout << "The Domain Boundaries are: [" << bounds.bmin << "," << bounds.bmax << "]" << std::endl;
-
-			constexpr int ghost_layer = 2; // should be 1 lbm and 2 for dem lbm
-
-			// init periodic conditions 
-			int * periods = new int[DIM];
-			for(size_t dim = 0 ; dim < periodic.size() ; dim++) 
-			{ 
-				if(periodic[dim]) periods[dim] = 1; 
-				else periods[dim] = 0; 
+	template<>
+		inline std::array<bool, hippoLBMGridDetails::dim> convert(const std::vector<bool>& b)
+		{
+			std::array<bool, hippoLBMGridDetails::dim> a;
+			for(int dim = 0 ; dim < hippoLBMGridDetails::dim ; dim++)
+			{
+				a[dim] = b[dim];
 			}
-			int ndims[DIM];
-			MPI_Comm MPI_COMM_CART;
-			int mpi_rank, mpi_size;
-			MPI_Comm_rank(comm, &mpi_rank);
-			MPI_Comm_size(comm, &mpi_size);
+			return a;
+		}
 
+	template<int Q>
+		LBMDomain<Q> make_domain(const GridDetails grid, const SubGridDetails& subgrid)
+		{
+			constexpr int ghost_layer = hippoLBMGridDetails::ghost_layer;
+			auto periodic = subgrid.periodic;
+			int3d domain_size = convert<int3d>(grid.dims);
+			IJK MPI_coord = subgrid.cart_coordinate;
+			IJK MPI_grid_size = subgrid.cart_dims;
 
-			for (int dim = 0; dim < DIM; dim++) {
-				ndims[dim] = 0; // do not remove it
-			}
+			int3d coord = convert<int3d>(MPI_coord);
+			int3d ndims = convert<int3d>(MPI_grid_size);
 
-			MPI_Dims_create(mpi_size, DIM, ndims);
-			MPI_Cart_create(comm, DIM, ndims, periods, true, &MPI_COMM_CART);
-
-			int coord[DIM];
-			MPI_Cart_coords(MPI_COMM_CART, mpi_rank, DIM, coord);
-			int3d domain_size = {lx, ly, lz};
 			int3d subdomain, relative_position, offset;
-			for (int dim = 0; dim < DIM; dim++) {
+			for (int dim = 0; dim < hippoLBMGridDetails::dim; dim++) {
 				double size = domain_size[dim] / ndims[dim];
 				if (coord[dim] == ndims[dim] - 1)
 					subdomain[dim] = domain_size[dim] - coord[dim] * size;
@@ -65,8 +100,8 @@ namespace hippoLBM
 			Box3D local_box = {{0, 0, 0}, {subdomain[0] + 2 * ghost_layer - 1, subdomain[1] + 2 * ghost_layer - 1, subdomain[2] + 2 * ghost_layer - 1}};
 			/** create the extended real box to skip point that does not exist ( next points ) **/
 			Box3D ext = local_box;
-			for (int dim = 0; dim < DIM; dim++) {
-				if (periods[dim] == 0) // not periodic
+			for (int dim = 0; dim < hippoLBMGridDetails::dim; dim++) {
+				if (periodic[dim] == 0) // not periodic
 				{
 					if (coord[dim] == 0)
 						ext.inf[dim] += ghost_layer;
@@ -81,18 +116,16 @@ namespace hippoLBM
 			g.set_ext(ext);
 			g.set_offset({offset[0], offset[1], offset[2]});
 			g.set_ghost_layer(ghost_layer);
-			g.set_dx(Dx);
-
-			// get data
-			onika::math::IJK MPI_coord = {coord[0], coord[1], coord[2]};
-			onika::math::IJK MPI_grid_size = {ndims[0], ndims[1], ndims[2]};
+			g.set_dx(subgrid.Dx);
 
 			LBMGhostManager<Q> manager;
 			// fill ghost comm
 			int default_tag = 100;
-			for (int i = 0; i < 27; i++) {
+			for (int i = 0; i < 27; i++) 
+      {
 				int idx = i;
-				for (int dim = 0; dim < 3; dim++) {
+				for (int dim = 0; dim < hippoLBMGridDetails::dim; dim++) 
+        {
 					int d = idx % 3; // keep 3 first bits
 					relative_position[dim] = d - 1;
 					idx = (idx - d) / 3; // shift 3 bits
@@ -100,10 +133,14 @@ namespace hippoLBM
 				if (relative_position[0] == 0 && relative_position[1] == 0 && relative_position[2] == 0)
 					continue;
 
-				auto [not_exist, coord_neig] = build_comm(relative_position, coord, domain_size, periods, ndims);
+				auto [not_exist, coord_neig] = build_comm(relative_position, coord, domain_size, periodic, ndims);
 				if (not_exist == false)
 					continue;
 				int neig;
+				const MPI_Comm& MPI_COMM_CART = subgrid.cart_comm;
+				int mpi_rank, mpi_size;
+				MPI_Comm_rank(MPI_COMM_CART, &mpi_rank);
+				MPI_Comm_size(MPI_COMM_CART, &mpi_size);
 				MPI_Cart_rank(MPI_COMM_CART, coord_neig.data(), &neig);
 
 				auto [send_box, recv_box] = build_boxes(relative_position, g);
@@ -132,8 +169,88 @@ namespace hippoLBM
 						manager.add_comm(send, recv);
 				}
 			}
-			LBMDomain<Q> domain(manager, local_box, g, bounds, domain_size, MPI_coord, MPI_grid_size);
-			return domain;
-		}
-}
 
+      auto bounds_cpy = grid.bounds;
+
+			LBMDomain<Q> domain(manager, local_box, g, bounds_cpy, domain_size, MPI_coord, MPI_grid_size);
+			return domain;
+		} 
+
+
+
+	SubGridDetails load_balancing(
+			const GridDetails& grid, 
+			MPI_Comm& comm)
+	{
+		auto& [ grid_size, bounds, periodic ]  = grid;
+		double GridDx = double(bounds.bmax.x - bounds.bmin.x) / double(grid_size.i);
+		if( GridDx != double(bounds.bmax.y - bounds.bmin.y) / double(grid_size.j))
+		{
+			lout << "GridDim and bounds are not dedfined correclty, GridDx should be equal for every direction" << std::endl;
+		}
+		if( GridDx != double(bounds.bmax.z - bounds.bmin.z) / double(grid_size.k))
+		{
+			lout << "coarseGridDim and bounds are not dedfined correclty, coarseGridDx should be equal for every direction" << std::endl;
+		}
+
+
+		// init periodic conditions 
+		int * periods = new int[hippoLBMGridDetails::dim];
+		for(size_t dim = 0 ; dim < periodic.size() ; dim++)
+		{
+			if(periodic[dim]) periods[dim] = 1;
+			else periods[dim] = 0;
+		}
+		int3d ndims;
+		MPI_Comm MPI_COMM_CART;
+		int mpi_rank, mpi_size;
+		MPI_Comm_rank(comm, &mpi_rank);
+		MPI_Comm_size(comm, &mpi_size);
+
+		for (int dim = 0; dim < hippoLBMGridDetails::dim; dim++) 
+		{
+			ndims[dim] = 0; // do not remove it
+		}
+		MPI_Dims_create(mpi_size, hippoLBMGridDetails::dim, ndims.data());
+		MPI_Cart_create(comm, hippoLBMGridDetails::dim, ndims.data(), periods, true, &MPI_COMM_CART);
+		int3d coord;
+		MPI_Cart_coords(MPI_COMM_CART, mpi_rank, hippoLBMGridDetails::dim, coord.data());
+
+
+		IJK block_size;
+
+		auto set_block_size = [&coord, &ndims] (int dim, const int coarseGridDim) -> int
+		{
+			if(coord[dim] != ndims[dim] -1 )
+			{
+				return coarseGridDim / ndims[dim];
+			}
+			else
+			{
+				return coarseGridDim - (coarseGridDim / ndims[dim]) * coord[dim];
+			}
+		}; 
+
+
+		block_size.i = set_block_size(0, grid_size.i);
+		block_size.j = set_block_size(1, grid_size.j);
+		block_size.k = set_block_size(2, grid_size.k);
+
+		IJK inf = { 
+			(grid_size.i / ndims[0]) * coord[0],
+			(grid_size.j / ndims[1]) * coord[1],
+			(grid_size.k / ndims[2]) * coord[2]}; 
+		Vec3d offset = bounds.bmin + inf * GridDx;
+		IJK sup = inf + block_size;
+
+		SubGridDetails res;
+		res.Dx = GridDx;
+		res.cart_coordinate = convert<IJK>(coord);
+		res.cart_dims = convert<IJK>(ndims);
+		res.offset = offset;
+		res.block = {inf, sup};
+		res.periodic = periodic;
+    res.cart_comm = MPI_COMM_CART;
+		return res;
+	}
+}

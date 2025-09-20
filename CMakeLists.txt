@@ -32,6 +32,7 @@ endif()
 
 ## Onika
 find_package(OpenMP REQUIRED)
+find_package(MPI REQUIRED)
 find_package(onika REQUIRED)
 
 
@@ -43,10 +44,6 @@ if(ONIKA_BUILD_CUDA)
 endif()
 
 add_subdirectory(src)
-
-set( CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS}" "--expt-relaxed-constexpr" )
-
-find_package(MPI REQUIRED)
 
 add_executable(hippoLBM hippoLBM.cpp)
 target_compile_options(hippoLBM PUBLIC ${ONIKA_COMPILE_OPTIONS})
