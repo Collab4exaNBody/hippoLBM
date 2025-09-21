@@ -52,7 +52,7 @@ namespace hippoLBM
 
 			inline void execute () override final
 			{
-				GridDetails grid;
+				GridConfig grid;
         grid.dims = *grid_dims;
 				grid.bounds = *bounds;
 				grid.periodic = convert<std::array<bool,3>>(*periodic);
@@ -89,7 +89,7 @@ namespace hippoLBM
 					std::exit(EXIT_FAILURE);  
 				}
 
-				SubGridDetails sub_grid = load_balancing(grid, *mpi);
+				SubGridConfig sub_grid = load_balancing(grid, *mpi);
 				*domain = make_domain<Q>(grid, sub_grid);
 			}
 	};
