@@ -1,6 +1,8 @@
 #pragma once
 #include <mpi.h>
 #include <cstring>
+#include <fstream>
+#include <filesystem>
 #include <onika/cuda/cuda_context.h>
 #include <hippoLBM/grid/point3d.hpp>
 #include <hippoLBM/grid/box3d.hpp>
@@ -11,23 +13,23 @@
 namespace hippoLBM
 {
 
-  /**
-   * @brief A manager for ghost cell communication between processes.
-   *
-   * @tparam N The number of data elements per point.
-   * @tparam DIM The dimension of the communication box.
-   */
-  template<int Components>
-    struct LBMGhostManager
-    {
-      using ParExecSpace3d = onika::parallel::ParallelExecutionSpace<3>;
-      std::vector<LBMGhostComm<Components>> m_data; ///< Vector of ghost communications.
-      std::vector<MPI_Request> m_request; ///< Vector of MPI requests.
+	/**
+	 * @brief A manager for ghost cell communication between processes.
+	 *
+	 * @tparam N The number of data elements per point.
+	 * @tparam DIM The dimension of the communication box.
+	 */
+	template<int Components>
+		struct LBMGhostManager
+		{
+			using ParExecSpace3d = onika::parallel::ParallelExecutionSpace<3>;
+			std::vector<LBMGhostComm<Components>> m_data; ///< Vector of ghost communications.
+			std::vector<MPI_Request> m_request; ///< Vector of MPI requests.
 
 
-      void debug_print_comm()
-      {
-        onika::lout << "Debug Print Comms, number of comms" << m_data.size() << " Components: " << 
+			void debug_print_comm()
+			{
+				onika::lout << "Debug Print Comms, number of comms" << m_data.size() << " Components: " << 
 					Components << std::endl;
 				for(auto it: m_data) it.debug_print_comm();
 			}
@@ -70,7 +72,7 @@ namespace hippoLBM
 			 */
 			void wait_all()
 			{
-				//MPI_Waitall(m_request.size(), m_request.data(), MPI_STATUSES_IGNORE);
+				MPI_Waitall(m_request.size(), m_request.data(), MPI_STATUSES_IGNORE);
 			}
 
 			/**
@@ -78,19 +80,21 @@ namespace hippoLBM
 			 */
 			void do_recv()
 			{
+        int mpi_rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 				int acc = 0;
 #ifdef PRINT_DEBUG_MPI
 				std::cout << "Number of messages " << this->m_data.size() << std::endl;
 #endif
 				for (auto& it : this->m_data)
 				{
-					auto& send = it.recv;
 					auto& recv = it.recv;
 					uint64_t nb_bytes = recv.get_size() * sizeof(double);
 #ifdef PRINT_DEBUG_MPI
 					std::cout << "I recv " << nb_bytes << " bytes from " << recv.get_dest() << " with tag " << recv.get_tag() << std::endl;
 #endif
-					bool do_recv = !((send.get_tag() == recv.get_tag()) && (send.get_dest() == recv.get_dest()));
+					//bool do_recv = !((send.get_tag() == recv.get_tag()) && (send.get_dest() == recv.get_dest()));
+          bool do_recv = !(recv.get_dest() == mpi_rank);
 					if(do_recv) // NOT (periodic case && himself)
 					{
 						MPI_Irecv(recv.get_data(), nb_bytes, MPI_CHAR, recv.get_dest(), recv.get_tag(), MPI_COMM_WORLD, &(this->m_request[acc++]));
@@ -137,6 +141,9 @@ namespace hippoLBM
 						Box3D& mesh_box,
 						ParExecCtxFunc& par_exec_ctx)
 				{
+          int mpi_rank;
+          MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+
 					const uint64_t size = this->get_size();
 					int acc = size;
 					for (auto& it : this->m_data)
@@ -158,7 +165,8 @@ namespace hippoLBM
 						auto& send = it.send;
 						auto& recv = it.recv; 
 						uint64_t nb_bytes = send.get_size() * sizeof(double);
-						if((send.get_tag() == recv.get_tag()) && (send.get_dest() == recv.get_dest())) // periodic case && himself
+						//if((send.get_tag() == recv.get_tag()) && (send.get_dest() == recv.get_dest())) // periodic case && himself
+						if(mpi_rank == recv.get_dest()) // periodic case && himself
 						{
 							ONIKA_CU_MEMCPY(recv.get_data(), send.get_data(), nb_bytes); // cudaMemcpyDefault, 0 /** default stream */);
 						}
@@ -169,4 +177,35 @@ namespace hippoLBM
 					}
 				}
 		};
+
+  template<int Components>
+	void write_comm(LBMGhostManager<Components>& ghost_manager)
+	{
+		auto& comms = ghost_manager.m_data;
+		const size_t number_of_comms = comms.size();
+    int mpi_rank;
+		MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+
+		std::string basename = "HippoLBMDebugCommManager";
+		if(mpi_rank == 0)
+		{
+			std::filesystem::create_directories(basename);
+		}
+    MPI_Barrier(MPI_COMM_WORLD);
+
+		std::stringstream ss;
+
+		ss << "Rank " << std::to_string(mpi_rank) << std::endl;
+
+		for(size_t comm_id = 0 ; comm_id < number_of_comms ; comm_id++)
+		{
+			auto& [send, recv] = comms[comm_id];
+			ss << "[Send] to:   " << send.get_dest() << " tag: " << send.get_tag() << " size: " << send.get_size() << std::endl; 
+			ss << "[Recv] from: " << recv.get_dest() << " tag: " << recv.get_tag() << " size: " << recv.get_size() << std::endl; 
+		}
+
+		std::string filename = basename + "/proc_" + std::to_string(mpi_rank) + ".txt";
+		std::ofstream file(filename);
+		file << ss.rdbuf();
+	}
 }

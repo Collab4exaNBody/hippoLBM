@@ -25,6 +25,16 @@ namespace hippoLBM
 		IJK dims; ///< Number of nodes in each direction (i,j,k).
 		AABB bounds; ///< Physical bounding box of the grid domain.
 		std::array<bool, hippoLBMGridConfig::dim> periodic; ///< Periodicity flags along each axis.
+
+    void display() const
+    {
+      std::cout << "=================================" <<std::endl;
+      std::cout << "GridConfig: " << std::endl;
+      std::cout << "Grid dim size: [" << dims << "]" << std::endl; 
+      std::cout << "Bounds inf:    [" << bounds.bmin << "]" << std::endl; 
+      std::cout << "Bounds sup:    [" << bounds.bmax << "]" << std::endl; 
+      std::cout << "=================================" <<std::endl;
+    }
 	};
 
 	/**
@@ -39,6 +49,18 @@ namespace hippoLBM
 		Vec3d offset; ///< Offset of the subgrid relative to the global origin.
 		GridBlock block; ///< Local block of cells owned by this subgrid.
 		std::array<bool, hippoLBMGridConfig::dim> periodic; ///< Periodicity flags along each axis.
+
+    void display() const
+    {
+      std::cout << "=================================" <<std::endl;
+      std::cout << "SubGridConfig: " << std::endl;
+      std::cout << "SubGrid node size:   " << dx << std::endl;
+      std::cout << "SubGrid offset:      ["<< offset <<"]" << std::endl;
+      std::cout << "SubGrid block start: ["<< block.start <<"]" << std::endl;
+      std::cout << "SubGrid block end:   ["<< block.end <<"]" << std::endl;
+      std::cout << "Periodicity:         ["<< periodic[0] << "," << periodic[1] << "," << periodic[2] <<"]" << std::endl;
+      std::cout << "=================================" <<std::endl;
+    }
 	};
 
 	/**
@@ -53,6 +75,21 @@ namespace hippoLBM
 		SubGridConfig refined_grid = coarse_grid;
 		refined_grid.block.start =  refined_grid.block.start * resolution;
 		refined_grid.block.end = refined_grid.block.end * resolution;
+    refined_grid.dx /= double(resolution);
+		return refined_grid;
+	}
+
+	/**
+	 * @brief Refines a grid resolution by a given factor.
+	 *
+	 * @param coarse_grid Input coarse grid.
+	 * @param resolution Refinement factor.
+	 * @return GridDetails Refined grid with updated block indices.
+	 */
+	inline GridConfig grid_resolution(const GridConfig& coarse_grid, ssize_t resolution)
+	{
+		GridConfig refined_grid = coarse_grid;
+		refined_grid.dims = refined_grid.dims * resolution;
 		return refined_grid;
 	}
 
@@ -105,6 +142,8 @@ namespace hippoLBM
 	template<int Q>
 		LBMDomain<Q> make_domain(const GridConfig grid, const SubGridConfig& subgrid)
 		{
+      grid.display();
+      subgrid.display();
 			constexpr int ghost_layer = hippoLBMGridConfig::ghost_layer;
 
 			auto periodic = subgrid.periodic;
@@ -116,31 +155,18 @@ namespace hippoLBM
 			int3d coord = convert<int3d>(mpi_coords);
 			int3d ndims = convert<int3d>(mpi_grid_dims);
 
-			int3d subdomain, relative_position, offset;
+			int3d relative_position;
 
-      // Compute subdomain size and offset (handle last-rank remainder properly)
-			for (int dim = 0; dim < hippoLBMGridConfig::dim; dim++) {
-				double size = domain_size[dim] / ndims[dim];
-				if (coord[dim] == ndims[dim] - 1)
-					subdomain[dim] = domain_size[dim] - coord[dim] * size;
-				else
-					subdomain[dim] = size;
-				offset[dim] = -ghost_layer + coord[dim] * size;
-			}
-
+      int3d subdomain_with_ghost_size = convert<int3d>(subgrid.block.end - subgrid.block.start +  2 * ghost_layer - 1);
+      int3d offset = convert<int3d>(subgrid.block.start - ghost_layer);
 
 			/// Local domain including ghost cells
-			Box3D local_box = {
-				 {0, 0, 0},
-				 {subdomain[0] + 2 * ghost_layer - 1,
-					subdomain[1] + 2 * ghost_layer - 1,
-					subdomain[2] + 2 * ghost_layer - 1}
-			};
+			Box3D local_box = { {0, 0, 0}, subdomain_with_ghost_size };
 
       /// Extended real domain (skip invalid points at non-periodic boundaries)
 			Box3D ext = local_box;
 			for (int dim = 0; dim < hippoLBMGridConfig::dim; dim++) {
-				if (periodic[dim] == 0) // not periodic
+				if (!periodic[dim]) // not periodic
 				{
 					if (coord[dim] == 0)
 						ext.inf[dim] += ghost_layer;
@@ -166,11 +192,9 @@ namespace hippoLBM
 			LBMGhostManager<Q> manager;
 
 			int neig;
-			int default_tag = 100;
 			const MPI_Comm& MPI_COMM_CART = subgrid.cart_comm;
-			int mpi_rank, mpi_size;
+			int mpi_rank;
 			MPI_Comm_rank(MPI_COMM_CART, &mpi_rank);
-			MPI_Comm_size(MPI_COMM_CART, &mpi_size);
 
 			// Build ghost communications with 26 neighbors (3^3 - 1)
 			for (int i = 0; i < 27; i++) 
@@ -187,51 +211,47 @@ namespace hippoLBM
 					continue;
 
 				// Find neighbor coordinates in MPI grid
-				auto [is_missing, coord_neig] = build_comm(relative_position, coord, domain_size, periodic, ndims);
+				auto [exists, coord_neig] = build_comm(relative_position, coord, periodic, ndims);
 
-				if (!is_missing) continue;
+				if (!exists) continue;
 
 				MPI_Cart_rank(MPI_COMM_CART, coord_neig.data(), &neig);
 
         // Build send/receive boxes for this neighbor
 				auto [send_box, recv_box] = build_boxes(relative_position, g);
 
-				if(neig == mpi_rank) // 
+        int rtag;
+				int stag = relative_position[0] + 1
+					+ (relative_position[1] + 1) * 3 
+					+ (relative_position[2] + 1) * 9;
+				if(neig == mpi_rank)  
 				{
-          // ----------------------------
-          // Case 1: periodic self-communication
-          // ----------------------------
+					// ----------------------------
+					// Case 1: periodic self-communication
+					// ----------------------------
 					send_box = fix_box_with_periodicity(relative_position, g);
-					int tag = relative_position[0] + 1
-						+ 3 * (relative_position[1] + 1) * 3 
-						+ (relative_position[2] + 1) * 9;
-
-					hippoLBM::LBMComm<Q> send(neig, default_tag + neig * 27 + tag, send_box);
-					hippoLBM::LBMComm<Q> recv(neig, default_tag + mpi_rank * 27 + tag, recv_box);
-
-					assert(recv.get_size() == send.get_size());
-					if (recv.get_size() != 0)
-					{
-						manager.add_comm(send, recv);
-					}
+          rtag = stag;
 				}
-				else
-				{
-					// ----------------------------
-					// Case 2: normal neighbor communication
-					// ----------------------------
-					int send_tag = (relative_position[0] + 1) + 3 * (relative_position[1] + 1) * 3 + (relative_position[2] + 1) * 9;
-					int recv_tag = (2 - (relative_position[0] + 1)) + 3 * (2 - (relative_position[1] + 1)) * 3 + (2 - (relative_position[2] + 1)) * 9;
-					hippoLBM::LBMComm<Q> send(neig, default_tag + neig * 27 + send_tag, send_box);
-					hippoLBM::LBMComm<Q> recv(neig, default_tag + mpi_rank * 27 + recv_tag, recv_box);
+        else
+        {
+				  rtag = 2 - relative_position[0] - 1
+					     + (2 - relative_position[1] - 1) * 3 
+					     + (2 - relative_position[2] - 1) * 9;
+          if(rtag > 27) std::cout << "rtag: " << rtag << " " << relative_position[0] << " " << relative_position[1] << " " << relative_position[2]<< std::endl;
+        }
 
-					assert(recv.get_size() == send.get_size());
-					if (recv.get_size() != 0)
-					{
-						manager.add_comm(send, recv);
-					}
+				hippoLBM::LBMComm<Q> send(neig, stag, send_box);
+				hippoLBM::LBMComm<Q> recv(neig, rtag, recv_box);
+
+				assert(recv.get_size() == send.get_size());
+				if (recv.get_size() != 0)
+				{
+					manager.add_comm(send, recv);
 				}
 			}
+
+			//manager.debug_print_comm();
+      //write_comm(manager);
 
 			auto bounds_cpy = grid.bounds;
 
@@ -258,23 +278,23 @@ namespace hippoLBM
 		auto& [ grid_size, bounds, periodic ]  = grid;
 		double GridDx = double(bounds.bmax.x - bounds.bmin.x) / double(grid_size.i);
 
-    // Consistency check: ensure dx is the same in all directions
+		// Consistency check: ensure dx is the same in all directions
 		if( GridDx != double(bounds.bmax.y - bounds.bmin.y) / double(grid_size.j))
 		{
-      lout << "Grid dimensions and bounds are inconsistent: dx must be equal in X and Y." << std::endl;
+			onika::lout << "Grid dimensions and bounds are inconsistent: dx must be equal in X and Y." << std::endl;
 		}
 		if( GridDx != double(bounds.bmax.z - bounds.bmin.z) / double(grid_size.k))
 		{
-      lout << "Grid dimensions and bounds are inconsistent: dx must be equal in Z." << std::endl;
+			onika::lout << "Grid dimensions and bounds are inconsistent: dx must be equal in Z." << std::endl;
 		}
 
-    // ----------------------------
-    // Setup periodic boundary conditions
-    // ----------------------------
+		// ----------------------------
+		// Setup periodic boundary conditions
+		// ----------------------------
 		std::array<int, hippoLBMGridConfig::dim> periods;
-		for(size_t dim = 0 ; dim < periodic.size() ; dim++)
+		for(size_t dim = 0 ; dim < hippoLBMGridConfig::dim ; dim++)
 		{
-      periods[dim] = periodic[dim] ? 1 : 0;
+			periods[dim] = periodic[dim] ? 1 : 0;
 		}
 
 		int3d mpi_dims;
@@ -299,19 +319,19 @@ namespace hippoLBM
 		{
 			if(mpi_coords[dim] != mpi_dims[dim] -1 )
 			{
-         // Regular block (all but last rank in this dimension)
+				// Regular block (all but last rank in this dimension)
 				return global_dim_size / mpi_dims[dim];
 			}
 			else
 			{
-        // Last rank in this dimension: handle remainder
+				// Last rank in this dimension: handle remainder
 				return global_dim_size - (global_dim_size / mpi_dims[dim]) * mpi_coords[dim];
 			}
 		}; 
 
-    // ----------------------------
-    // Compute block indices in the global grid
-    // ----------------------------
+		// ----------------------------
+		// Compute block indices in the global grid
+		// ----------------------------
 		block_size.i = set_block_size(0, grid_size.i);
 		block_size.j = set_block_size(1, grid_size.j);
 		block_size.k = set_block_size(2, grid_size.k);
@@ -323,9 +343,9 @@ namespace hippoLBM
 		Vec3d offset = bounds.bmin + inf * GridDx;
 		IJK sup = inf + block_size;
 
-    // ----------------------------
-    // Build subgrid configuration
-    // ----------------------------
+		// ----------------------------
+		// Build subgrid configuration
+		// ----------------------------
 		SubGridConfig res;
 		res.dx = GridDx;
 		res.cart_coordinate = convert<IJK>(mpi_coords);

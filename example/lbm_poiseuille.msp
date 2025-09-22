@@ -17,4 +17,6 @@ boundary_conditions:
 
 global:
    simulation_paraview_freq: 100
+#   simulation_paraview_freq: 1
+#   simulation_end_iteration: 10
    simulation_end_iteration: 3000
