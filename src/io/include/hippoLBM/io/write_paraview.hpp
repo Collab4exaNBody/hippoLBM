@@ -270,7 +270,7 @@ namespace hippoLBM
 		}
 
 	template<int Q>
-		void write_paraview(MPI_Comm& comm, 
+		void write_paraview(MPI_Comm comm, 
 				std::string filename,
 				std::string basedir,
 				long timestep,
