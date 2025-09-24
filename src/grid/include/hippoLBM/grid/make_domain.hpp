@@ -273,7 +273,7 @@ namespace hippoLBM
 	 */
 	SubGridConfig load_balancing(
 			const GridConfig& grid, 
-			MPI_Comm& comm)
+			MPI_Comm comm)
 	{
 		auto& [ grid_size, bounds, periodic ]  = grid;
 		double GridDx = double(bounds.bmax.x - bounds.bmin.x) / double(grid_size.i);
