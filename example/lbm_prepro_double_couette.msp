@@ -1,0 +1,26 @@
+do_domain:
+  - domain:
+     bounds:    [ [0,0,0],[0.1,0.1,0.1] ]
+     grid_dims: [ 100 , 100 , 100 ]
+     periodic:  [ true, true, false ]
+
+set_distributions:
+  - init_double_couette:
+     U: [0.001,0,0]
+     dimension: Z
+
+set_lbm_parameters:
+  - lbm_parameters:
+     Fext: [0,0,0]
+     nuth: 1e-2
+     celerity: 1.0
+
+boundary_conditions:
+  - neumann_z_l:
+     U: [-0.001,0,0]
+  - neumann_z_0:
+     U: [0.001,0,0]
+
+global:
+   simulation_paraview_freq: 1
+   simulation_end_iteration: 20

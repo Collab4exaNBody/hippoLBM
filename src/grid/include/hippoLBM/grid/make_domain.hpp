@@ -142,8 +142,8 @@ namespace hippoLBM
 	template<int Q>
 		LBMDomain<Q> make_domain(const GridConfig grid, const SubGridConfig& subgrid)
 		{
-      grid.display();
-      subgrid.display();
+      // grid.display(); -> useful for debuging
+      // subgrid.display();
 			constexpr int ghost_layer = hippoLBMGridConfig::ghost_layer;
 
 			auto periodic = subgrid.periodic;

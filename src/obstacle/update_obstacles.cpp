@@ -74,7 +74,6 @@ namespace hippoLBM
 		ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT);
 		ADD_SLOT( Obstacles, obstacles, INPUT_OUTPUT, REQUIRED, DocString{"List of Obstacles"});
 
-
 		public:
 		inline std::string documentation() const override final
 		{

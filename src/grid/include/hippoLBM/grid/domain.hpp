@@ -20,6 +20,7 @@ namespace hippoLBM
       LBMDomain(LBMGhostManager<Q>& g, Box3D& b, LBMGrid& gr, onika::math::AABB& bd, int3d& ds, onika::math::IJK& mc, onika::math::IJK& mgs)
         : m_ghost_manager(g), m_box(b), m_grid(gr), bounds(bd), domain_size(ds), MPI_coord(mc), MPI_grid_size(mgs) {} 
 
+      int3d size() { return domain_size; } // return the number of nodes in each dimension, without ghost_layers 
       double dx() { return m_grid.dx; }
       LBMGrid& grid() { return m_grid; }
     };
