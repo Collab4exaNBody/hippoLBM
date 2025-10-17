@@ -35,7 +35,7 @@ namespace hippoLBM
       {
         for(size_t component_index = 0 ; component_index < Components ; component_index++)
         {
-          (idx, component_index) = 0;
+          this->operator()(idx, component_index) = 0;
         }
       }
 

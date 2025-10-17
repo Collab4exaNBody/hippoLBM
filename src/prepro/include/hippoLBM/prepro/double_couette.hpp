@@ -43,7 +43,6 @@ namespace hippoLBM
 			if constexpr (DIM == DIMZ ) value = coord.z + g.offset[2];
 
       Vec3d uii = U - dU_lbm * value;
-      ldbg << "uii.x: " << uii.x << " coord.z: " << coord.z << std::endl;
    
 			double eu;
 		  double u_squ = dot(uii, uii);

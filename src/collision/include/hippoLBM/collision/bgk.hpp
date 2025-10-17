@@ -50,10 +50,10 @@ namespace hippoLBM
       {
 
         bool update = check_level<TR>(levels[idx]) && (obst[idx] == FLUIDE_); 
-        const double& rho = m0[idx];
-        const double& ux = m1(idx,0);
-        const double& uy = m1(idx,1);
-        const double& uz = m1(idx,2);
+        const double rho = m0[idx];
+        const double ux = m1(idx,0);
+        const double uy = m1(idx,1);
+        const double uz = m1(idx,2);
         const double u_squ = (ux * ux + uy * uy + uz * uz);
 
         for (int iLB = 0; iLB < Q; iLB++) 

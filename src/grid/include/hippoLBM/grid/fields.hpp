@@ -68,7 +68,7 @@ namespace hippoLBM
       double * densities() { return onika::cuda::vector_data(m0); }
       FieldView<3> flux()  { return FieldView<3>{onika::cuda::vector_data(m1), grid_size}; }
       int * obstacles() { return onika::cuda::vector_data(obst); }
-      const int * const obstacles() const { return onika::cuda::vector_data(obst); }
+      const int * obstacles() const { return onika::cuda::vector_data(obst); }
       const double * weights() { return onika::cuda::vector_data(scheme.w); }
       const int * iopp() { return onika::cuda::vector_data(scheme.iopp); }
       std::tuple<const int *, const int * , const int *> exyz() 

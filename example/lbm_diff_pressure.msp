@@ -29,7 +29,6 @@ set_distributions:
 post_stream_bcs:
   - post_bounce_back
 
-
 global:
    simulation_paraview_freq: 25
    simulation_end_iteration: 1000

@@ -79,7 +79,7 @@ namespace hippoLBM
         // define functor
         bgk<Q, Traversal::Real> func = {ptr, params.Fext, pm1, pobst, pf, pm0, pex, pey, pez, w, params.tau};
         // run kernel over the lbm grid
-        parallel_for_simple(size, func, parallel_execution_context());
+        parallel_for_simple(size, func, parallel_execution_context("bgk"));
       }
   };
 
