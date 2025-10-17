@@ -37,7 +37,7 @@ namespace hippoLBM
 		ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t coord) const
 		{
 			const int idx = g(coord.x, coord.y, coord.z);
-      double value;
+            double value;
 			if constexpr (DIM == DIMX ) value = coord.x + g.offset[0];
 			if constexpr (DIM == DIMY ) value = coord.y + g.offset[1];
 			if constexpr (DIM == DIMZ ) value = coord.z + g.offset[2];
@@ -45,7 +45,7 @@ namespace hippoLBM
       Vec3d uii = U - dU_lbm * value;
    
 			double eu;
-		  double u_squ = dot(uii, uii);
+		    double u_squ = dot(uii, uii);
 			for(int iLB = 0 ; iLB < Q ; iLB++)
 			{
 				eu = uii.x * double(ex[iLB]) + uii.y * ey[iLB] + uii.z * ez[iLB];
