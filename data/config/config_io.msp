@@ -20,5 +20,5 @@ dump_paraview_if_triggered:
 print_log_if_triggered:
   condition: trigger_pring_log
   body:
-    - hippoblm_simulation_state
+    - hippolbm_simulation_state
     - log

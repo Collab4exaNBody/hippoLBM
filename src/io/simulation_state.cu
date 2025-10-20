@@ -96,7 +96,7 @@ namespace hippoLBM
   // === register factories ===  
   ONIKA_AUTORUN_INIT(SimulationState)
   {
-    OperatorNodeFactory::instance()->register_factory( "hippoblm_simulation_state", make_variant_operator<SimulationState>);
+    OperatorNodeFactory::instance()->register_factory( "hippolbm_simulation_state", make_variant_operator<SimulationState>);
   }
 }
 
