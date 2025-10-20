@@ -87,7 +87,7 @@ namespace hippoLBM
           auto [is_inside_subdomain, wall_box] = Grid.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_wall_box);
           if( !is_inside_subdomain ) return;
 
-          parallel_for(wall_box, func, parallel_execution_context(), pf, pw);
+          parallel_for(wall_box, func, parallel_execution_context("wall_box"), pf, pw);
 
         }
         else  // all domain
@@ -95,13 +95,13 @@ namespace hippoLBM
           if( *do_update )
           {
             auto [ptr, size] = traversals.get_data<Traversal::Real>();
-            parallel_for_id(ptr, size, func, parallel_execution_context(), pf, pw);
+            parallel_for_id(ptr, size, func, parallel_execution_context("wall_box"), pf, pw);
             update_ghost(Domain, pf, par_exec_ctx);
           }
           else
           {
             auto [ptr, size] = traversals.get_data<Traversal::All>();
-            parallel_for_id(ptr, size, func, parallel_execution_context(), pf, pw);
+            parallel_for_id(ptr, size, func, parallel_execution_context("wall_box"), pf, pw);
           }
         }
       }

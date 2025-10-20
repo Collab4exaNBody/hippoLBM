@@ -64,10 +64,10 @@ namespace hippoLBM
         grid_data.grid_size = np;
         if(grid_data.obst.size() != np)
         {
-          grid_data.f.resize(np*Q);
+          grid_data.f.resize(np*Q, 0);
           grid_data.obst.resize(np);
-          grid_data.m0.resize(np);
-          grid_data.m1.resize(np*3);
+          grid_data.m0.resize(np, 0);
+          grid_data.m1.resize(np*3, 0);
           grid_data.fi_x_0.resize(size_YZU);
           grid_data.fi_x_l.resize(size_YZU);
           grid_data.fi_y_0.resize(size_XZU);

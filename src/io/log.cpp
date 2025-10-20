@@ -32,6 +32,7 @@ under the License.
 #include <hippoLBM/grid/make_variant_operator.hpp>
 #include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/enum.hpp>
+#include <hippoLBM/io/simulation_state.hpp>
 
 #include<chrono>
 
@@ -48,6 +49,7 @@ namespace hippoLBM
 
     public:
     ADD_SLOT( LBMDomain<Q>, domain, INPUT_OUTPUT, REQUIRED);
+    ADD_SLOT( SimulationStatistics, simulation_statistics, INPUT, REQUIRED, DocString{"Contains general information about the LBM grid, such as minimum and maximum fluid velocity."});
     ADD_SLOT( long , timestep , INPUT, REQUIRED);
     ADD_SLOT( double , physical_time , INPUT, REQUIRED);
     ADD_SLOT( bool , print_log_header, INPUT_OUTPUT, true);
@@ -76,9 +78,17 @@ namespace hippoLBM
       }
       *previous_time = current_time;
       *previous_step = *timestep;
+      const auto& ss = *simulation_statistics;
 
-      std::string  header = "     Step     Time          Mesh Size     MLUPS";
-      std::string line = format_string("%9ld % .6e %13lld  %.2e", *timestep, *physical_time,  size_xyz, MLUPS);
+      std::string  header = "     Step     Time          Mesh Size   Sum(density)   min(||V||)   max(||V||)     MLUPS";
+      std::string line = format_string("%9ld % .6e %13lld       %.2e     %.2e     %.2e   %.2e", 
+          *timestep, 
+          *physical_time, 
+          size_xyz, 
+          ss.sum_density, 
+          ss.min_velocity_norm, 
+          ss.max_velocity_norm, 
+          MLUPS);
 
       if(*print_log_header)
       {
