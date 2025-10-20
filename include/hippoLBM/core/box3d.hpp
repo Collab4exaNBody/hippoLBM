@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hippoLBM/grid/point3d.hpp>
+#include <hippoLBM/core/point3d.hpp>
 
 namespace hippoLBM
 {

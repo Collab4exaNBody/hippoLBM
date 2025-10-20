@@ -20,7 +20,7 @@ under the License.
 #include <onika/math/basic_types_yaml.h>
 #include <onika/math/basic_types_stream.h>
 #include <onika/math/basic_types_operators.h>
-#include <hippoLBM/grid/parallel_for_core.cu>
+#include <hippoLBM/compute/parallel_for_core.hpp>
 
 #pragma once
 

@@ -4,8 +4,8 @@
 #include <fstream>
 #include <filesystem>
 #include <onika/cuda/cuda_context.h>
-#include <hippoLBM/grid/point3d.hpp>
-#include <hippoLBM/grid/box3d.hpp>
+#include <hippoLBM/core/point3d.hpp>
+#include <hippoLBM/core/box3d.hpp>
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/operator_ghost_manager.hpp>
 #include <hippoLBM/grid/packers.hpp>

@@ -27,7 +27,7 @@ under the License.
 #include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/io/writer.hpp>
 #include <onika/string_utils.h>
-#include <hippoLBM/grid/parallel_for_core.cu>
+#include <hippoLBM/compute/parallel_for_core.hpp>
 
 namespace hippoLBM
 {

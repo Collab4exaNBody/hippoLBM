@@ -1,6 +1,5 @@
 #pragma once
 
-#include <hippoLBM/grid/box3d.hpp>
 #include <hippoLBM/grid/grid.hpp>
 
 namespace hippoLBM

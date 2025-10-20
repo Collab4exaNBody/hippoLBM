@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hippoLBM/grid/box3d.hpp>
+#include <hippoLBM/core/box3d.hpp>
 #include <hippoLBM/grid/ghost_manager.hpp>
 #include <hippoLBM/grid/grid.hpp>
 

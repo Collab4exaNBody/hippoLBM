@@ -20,7 +20,6 @@ under the License.
 #pragma once
 
 #include <onika/parallel/parallel_for.h>
-#include <hippoLBM/grid/box3d.hpp>
 #include <hippoLBM/grid/field_view.hpp>
 
 namespace hippoLBM

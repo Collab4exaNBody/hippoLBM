@@ -32,7 +32,7 @@ under the License.
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
-#include <hippoLBM/grid/parallel_for_core.cu>
+#include <hippoLBM/compute/parallel_for_core.hpp>
 #include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/bcs/bounce_back.hpp>
 #include <hippoLBM/bcs/bounce_back_manager.hpp>
