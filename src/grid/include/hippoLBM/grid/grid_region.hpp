@@ -101,27 +101,27 @@ namespace hippoLBM
       ghost_edge.resize(all.size() - inside.size());
       extend.resize(ex.number_of_points());
 
-			size_t shift_a(0), shift_r(0), shift_i(0), shift_ge(0), shift_ex(0);
-			for (int z = ba.start(2); z <= ba.end(2); z++) {
-				for (int y = ba.start(1); y <= ba.end(1); y++) {
-					for (int x = ba.start(0); x <= ba.end(0); x++) {
-						Point3D p = {x, y, z};
-						int idx = G(x, y, z);
-						all[shift_a++] = idx;
-						level[idx] = 3; // ALL
-						if (ex.contains(p))
-						{
-							extend[shift_ex++] = idx;
-							level[idx] = LEVEL_EXTEND;
-							if (br.contains(p)) {
-								real[shift_r++] = idx;
-								level[idx] = LEVEL_REAL;
-								if (bi.contains(p)) {
-									inside[shift_i++] = idx;
-									level[idx] = LEVEL_INSIDE;
-								}
-							}
-						}
+      size_t shift_a(0), shift_r(0), shift_i(0), shift_ge(0), shift_ex(0);
+      for (int z = ba.start(2); z <= ba.end(2); z++) {
+        for (int y = ba.start(1); y <= ba.end(1); y++) {
+          for (int x = ba.start(0); x <= ba.end(0); x++) {
+            Point3D p = {x, y, z};
+            int idx = G(x, y, z);
+            all[shift_a++] = idx;
+            level[idx] = 3; // ALL
+            if (ex.contains(p))
+            {
+              extend[shift_ex++] = idx;
+              level[idx] = LEVEL_EXTEND;
+              if (br.contains(p)) {
+                real[shift_r++] = idx;
+                level[idx] = LEVEL_REAL;
+                if (bi.contains(p)) {
+                  inside[shift_i++] = idx;
+                  level[idx] = LEVEL_INSIDE;
+                }
+              }
+            }
 
             if (!bi.contains(p)) {
               ghost_edge[shift_ge++] = idx;
@@ -211,7 +211,6 @@ namespace hippoLBM
     }
   };
 
-
   template<> inline traversal_data LBMGridRegion::get_data<Traversal::All>()        { return{ vector_data(all), vector_size(all)}; }  
   template<> inline traversal_data LBMGridRegion::get_data<Traversal::Real>()       { return{ vector_data(real), vector_size(real)}; }  
   template<> inline traversal_data LBMGridRegion::get_data<Traversal::Extend>()     { return{ vector_data(extend), vector_size(extend)}; }  
@@ -236,4 +235,58 @@ namespace hippoLBM
   template<> inline const traversal_data LBMGridRegion::get_data<Traversal::Plan_xz_l>() const  { return{ vector_data(plane_xz_l), vector_size(plane_xz_l)}; }  
   template<> inline const traversal_data LBMGridRegion::get_data<Traversal::Plan_yz_0>() const  { return{ vector_data(plane_yz_0), vector_size(plane_yz_0)}; }  
   template<> inline const traversal_data LBMGridRegion::get_data<Traversal::Plan_yz_l>() const  { return{ vector_data(plane_yz_l), vector_size(plane_yz_l)}; }  
+
+  using traversal_getter_t = traversal_data (*)(LBMGridRegion&);
+
+  constexpr std::array<traversal_getter_t, 12> traversal_table = {
+    +[](LBMGridRegion& r) { return r.get_data<Traversal::All>(); },
+    +[](LBMGridRegion& r) { return r.get_data<Traversal::Real>(); },
+    +[](LBMGridRegion& r) { return r.get_data<Traversal::Extend>(); },
+    +[](LBMGridRegion& r) { return r.get_data<Traversal::Inside>(); },
+    +[](LBMGridRegion& r) { return r.get_data<Traversal::Edge>(); },
+    +[](LBMGridRegion& r) { return r.get_data<Traversal::Ghost_Edge>(); },
+    +[](LBMGridRegion& r) { return r.get_data<Traversal::Plan_xy_0>(); },
+    +[](LBMGridRegion& r) { return r.get_data<Traversal::Plan_xy_l>(); },
+    +[](LBMGridRegion& r) { return r.get_data<Traversal::Plan_xz_0>(); },
+    +[](LBMGridRegion& r) { return r.get_data<Traversal::Plan_xz_l>(); },
+    +[](LBMGridRegion& r) { return r.get_data<Traversal::Plan_yz_0>(); },
+    +[](LBMGridRegion& r) { return r.get_data<Traversal::Plan_yz_l>(); }
+  };
+
+  using const_traversal_getter_t = traversal_data (*)(const LBMGridRegion&);
+
+  constexpr std::array<const_traversal_getter_t, 12> const_traversal_table = {
+    +[](const LBMGridRegion& r) { return r.get_data<Traversal::All>(); },
+    +[](const LBMGridRegion& r) { return r.get_data<Traversal::Real>(); },
+    +[](const LBMGridRegion& r) { return r.get_data<Traversal::Extend>(); },
+    +[](const LBMGridRegion& r) { return r.get_data<Traversal::Inside>(); },
+    +[](const LBMGridRegion& r) { return r.get_data<Traversal::Edge>(); },
+    +[](const LBMGridRegion& r) { return r.get_data<Traversal::Ghost_Edge>(); },
+    +[](const LBMGridRegion& r) { return r.get_data<Traversal::Plan_xy_0>(); },
+    +[](const LBMGridRegion& r) { return r.get_data<Traversal::Plan_xy_l>(); },
+    +[](const LBMGridRegion& r) { return r.get_data<Traversal::Plan_xz_0>(); },
+    +[](const LBMGridRegion& r) { return r.get_data<Traversal::Plan_xz_l>(); },
+    +[](const LBMGridRegion& r) { return r.get_data<Traversal::Plan_yz_0>(); },
+    +[](const LBMGridRegion& r) { return r.get_data<Traversal::Plan_yz_l>(); }
+  };
+
+  inline traversal_data get_traversal(LBMGridRegion& region, Traversal Tr)
+  {
+    const std::size_t idx = static_cast<std::size_t>(Tr);
+    if (idx >= traversal_table.size())
+    {
+      throw std::out_of_range("Invalid traversal type");
+    }
+    return traversal_table[idx](region);
+  }
+
+  inline traversal_data get_traversal(const LBMGridRegion& region, Traversal Tr)
+  {
+    const std::size_t idx = static_cast<std::size_t>(Tr);
+    if (idx >= const_traversal_table.size())
+    {
+      throw std::out_of_range("Invalid traversal type");
+    }
+    return const_traversal_table[idx](region);
+  }
 };

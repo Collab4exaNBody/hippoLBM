@@ -64,13 +64,19 @@ namespace hippoLBM
       FieldView<Q> distributions() { 
         return FieldView<Q>{onika::cuda::vector_data(f), grid_size}; 
       }
-      //double * distributions() { return onika::cuda::vector_data(f); }
+
       double * densities() { return onika::cuda::vector_data(m0); }
+
       FieldView<3> flux()  { return FieldView<3>{onika::cuda::vector_data(m1), grid_size}; }
+
       int * obstacles() { return onika::cuda::vector_data(obst); }
+
       const int * obstacles() const { return onika::cuda::vector_data(obst); }
+
       const double * weights() { return onika::cuda::vector_data(scheme.w); }
+
       const int * iopp() { return onika::cuda::vector_data(scheme.iopp); }
+
       std::tuple<const int *, const int * , const int *> exyz() 
       {
         const int * ex = onika::cuda::vector_data(scheme.ex); 
@@ -78,8 +84,11 @@ namespace hippoLBM
         const int * ez = onika::cuda::vector_data(scheme.ez); 
         return {ex,ey,ez}; 
       }
+
       const int * ex() { return onika::cuda::vector_data(scheme.ex); }
+
       const int * ey() { return onika::cuda::vector_data(scheme.ey); }
+
       const int * ez() { return onika::cuda::vector_data(scheme.ez); }
     };
 }
