@@ -19,7 +19,7 @@ under the License.
 
 #pragma once
 
-#include <hippoLBM/grid/box3d.hpp>
+#include <hippoLBM/core/box3d.hpp>
 #include <onika/cuda/stl_adaptors.h>
 
 namespace hippoLBM

@@ -31,7 +31,7 @@ under the License.
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
-#include <hippoLBM/grid/parallel_for_core.cu>
+#include <hippoLBM/compute/parallel_for_core.hpp>
 #include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/grid/set_distribution.hpp>
 #include <hippoLBM/grid/update_ghost.hpp>

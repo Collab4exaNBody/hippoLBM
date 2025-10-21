@@ -111,6 +111,14 @@ namespace hippoLBM
 					access(idx, 1) = in.y;
 					access(idx, 2) = in.z;
 				}
+
+			ONIKA_HOST_DEVICE_FUNC
+				void set(size_t idx, const onika::math::Vec3d& in) const requires (Components == 3) 
+				{
+					access(idx, 0) = in.x;
+					access(idx, 1) = in.y;
+					access(idx, 2) = in.z;
+				}
 		};
 
 

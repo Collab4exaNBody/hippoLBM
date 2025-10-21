@@ -26,7 +26,7 @@ under the License.
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/field_view.hpp>
 #include <hippoLBM/grid/grid_region.hpp>
-#include <hippoLBM/grid/parallel_for_core.cu>
+#include <hippoLBM/compute/parallel_for_core.hpp>
 
 namespace hippoLBM
 {

@@ -2,8 +2,8 @@
 
 #include <onika/math/basic_types_def.h>
 #include <hippoLBM/grid/enum.hpp>
-#include <hippoLBM/grid/point3d.hpp>
-#include <hippoLBM/grid/box3d.hpp>
+#include <hippoLBM/core/point3d.hpp>
+#include <hippoLBM/core/box3d.hpp>
 #include <hippoLBM/grid/grid.hpp>
 #include <cassert>
 #include <tuple>
