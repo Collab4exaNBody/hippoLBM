@@ -51,7 +51,7 @@ namespace hippoLBM
     public:
 
       ADD_SLOT(MPI_Comm, mpi, INPUT, MPI_COMM_WORLD);
-      ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+      ADD_SLOT( LBMFields<Q>, fields, INPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
       ADD_SLOT( LBMGridRegion, grid_region, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
       ADD_SLOT( SimulationStatistics, simulation_statistics, OUTPUT, DocString{"Contains general information about the LBM grid, such as minimum and maximum fluid velocity."});
       ADD_SLOT( CudaMMVector<SimulationStatistics>, scratch, PRIVATE);
