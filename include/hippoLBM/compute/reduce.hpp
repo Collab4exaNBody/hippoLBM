@@ -28,6 +28,8 @@ under the License.
 #include <onika/parallel/block_parallel_for.h>
 #include <onika/parallel/parallel_for.h>
 
+#include <onika/cuda/uninitialized_place_holder.h>
+
 namespace hippoLBM
 {
   struct reduce_thread_local_t {};
