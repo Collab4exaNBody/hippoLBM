@@ -18,33 +18,29 @@ under the License.
  */
 
 #include <onika/scg/operator.h>
-#include <onika/scg/operator_slot.h>
 #include <onika/scg/operator_factory.h>
+#include <onika/scg/operator_slot.h>
+
 #include <hippoLBM/obstacle/obstacles.hpp>
-namespace hippoLBM
-{
-  using namespace onika;
-  using namespace scg;
-  using onika::math::AABB;
+namespace hippoLBM {
+using namespace onika;
+using namespace scg;
+using onika::math::AABB;
 
-  class RegisterSolidWall : public OperatorNode
-  {
-    public:
-      ADD_SLOT(Obstacles, obstacles, INPUT_OUTPUT, REQUIRED, DocString{"List of Obstacles"});
-      ADD_SLOT(int, id, INPUT, REQUIRED, DocString{"Driver index"});
-      ADD_SLOT( AABB, bounds, INPUT, REQUIRED, DocString{"Domain's bounds"});
+class RegisterSolidWall : public OperatorNode {
+ public:
+  ADD_SLOT(Obstacles, obstacles, INPUT_OUTPUT, REQUIRED, DocString{"List of Obstacles"});
+  ADD_SLOT(int, id, INPUT, REQUIRED, DocString{"Driver index"});
+  ADD_SLOT(onika::math::AABB, bounds, INPUT, REQUIRED, DocString{"Domain's bounds"});
 
-      inline void execute () override final
-      {
-        Wall obj {*bounds};
-        obstacles->add(*id, obj);
-      }
-  };
-
-  // === register factories ===  
-  ONIKA_AUTORUN_INIT(register_solid_wall)
-  {
-    OperatorNodeFactory::instance()->register_factory("register_solid_wall", make_simple_operator<RegisterSolidWall>); 
+  inline void execute() override final {
+    Wall obj{*bounds};
+    obstacles->add(*id, obj);
   }
-}
+};
 
+// === register factories ===
+ONIKA_AUTORUN_INIT(register_solid_wall) {
+  OperatorNodeFactory::instance()->register_factory("register_solid_wall", make_simple_operator<RegisterSolidWall>);
+}
+}  // namespace hippoLBM

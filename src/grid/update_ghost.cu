@@ -18,63 +18,65 @@ under the License.
  */
 
 #include <mpi.h>
-#include <onika/scg/operator.h>
-#include <onika/scg/operator_slot.h>
-#include <onika/scg/operator_factory.h>
-#include <onika/log.h>
+
+// onika
 #include <onika/cuda/cuda.h>
+#include <onika/log.h>
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
+#include <onika/scg/operator.h>
+#include <onika/scg/operator_factory.h>
+#include <onika/scg/operator_slot.h>
 
-#include <hippoLBM/grid/domain.hpp>
+// hippoLBM
 #include <hippoLBM/grid/comm.hpp>
+#include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
-#include <hippoLBM/grid/domain.hpp>
-#include <hippoLBM/grid/update_ghost.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
+#include <hippoLBM/grid/update_ghost.hpp>
 
-namespace hippoLBM
-{
-  using namespace onika;
-  using namespace scg;
-  using namespace onika::cuda;
+namespace hippoLBM {
+using namespace onika;
+using namespace scg;
+using namespace onika::cuda;
 
-  template<int Q>
-    class UpdateGhost : public OperatorNode
-  {
-    ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
-    ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
+template <int Q>
+class UpdateGhost : public OperatorNode {
+  ADD_SLOT(LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED,
+           DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+  ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED,
+           DocString{"The domain containing the grid and other simulation parameters."});
 
-    public:
+ public:
+  inline std::string documentation() const final {
+    return R"EOF(
+    A functor for computing macroscopic variables (densities and flux) for lattice Boltzmann method.
 
-    inline std::string documentation() const override final
-    {
-      return R"EOF(  A functor for computing macroscopic variables (densities and flux) for lattice Boltzmann method.
+    YAML example:
+
+      - update_ghost:
+          fields: fields
+          domain: domain
         )EOF";
-    }
-
-    inline void execute () override final
-    {
-      auto& data = *fields;
-
-      // capture the parallel execution context
-      auto par_exec_ctx = [this] (const char* exec_name)
-      { 
-        return this->parallel_execution_context(exec_name);
-      };
-
-      // get fields
-      FieldView<Q> pf = data.distributions();
-      update_ghost(*domain, pf, par_exec_ctx);
-    }
-  };
-
-  // === register factories ===  
-  ONIKA_AUTORUN_INIT(update_ghost)
-  {
-    OperatorNodeFactory::instance()->register_factory( "update_ghost", make_variant_operator<UpdateGhost>);
-    OperatorNodeFactory::instance()->register_factory( "hippolbm_update_ghost", make_variant_operator<UpdateGhost>); // used for couplings
   }
-}
 
+  inline void execute() override final {
+    auto& data = *fields;
+
+    // capture the parallel execution context
+    auto par_exec_ctx = [this](const char* exec_name) { return this->parallel_execution_context(exec_name); };
+
+    // get fields
+    FieldView<Q> pf = data.distributions();
+    update_ghost(*domain, pf, par_exec_ctx);
+  }
+};
+
+// === register factories ===
+ONIKA_AUTORUN_INIT(update_ghost) {
+  OperatorNodeFactory::instance()->register_factory("update_ghost", make_variant_operator<UpdateGhost>);
+  OperatorNodeFactory::instance()->register_factory("hippolbm_update_ghost",
+                                                    make_variant_operator<UpdateGhost>);  // used for couplings
+}
+}  // namespace hippoLBM

@@ -17,99 +17,102 @@ specific language governing permissions and limitations
 under the License.
  */
 
-#include <onika/scg/operator.h>
-#include <onika/scg/operator_slot.h>
-#include <onika/scg/operator_factory.h>
-#include <onika/log.h>
 #include <onika/cuda/cuda.h>
+#include <onika/log.h>
+#include <onika/math/basic_types.h>
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
+#include <onika/scg/operator.h>
+#include <onika/scg/operator_factory.h>
+#include <onika/scg/operator_slot.h>
 
-#include <hippoLBM/grid/make_variant_operator.hpp>
-#include <onika/math/basic_types.h>
-#include <hippoLBM/grid/domain.hpp>
+#include <hippoLBM/compute/parallel_for_core.hpp>
 #include <hippoLBM/grid/comm.hpp>
+#include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
-#include <hippoLBM/compute/parallel_for_core.hpp>
 #include <hippoLBM/grid/grid_region.hpp>
+#include <hippoLBM/grid/make_variant_operator.hpp>
 #include <hippoLBM/grid/set_distribution.hpp>
 #include <hippoLBM/grid/update_ghost.hpp>
 
-namespace hippoLBM
-{
-  using namespace onika;
-  using namespace scg;
+namespace hippoLBM {
+using namespace onika;
+using namespace scg;
+using namespace onika::math;
+using namespace onika::parallel;
 
-  template<int Q>
-    class SetDistributionsLBM : public OperatorNode
-  {
-    public:
-      ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
-      ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED);
-      ADD_SLOT( LBMGridRegion, grid_region, INPUT, REQUIRED);
-      ADD_SLOT( AABB, bounds, INPUT, OPTIONAL, DocString{"Domain's bounds"});
-      ADD_SLOT( double, value, INPUT, double(1) );
-      ADD_SLOT( bool, do_update, INPUT, false);
+template <int Q>
+class SetDistributionsLBM : public OperatorNode {
+ public:
+  ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED,
+           DocString("The domain containing the grid and other simulation parameters."));
+  ADD_SLOT(LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED,
+           DocString("The fields to be initialized, including the distribution function."));
+  ADD_SLOT(LBMGridRegion, grid_region, INPUT, REQUIRED,
+           DocString("The grid region defining the traversal for initialization."));
+  ADD_SLOT(onika::math::AABB, bounds, INPUT, OPTIONAL, DocString{"Domain's bounds"});
+  ADD_SLOT(double, value, INPUT, double(1), DocString{"The value to initialize the distribution function with."});
+  ADD_SLOT(bool, do_update, INPUT, false, DocString{"Whether to update ghost cells after initialization."});
 
-      inline void execute () override final
-      {
-        auto& data = *fields;
-        auto& traversals = *grid_region;
-        LBMDomain<Q>& Domain = *domain;
-        LBMGrid& Grid = Domain.m_grid;
-        GridIJKtoIdx ijk_to_idx(Grid);
+  inline std::string documentation() const final {
+    return R"EOF(
+    This operator initializes the distribution function for the LBM simulation.
 
-        FieldView pf = data.distributions();
-        const double * const pw = data.weights();
+    YAML example:
 
-        // define kernel
-        init_distributions<Q> func = {*value, ijk_to_idx};
-
-        // capture the parallel execution context
-        auto par_exec_ctx = [this] (const char* exec_name)
-        { 
-          return this->parallel_execution_context(exec_name);
-        };
-
-        if(bounds.has_value())
-        {
-
-          auto& bound = *bounds;
-          Vec3d min = bound.bmin;
-          Vec3d max = bound.bmax;
-          double Dx = Grid.dx;
-          Point3D _min = {int(min.x/Dx), int(min.y/Dx), int(min.z/Dx)};
-          Point3D _max = {int(max.x/Dx), int(max.y/Dx), int(max.z/Dx)};
-
-          Box3D global_wall_box = {_min, _max};
-
-          auto [is_inside_subdomain, wall_box] = Grid.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_wall_box);
-          if( !is_inside_subdomain ) return;
-
-          parallel_for(wall_box, func, parallel_execution_context("wall_box"), pf, pw);
-
-        }
-        else  // all domain
-        { 
-          if( *do_update )
-          {
-            auto [ptr, size] = traversals.get_data<Traversal::Real>();
-            parallel_for_id(ptr, size, func, parallel_execution_context("wall_box"), pf, pw);
-            update_ghost(Domain, pf, par_exec_ctx);
-          }
-          else
-          {
-            auto [ptr, size] = traversals.get_data<Traversal::All>();
-            parallel_for_id(ptr, size, func, parallel_execution_context("wall_box"), pf, pw);
-          }
-        }
-      }
-  };
-
-  // === register factories ===  
-  ONIKA_AUTORUN_INIT(init_distributions)
-  {
-    OperatorNodeFactory::instance()->register_factory( "set_distribution", make_variant_operator<SetDistributionsLBM>);
+      - set_distribution:
+          value: 1.0
+    )EOF";
   }
+
+  inline void execute() final {
+    auto& data = *fields;
+    auto& traversals = *grid_region;
+    LBMDomain<Q>& Domain = *domain;
+    LBMGrid& Grid = Domain.m_grid;
+    GridIJKtoIdx ijk_to_idx(Grid);
+
+    FieldView pf = data.distributions();
+    const double* const pw = data.weights();
+
+    // define kernel
+    init_distributions<Q> func = {*value, ijk_to_idx};
+
+    // capture the parallel execution context
+    auto par_exec_ctx = [this](const char* exec_name) { return this->parallel_execution_context(exec_name); };
+
+    if (bounds.has_value()) {
+      auto& bound = *bounds;
+      onika::math::Vec3d min = bound.bmin;
+      onika::math::Vec3d max = bound.bmax;
+      double Dx = Grid.dx;
+      Point3D _min = {int(min.x / Dx), int(min.y / Dx), int(min.z / Dx)};
+      Point3D _max = {int(max.x / Dx), int(max.y / Dx), int(max.z / Dx)};
+
+      Box3D global_wall_box = {_min, _max};
+
+      auto [is_inside_subdomain, wall_box] = Grid.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_wall_box);
+      if (!is_inside_subdomain) return;
+
+      parallel_for(wall_box, func, parallel_execution_context("wall_box"), pf, pw);
+
+    } else  // all domain
+    {
+      if (*do_update) {
+        auto [ptr, size] = traversals.get_data<Traversal::Real>();
+        parallel_for_id(ptr, size, func, parallel_execution_context("wall_box"), pf, pw);
+        update_ghost(Domain, pf, par_exec_ctx);
+      } else {
+        auto [ptr, size] = traversals.get_data<Traversal::All>();
+        parallel_for_id(ptr, size, func, parallel_execution_context("wall_box"), pf, pw);
+      }
+    }
+  }
+};
+
+// === register factories ===
+ONIKA_AUTORUN_INIT(init_distributions) {
+  OperatorNodeFactory::instance()->register_factory("set_distribution", make_variant_operator<SetDistributionsLBM>);
 }
+}  // namespace hippoLBM
