@@ -17,26 +17,24 @@ specific language governing permissions and limitations
 under the License.
 */
 #include <onika/scg/operator.h>
-#include <onika/scg/operator_slot.h>
 #include <onika/scg/operator_factory.h>
+#include <onika/scg/operator_slot.h>
+
 #include <hippoLBM/obstacle/obstacles.hpp>
 
-namespace hippoLBM
-{
-  using namespace onika;
-  using namespace scg;
+namespace hippoLBM {
+using namespace onika;
+using namespace scg;
 
-  class RegisterSolidBall : public OperatorNode
-  {
-    ADD_SLOT(Obstacles, obstacles, INPUT_OUTPUT, REQUIRED, DocString{"List of Obstacles"});
-    ADD_SLOT(int, id, INPUT, REQUIRED, DocString{"Driver index"});
-    ADD_SLOT(Vec3d, center, INPUT, REQUIRED, DocString{"Center of the ball."});
-    ADD_SLOT(double, radius, INPUT, REQUIRED, DocString{"Radius of the ball."});
+class RegisterSolidBall : public OperatorNode {
+  ADD_SLOT(Obstacles, obstacles, INPUT_OUTPUT, REQUIRED, DocString{"List of Obstacles"});
+  ADD_SLOT(int, id, INPUT, REQUIRED, DocString{"Driver index"});
+  ADD_SLOT(onika::math::Vec3d, center, INPUT, REQUIRED, DocString{"Center of the ball."});
+  ADD_SLOT(double, radius, INPUT, REQUIRED, DocString{"Radius of the ball."});
 
-    public:
-    inline std::string documentation() const override final
-    {
-      return R"EOF(
+ public:
+  inline std::string documentation() const override final {
+    return R"EOF(
         This operator add a ball to the obstacles list.
  
         YAML example:
@@ -46,17 +44,16 @@ namespace hippoLBM
              center: [1,2,3]
              radius: 1
         )EOF";
-    }
+  }
 
-    inline void execute() override final
-    {
-      hippoLBM::Ball obj(*center, *radius);
-      obstacles->add(*id, obj);
-    }
-  };
+  inline void execute() override final {
+    hippoLBM::Ball obj(*center, *radius);
+    obstacles->add(*id, obj);
+  }
+};
 
-  // === register factories ===
-  ONIKA_AUTORUN_INIT(register_solid_ball) { OperatorNodeFactory::instance()->register_factory("register_solid_ball", make_simple_operator<RegisterSolidBall>); }
-} // namespace exaDEM
-
-
+// === register factories ===
+ONIKA_AUTORUN_INIT(register_solid_ball) {
+  OperatorNodeFactory::instance()->register_factory("register_solid_ball", make_simple_operator<RegisterSolidBall>);
+}
+}  // namespace hippoLBM

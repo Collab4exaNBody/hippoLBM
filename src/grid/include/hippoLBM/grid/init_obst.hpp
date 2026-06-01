@@ -17,34 +17,27 @@ specific language governing permissions and limitations
 under the License.
  */
 
-
 #pragma once
 
+// TODO: place this macro in a more general header file, as it is used in multiple places
 #define FLUIDE_ -1
 
-namespace hippoLBM
-{
-  /**
-   * @brief Initializes the obst in a lattice Boltzmann model.
-   */
-  struct init_obst
-  {
-    int * obst;
-    ONIKA_HOST_DEVICE_FUNC inline void operator()(const int idx) const
-    {
-      obst[idx] = FLUIDE_;
-    };
-  };
-}
+namespace hippoLBM {
+/**
+ * @brief Initializes the obst in a lattice Boltzmann model.
+ */
+struct init_obst {
+  int* obst;  // Pointer to the obstacle field to be initialized.
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(const int idx) const { obst[idx] = FLUIDE_; };
+};
+}  // namespace hippoLBM
 
-namespace onika
-{
-  namespace parallel
-  {
-    template<> struct ParallelForFunctorTraits<hippoLBM::init_obst>
-    {
-      static inline constexpr bool RequiresBlockSynchronousCall = false;
-      static inline constexpr bool CudaCompatible = true;
-    };
-  }
-}
+namespace onika {
+namespace parallel {
+template <>
+struct ParallelForFunctorTraits<hippoLBM::init_obst> {
+  static inline constexpr bool RequiresBlockSynchronousCall = false;
+  static inline constexpr bool CudaCompatible = true;
+};
+}  // namespace parallel
+}  // namespace onika

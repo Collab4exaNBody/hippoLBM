@@ -17,40 +17,36 @@ specific language governing permissions and limitations
 under the License.
 */
 #include <onika/scg/operator.h>
-#include <onika/scg/operator_slot.h>
 #include <onika/scg/operator_factory.h>
+#include <onika/scg/operator_slot.h>
 
 #include <hippoLBM/obstacle/obstacles.hpp>
 
-namespace hippoLBM
-{
-  using namespace onika;
-  using namespace scg;
+namespace hippoLBM {
+using namespace onika;
+using namespace scg;
 
-  class InitObstacles : public OperatorNode
-  {
+class InitObstacles : public OperatorNode {
+  ADD_SLOT(Obstacles, obstacles, OUTPUT, DocString{"List of Obstacles"});
 
-		ADD_SLOT( Obstacles, obstacles, OUTPUT, DocString{"List of Obstacles"});
-
-		public:
-		inline std::string documentation() const override final
-		{
-			return R"EOF(
-        This operator .
+ public:
+  inline std::string documentation() const final {
+    return R"EOF(
+        This operator initializes the list of obstacles for the simulation.
 
         YAML example:
 
+		setup_obstacles:
+		  - init_obstacles:
+
         )EOF";
-		}
+  }
 
-		inline void execute() override final
-		{
-      *obstacles = Obstacles(); 
-		}
-	};
+  inline void execute() final { *obstacles = Obstacles(); }
+};
 
-	// === register factories ===
-	ONIKA_AUTORUN_INIT(init_obstacles) { OperatorNodeFactory::instance()->register_factory("init_obstacles", make_simple_operator<InitObstacles>); }
-} // namespace exaDEM
-
-
+// === register factories ===
+ONIKA_AUTORUN_INIT(init_obstacles) {
+  OperatorNodeFactory::instance()->register_factory("init_obstacles", make_simple_operator<InitObstacles>);
+}
+}  // namespace hippoLBM

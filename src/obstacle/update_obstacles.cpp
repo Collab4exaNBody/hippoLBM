@@ -17,90 +17,80 @@ specific language governing permissions and limitations
 under the License.
  */
 #include <onika/scg/operator.h>
-#include <onika/scg/operator_slot.h>
 #include <onika/scg/operator_factory.h>
+#include <onika/scg/operator_slot.h>
 
-#include <hippoLBM/grid/enum.hpp>
-#include <hippoLBM/grid/make_variant_operator.hpp>
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/fields.hpp>
+#include <hippoLBM/grid/make_variant_operator.hpp>
 #include <hippoLBM/obstacle/obstacles.hpp>
 
+namespace hippoLBM {
+using namespace onika;
+using namespace scg;
 
-namespace hippoLBM
-{
-	using namespace onika;
-	using namespace scg;
+template <int Q>
+struct UpdateObstaclesFunc {
+  LBMGrid _grid;       // The LBM grid containing the simulation data.
+  double _dx;          // The grid spacing of the LBM simulation.
+  int* const _obst;    // Pointer to the obstacle field in the LBM grid.
+  int _value = WALL_;  // The value to set for obstacle cells in the obstacle field.
 
-	template<int Q>
-		struct UpdateObstaclesFunc
-		{
-			LBMGrid _grid;
-			double _dx;
-			int * const _obst;
-      int _value = WALL_;
+  template <typename Obj>
+  inline void operator()(Obj& obj) const {
+    // convert bounds in box
+    onika::math::AABB bounds = obj.covered();
+    onika::math::Vec3d min = bounds.bmin;
+    onika::math::Vec3d max = bounds.bmax;
+    Point3D _min = {int(min.x / _dx), int(min.y / _dx), int(min.z / _dx)};
+    Point3D _max = {int(max.x / _dx), int(max.y / _dx), int(max.z / _dx)};
+    Box3D global_box = {_min, _max};
 
-			template<typename Obj>
-				inline void operator()(Obj& obj) const
-				{
-					// convert bounds in box
-					AABB bounds = obj.covered();
-					Vec3d min = bounds.bmin;
-					Vec3d max = bounds.bmax;
-					Point3D _min = {int(min.x/_dx), int(min.y/_dx), int(min.z/_dx)};
-					Point3D _max = {int(max.x/_dx), int(max.y/_dx), int(max.z/_dx)};
-					Box3D global_box = {_min, _max};
+    auto [is_inside_subdomain, local_box] = _grid.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_box);
+    for (int z = local_box.start(2); z <= local_box.end(2); z++)
+      for (int y = local_box.start(1); y <= local_box.end(1); y++)
+        for (int x = local_box.start(0); x <= local_box.end(0); x++) {
+          if (obj.solid(_grid.compute_position<Area::Global>(x, y, z))) {
+            const int idx = _grid(x, y, z);
+            _obst[idx] = _value;
+          }
+        }
+  }
+};
 
-					auto [is_inside_subdomain, local_box] = _grid.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_box);
-					for(int z = local_box.start(2) ; z <= local_box.end(2) ; z++)
-						for(int y = local_box.start(1) ; y <= local_box.end(1) ; y++)
-							for(int x = local_box.start(0) ; x <= local_box.end(0) ; x++)
-							{
-								if( obj.solid( _grid.compute_position<Area::Global>(x,y,z) ))
-								{
-									const int idx = _grid(x,y,z);
-									_obst[idx] = _value;
-								}
-							}
+template <int Q>
+class UpdateObstacles : public OperatorNode {
+  ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED, DocString{"The LBM domain containing the simulation data."});
+  ADD_SLOT(LBMFields<Q>, fields, INPUT_OUTPUT, DocString{"The LBM fields containing the simulation data."});
+  ADD_SLOT(Obstacles, obstacles, INPUT_OUTPUT, REQUIRED, DocString{"List of Obstacles"});
 
-				}
-		};
-
-	template<int Q>
-		class UpdateObstacles : public OperatorNode
-	{
-
-		ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
-		ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT);
-		ADD_SLOT( Obstacles, obstacles, INPUT_OUTPUT, REQUIRED, DocString{"List of Obstacles"});
-
-		public:
-		inline std::string documentation() const override final
-		{
-			return R"EOF(
-        This operator .
+ public:
+  inline std::string documentation() const final {
+    return R"EOF(
+        This operator updates the obstacle field in the LBM grid based on the defined obstacles in the simulation.
 
         YAML example:
 
+		  - update_obstacles
+
         )EOF";
-		}
+  }
 
-		inline void execute() override final
-		{
-			auto& obs = *obstacles;
-			LBMFields<Q>& grid_data = *fields;
+  inline void execute() final {
+    auto& obs = *obstacles;
+    LBMFields<Q>& grid_data = *fields;
 
-			UpdateObstaclesFunc<Q> func = { domain->m_grid, domain->dx(), grid_data.obstacles() };
+    UpdateObstaclesFunc<Q> func = {domain->m_grid, domain->dx(), grid_data.obstacles()};
 
-			for(size_t i = 0 ; i < obs.size() ; i++)
-			{
-				obs.apply(i, func);
-			}
-		}
-	};
+    for (size_t i = 0; i < obs.size(); i++) {
+      obs.apply(i, func);
+    }
+  }
+};
 
-	// === register factories ===
-	ONIKA_AUTORUN_INIT(project_obstacles) { OperatorNodeFactory::instance()->register_factory("update_obstacles", make_variant_operator<UpdateObstacles>); }
-} // namespace exaDEM
-
-
+// === register factories ===
+ONIKA_AUTORUN_INIT(update_obstacles) {
+  OperatorNodeFactory::instance()->register_factory("update_obstacles", make_variant_operator<UpdateObstacles>);
+}
+}  // namespace hippoLBM
