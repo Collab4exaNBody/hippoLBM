@@ -18,68 +18,87 @@ under the License.
  */
 
 #include <mpi.h>
-#include <onika/scg/operator.h>
-#include <onika/scg/operator_slot.h>
-#include <onika/scg/operator_factory.h>
-#include <onika/log.h>
+
+// onika
 #include <onika/cuda/cuda.h>
+#include <onika/log.h>
+#include <onika/math/basic_types.h>
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
+#include <onika/scg/operator.h>
+#include <onika/scg/operator_factory.h>
+#include <onika/scg/operator_slot.h>
 
-#include <hippoLBM/grid/make_variant_operator.hpp>
-#include <onika/math/basic_types.h>
-#include <hippoLBM/grid/domain.hpp>
+// hippoLBM
+#include <hippoLBM/bcs/bounce_back_manager.hpp>
+#include <hippoLBM/compute/parallel_for_core.hpp>
 #include <hippoLBM/grid/comm.hpp>
+#include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
-#include <hippoLBM/compute/parallel_for_core.hpp>
 #include <hippoLBM/grid/grid_region.hpp>
+#include <hippoLBM/grid/make_variant_operator.hpp>
+
+// impl
 #include <hippoLBM/bcs/bounce_back.hpp>
-#include <hippoLBM/bcs/bounce_back_manager.hpp>
 
-namespace hippoLBM
-{
-  using namespace onika;
-  using namespace scg;
-  using namespace onika::cuda;
+namespace hippoLBM {
+using namespace onika;
+using namespace onika::parallel;
+using namespace scg;
+using namespace onika::cuda;
 
-  template<int Q>
-    class PostBounceBack : public OperatorNode
-  {
-    ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
-    ADD_SLOT( LBMGridRegion, grid_region, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
-    ADD_SLOT( bounce_back_manager<Q>, bbmanager, INPUT_OUTPUT);
-    public:
-    inline std::string documentation() const override final
-    {
-      return R"EOF( 
+template <int Q>
+class PostBounceBack : public OperatorNode {
+  ADD_SLOT(LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED,
+           DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+  ADD_SLOT(LBMGridRegion, grid_region, INPUT, REQUIRED,
+           DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
+  ADD_SLOT(bounce_back_manager<Q>, bbmanager, INPUT_OUTPUT);
+
+ public:
+  inline std::string documentation() const final {
+    return R"EOF(
+    This operator applies the post-collision bounce-back boundary condition to the distribution functions at the boundary points of the grid.
+
+    YAML example:
+    
+      - post_bounce_back
+    
         )EOF";
-    }
-
-    template<int dim, Side dir> 
-      void launcher(LBMGridRegion& traversals, FieldView<Q>& pf, bounce_back_manager<Q>& bbm)
-      {
-        constexpr int idx = helper_dim_idx<dim,dir>();
-        FieldView<bounce_back_manager<Q>::Un> pfi = bbm.get_data(idx);
-        if( pfi.num_elements> 0 )
-        {
-          constexpr Traversal Tr = get_traversal<dim, dir>();
-          auto [ptr, size] = traversals.get_data<Tr>();
-
-          assert(ptr != nullptr);
-          assert(pfi.num_elements == int(size));
-
-          ParallelForOptions opts;
-          opts.omp_scheduling = OMP_SCHED_STATIC;
-          post_bounce_back<dim, dir, Q> kernel = {ptr};
-          auto params = make_tuple(pf, pfi);
-          parallel_for_id_runner runner = {kernel, params}; //pf, pfi};
-          parallel_for(size, runner, parallel_execution_context(), opts);
-      }
   }
 
-  inline void execute () override final
-  {
+  // TODO simplify template usasge in this operator, we don't need to template on the dimension and side, we can just
+  // loop over them in the operator and call the appropriate kernel
+
+  /** @brief Launches the post-bounce-back operation for a specific dimension and direction
+   * @tparam dim The dimension (0 for x, 1 for y, 2 for z).
+   * @tparam dir The side (Left or Right) indicating the direction of the bounce-back
+   * @param traversals The grid region containing the traversal indexes for different categories of points.
+   * @param pf The field view for the distribution functions.
+   * @param bbm The bounce_back_manager containing the data for the bounce-back operation.
+   */
+  template <int dim, Side dir>
+  void launcher(LBMGridRegion& traversals, FieldView<Q>& pf, bounce_back_manager<Q>& bbm) {
+    constexpr int idx = helper_dim_idx<dim, dir>();
+    FieldView<bounce_back_manager<Q>::Un> pfi = bbm.get_data(idx);
+    if (pfi.num_elements > 0) {
+      constexpr Traversal Tr = get_traversal<dim, dir>();
+      auto [ptr, size] = traversals.get_data<Tr>();
+
+      assert(ptr != nullptr);
+      assert(pfi.num_elements == int(size));
+
+      ParallelForOptions opts;
+      opts.omp_scheduling = OMP_SCHED_STATIC;
+      post_bounce_back<dim, dir, Q> kernel = {ptr};
+      auto params = make_tuple(pf, pfi);
+      parallel_for_id_runner runner = {kernel, params};  // pf, pfi};
+      parallel_for(size, runner, parallel_execution_context(), opts);
+    }
+  }
+
+  inline void execute() final {
     auto& data = *fields;
     auto& traversals = *grid_region;
 
@@ -104,10 +123,8 @@ namespace hippoLBM
   }
 };
 
-// === register factories ===  
-ONIKA_AUTORUN_INIT()
-{
-  OperatorNodeFactory::instance()->register_factory( "post_bounce_back", make_variant_operator<PostBounceBack>);
+// === register factories ===
+ONIKA_AUTORUN_INIT() {
+  OperatorNodeFactory::instance()->register_factory("post_bounce_back", make_variant_operator<PostBounceBack>);
 }
-}
-
+}  // namespace hippoLBM

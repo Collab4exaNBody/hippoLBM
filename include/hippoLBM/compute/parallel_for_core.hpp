@@ -26,10 +26,11 @@ under the License.
 // hippoLBM
 #include <hippoLBM/core/box3d.hpp>
 #include <hippoLBM/core/point3d.hpp>
+#include <hippoLBM/grid/enum.hpp>
+#include <hippoLBM/grid/field_view.hpp>
+#include <hippoLBM/grid/grid.hpp>
 
 namespace hippoLBM {
-using namespace onika::parallel;
-
 /**
  * @brief Namespace for utilities related to tuple manipulation.
  */
@@ -107,22 +108,22 @@ struct wrapper_parallel_for_ijk {
 };
 
 template <Area A, Traversal Tr, typename Func, typename... Args>
-static inline ParallelExecutionWrapper parallel_for_all(LBMGrid& Grid, Func& a_func, ParallelExecutionContext* exec_ctx,
-                                                        Args&&... a_args) {
+static inline onika::parallel::ParallelExecutionWrapper parallel_for_all(
+    LBMGrid& Grid, Func& a_func, onika::parallel::ParallelExecutionContext* exec_ctx, Args&&... a_args) {
   Box3D bx = Grid.build_box<A, Tr>();
-  return parallel_for(bx, a_func, exec_ctx, std::forward<Args>(a_args)...);
+  return onika::parallel::parallel_for(bx, a_func, exec_ctx, std::forward<Args>(a_args)...);
 }
 
 template <typename Func, typename... Args>
-static inline ParallelExecutionWrapper parallel_for(Box3D& bx, Func& a_func, ParallelExecutionContext* exec_ctx,
-                                                    Args&&... a_args) {
-  ParallelExecutionSpace<3> parallel_range = {{bx.start(0), bx.start(1), bx.start(2)},
-                                              {bx.end(0) + 1, bx.end(1) + 1, bx.end(2) + 1}};
-  ParallelForOptions opts;
-  opts.omp_scheduling = OMP_SCHED_STATIC;
+static inline onika::parallel::ParallelExecutionWrapper parallel_for(
+    Box3D& bx, Func& a_func, onika::parallel::ParallelExecutionContext* exec_ctx, Args&&... a_args) {
+  onika::parallel::ParallelExecutionSpace<3> parallel_range = {{bx.start(0), bx.start(1), bx.start(2)},
+                                                               {bx.end(0) + 1, bx.end(1) + 1, bx.end(2) + 1}};
+  onika::parallel::ParallelForOptions opts;
+  opts.omp_scheduling = onika::parallel::OMP_SCHED_STATIC;
 
   wrapper_parallel_for_ijk runner = {a_func, a_args...};
-  return parallel_for(parallel_range, runner, exec_ctx, opts);
+  return onika::parallel::parallel_for(parallel_range, runner, exec_ctx, opts);
 }
 
 template <typename Func, typename... Args>
@@ -133,38 +134,39 @@ inline void for_all(const int* const indexes, int size, Func& func, Args&&... ar
 }
 
 template <Area A, Traversal Tr, typename Func, typename... Args>
-static inline ParallelExecutionWrapper parallel_for_id(LBMGrid& g, Func& func, ParallelExecutionContext* exec_ctx,
-                                                       Args&&... args) {
+static inline onika::parallel::ParallelExecutionWrapper parallel_for_id(
+    LBMGrid& g, Func& func, onika::parallel::ParallelExecutionContext* exec_ctx, Args&&... args) {
   static_assert(A == Area::Local && Tr == Traversal::All);
   if constexpr (A == Area::Local && Tr == Traversal::All) {
-    ParallelForOptions opts;
-    opts.omp_scheduling = OMP_SCHED_STATIC;
+    onika::parallel::ParallelForOptions opts;
+    opts.omp_scheduling = onika::parallel::OMP_SCHED_STATIC;
     auto bx = g.build_box<A, Tr>();
     uint64_t size = bx.number_of_points();
     parallel_for_id_runner runner = {func, std::tuple<Args>(args)...};
     assert(size > 0);
-    return parallel_for(size, runner, exec_ctx, opts);
+    return onika::parallel::parallel_for(size, runner, exec_ctx, opts);
   }
 }
 
 template <typename Func, typename... Args>
-static inline ParallelExecutionWrapper parallel_for_simple(int size, Func& func, ParallelExecutionContext* exec_ctx,
-                                                           Args&&... args) {
-  ParallelForOptions opts;
-  opts.omp_scheduling = OMP_SCHED_STATIC;
+static inline onika::parallel::ParallelExecutionWrapper parallel_for_simple(
+    int size, Func& func, onika::parallel::ParallelExecutionContext* exec_ctx, Args&&... args) {
+  onika::parallel::ParallelForOptions opts;
+  opts.omp_scheduling = onika::parallel::OMP_SCHED_STATIC;
   parallel_for_id_runner<Func, Args...> runner{func, std::tuple<Args...>(args...)};
   assert(size > 0);
-  return parallel_for(size, runner, exec_ctx, opts);
+  return onika::parallel::parallel_for(size, runner, exec_ctx, opts);
 }
 
 template <typename Func, typename... Args>
-static inline ParallelExecutionWrapper parallel_for_id(const int* const traversal, const int size, Func& func,
-                                                       ParallelExecutionContext* exec_ctx, Args&&... args) {
-  ParallelForOptions opts;
-  opts.omp_scheduling = OMP_SCHED_STATIC;
+static inline onika::parallel::ParallelExecutionWrapper parallel_for_id(
+    const int* const traversal, const int size, Func& func, onika::parallel::ParallelExecutionContext* exec_ctx,
+    Args&&... args) {
+  onika::parallel::ParallelForOptions opts;
+  opts.omp_scheduling = onika::parallel::OMP_SCHED_STATIC;
   parallel_for_id_traversal_runner runner(traversal, func, args...);
   assert(size > 0);
-  return parallel_for(size, runner, exec_ctx, opts);
+  return onika::parallel::parallel_for(size, runner, exec_ctx, opts);
 }
 }  // namespace hippoLBM
 
