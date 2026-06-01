@@ -18,6 +18,8 @@ under the License.
  */
 
 #include <mpi.h>
+
+// onika
 #include <onika/cuda/cuda.h>
 #include <onika/log.h>
 #include <onika/math/basic_types.h>
@@ -27,14 +29,17 @@ under the License.
 #include <onika/scg/operator_factory.h>
 #include <onika/scg/operator_slot.h>
 
+// hippoLBM
 #include <hippoLBM/compute/parallel_for_core.hpp>
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/domain.hpp>
-#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
+
+// Implementation
 #include <hippoLBM/prepro/double_couette.hpp>
 
 namespace hippoLBM {
@@ -44,7 +49,7 @@ using namespace onika::cuda;
 
 template <int Q>
 class InitDoubleCouette : public OperatorNode {
-  ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED);
+  ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED, DocString{"The LBM domain containing the simulation data."});
   ADD_SLOT(LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED,
            DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
   ADD_SLOT(LBMGridRegion, grid_region, INPUT, REQUIRED,
@@ -55,12 +60,20 @@ class InitDoubleCouette : public OperatorNode {
   ADD_SLOT(std::string, dimension, INPUT, REQUIRED, DocString{"Choose the dimension."});
 
  public:
-  inline std::string documentation() const override final {
-    return R"EOF( 
+  inline std::string documentation() const final {
+    return R"EOF(
+        This operator initializes the distribution functions in the LBM grid for a double Couette flow setup.
+        The velocity profile is defined by a linear gradient between two boundaries, with the velocity at one boundary specified by the input parameter U.
+
+        YAML example:
+
+          - init_double_couette:
+              dimension: "Z"
+              U: [0.1, 0.0, 0.0]
         )EOF";
   }
 
-  inline void execute() override final {
+  inline void execute() final {
     auto& data = *fields;
     auto& params = *Params;
     int3d domain_size = domain->size();
