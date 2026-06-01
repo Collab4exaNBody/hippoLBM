@@ -20,8 +20,8 @@ under the License.
 #include <onika/scg/operator_factory.h>
 #include <onika/scg/operator_slot.h>
 
-#include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/core/enum.hpp>
+#include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
 #include <hippoLBM/obstacle/obstacles.hpp>
@@ -32,10 +32,10 @@ using namespace scg;
 
 template <int Q>
 struct UpdateObstaclesFunc {
-  LBMGrid _grid;
-  double _dx;
-  int* const _obst;
-  int _value = WALL_;
+  LBMGrid _grid;       // The LBM grid containing the simulation data.
+  double _dx;          // The grid spacing of the LBM simulation.
+  int* const _obst;    // Pointer to the obstacle field in the LBM grid.
+  int _value = WALL_;  // The value to set for obstacle cells in the obstacle field.
 
   template <typename Obj>
   inline void operator()(Obj& obj) const {
@@ -61,21 +61,23 @@ struct UpdateObstaclesFunc {
 
 template <int Q>
 class UpdateObstacles : public OperatorNode {
-  ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED);
-  ADD_SLOT(LBMFields<Q>, fields, INPUT_OUTPUT);
+  ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED, DocString{"The LBM domain containing the simulation data."});
+  ADD_SLOT(LBMFields<Q>, fields, INPUT_OUTPUT, DocString{"The LBM fields containing the simulation data."});
   ADD_SLOT(Obstacles, obstacles, INPUT_OUTPUT, REQUIRED, DocString{"List of Obstacles"});
 
  public:
-  inline std::string documentation() const override final {
+  inline std::string documentation() const final {
     return R"EOF(
-        This operator .
+        This operator updates the obstacle field in the LBM grid based on the defined obstacles in the simulation.
 
         YAML example:
+
+		  - update_obstacles
 
         )EOF";
   }
 
-  inline void execute() override final {
+  inline void execute() final {
     auto& obs = *obstacles;
     LBMFields<Q>& grid_data = *fields;
 
@@ -88,7 +90,7 @@ class UpdateObstacles : public OperatorNode {
 };
 
 // === register factories ===
-ONIKA_AUTORUN_INIT(project_obstacles) {
+ONIKA_AUTORUN_INIT(update_obstacles) {
   OperatorNodeFactory::instance()->register_factory("update_obstacles", make_variant_operator<UpdateObstacles>);
 }
 }  // namespace hippoLBM
