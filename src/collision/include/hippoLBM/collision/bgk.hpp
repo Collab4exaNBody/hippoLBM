@@ -31,16 +31,17 @@ namespace hippoLBM {
 template <int Q, Traversal TR>
 struct bgk {
   const int* __restrict__ levels;  // It contains the traversal level (0 inside, 0 1 Real, 0 1 2 Extend, and 0 1 2 3 All
-  const onika::math::Vec3d m_Fext;
-  const FieldView<3> m1;
-  int* const __restrict__ obst;
-  const FieldView<Q> f;
-  double* const __restrict__ m0;
-  const int* const __restrict__ ex;
-  const int* const __restrict__ ey;
-  const int* const __restrict__ ez;
-  const double* const __restrict__ w;
-  const double tau;
+  const onika::math::Vec3d m_Fext;     // External force term, used in the computation of macroscopic variables.
+  const FieldView<3> m1;               // The field view for the first-order moments (momentum).
+  int* const __restrict__ obst;        // Pointer to the obstacle field.
+  const FieldView<Q> f;                // The field view for the distribution functions.
+  double* const __restrict__ m0;       // Pointer to the density field (zeroth-order moment).
+  const int* const __restrict__ ex;    // Pointer to an array of integers for X-direction.
+  const int* const __restrict__ ey;    // Pointer to an array of integers for Y-direction.
+  const int* const __restrict__ ez;    // Pointer to an array of integers for Z-direction.
+  const double* const __restrict__ w;  // Pointer to an array of doubles for the weights of the discrete velocity
+                                       // directions.
+  const double tau;                    // Relaxation time for the BGK collision model.
 
   /**
    * @brief Operator for performing collision operations at a given index.

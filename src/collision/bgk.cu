@@ -18,77 +18,88 @@ under the License.
  */
 
 #include <mpi.h>
-#include <onika/scg/operator.h>
-#include <onika/scg/operator_slot.h>
-#include <onika/scg/operator_factory.h>
-#include <onika/log.h>
+
+// onika
 #include <onika/cuda/cuda.h>
+#include <onika/log.h>
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
+#include <onika/scg/operator.h>
+#include <onika/scg/operator_factory.h>
+#include <onika/scg/operator_slot.h>
 
-#include <onika/math/basic_types_yaml.h>
-#include <onika/math/basic_types_stream.h>
+// onika types
 #include <onika/math/basic_types_operators.h>
-#include <hippoLBM/grid/domain.hpp>
+#include <onika/math/basic_types_stream.h>
+#include <onika/math/basic_types_yaml.h>
+
+// hippoLBM
+
+#include <hippoLBM/compute/parallel_for_core.hpp>
 #include <hippoLBM/grid/comm.hpp>
+#include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
-#include <hippoLBM/compute/parallel_for_core.hpp>
 #include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/grid/lbm_parameters.hpp>
-#include <hippoLBM/collision/bgk.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
 
-namespace hippoLBM
-{
-  using namespace onika;
-  using namespace scg;
-  using namespace onika::cuda;
+// implementation files
+#include <hippoLBM/collision/bgk.hpp>
 
-  template<int Q>
-    class CollisionBGK : public OperatorNode
-  {
-    public:
-      ADD_SLOT( LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED, DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
-      ADD_SLOT( LBMGridRegion, grid_region, INPUT, REQUIRED, DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
-      ADD_SLOT( LBMParameters, Params, INPUT, REQUIRED, DocString{"Contains global LBM simulation parameters"});
-      ADD_SLOT( LBMDomain<Q>, domain, INPUT, REQUIRED);
+namespace hippoLBM {
+using namespace onika;
+using namespace scg;
+using namespace onika::cuda;
 
-      inline std::string documentation() const override final
-      {
-        return R"EOF( The `CollisionBGK` operator implements the Bhatnagar-Gross-Krook (BGK) collision model for the Lattice Boltzmann Method (LBM). This model assumes a single relaxation time approach  to approximate the collision process, driving the distribution functions toward equilibrium.
+template <int Q>
+class CollisionBGK : public OperatorNode {
+ public:
+  ADD_SLOT(LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED,
+           DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
+  ADD_SLOT(LBMGridRegion, grid_region, INPUT, REQUIRED,
+           DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
+  ADD_SLOT(LBMParameters, Params, INPUT, REQUIRED, DocString{"Contains global LBM simulation parameters"});
+  ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED,
+           DocString{"Defines the computational domain and its properties for the LBM simulation."});
+
+  inline std::string documentation() const override final {
+    return R"EOF(
+    The `CollisionBGK` operator implements the Bhatnagar-Gross-Krook (BGK) collision model for the Lattice Boltzmann Method (LBM).
+    This model assumes a single relaxation time approach  to approximate the collision process, driving the distribution functions toward equilibrium.
+
+    YAML example:
+
+      - bgk
         )EOF";
-      }
-
-      inline void execute () override final
-      {
-        auto& data = *fields;
-        auto& traversals = *grid_region;
-        auto& params = *Params;
-
-        // get fields
-        FieldView<3> pm1 = data.flux();
-        int * const pobst = data.obstacles();
-        FieldView<Q> pf = data.distributions();
-        double * const pm0 = data.densities();
-        const double * const w = data.weights();
-        auto [pex, pey, pez] = data.exyz();
-
-        // get traversal
-        auto [ptr, size] = traversals.get_levels();
-        // define functor
-        bgk<Q, Traversal::Real> func = {ptr, params.Fext, pm1, pobst, pf, pm0, pex, pey, pez, w, params.tau};
-        // run kernel over the lbm grid
-        parallel_for_simple(size, func, parallel_execution_context("bgk"));
-      }
-  };
-
-  using CollisionBGK3D19Q = CollisionBGK<19>;
-
-  // === register factories ===  
-  ONIKA_AUTORUN_INIT(CollisionBGK)
-  {
-    OperatorNodeFactory::instance()->register_factory( "bgk", make_variant_operator<CollisionBGK>);
   }
-}
 
+  inline void execute() final {
+    auto& data = *fields;
+    auto& traversals = *grid_region;
+    auto& params = *Params;
+
+    // get fields
+    FieldView<3> pm1 = data.flux();
+    int* const pobst = data.obstacles();
+    FieldView<Q> pf = data.distributions();
+    double* const pm0 = data.densities();
+    const double* const w = data.weights();
+    auto [pex, pey, pez] = data.exyz();
+
+    // get traversal
+    auto [ptr, size] = traversals.get_levels();
+    // define functor
+    bgk<Q, Traversal::Real> func = {ptr, params.Fext, pm1, pobst, pf, pm0, pex, pey, pez, w, params.tau};
+    // run kernel over the lbm grid
+    parallel_for_simple(size, func, parallel_execution_context("bgk"));
+  }
+};
+
+using CollisionBGK3D19Q = CollisionBGK<19>;
+
+// === register factories ===
+ONIKA_AUTORUN_INIT(CollisionBGK) {
+  OperatorNodeFactory::instance()->register_factory("bgk", make_variant_operator<CollisionBGK>);
+}
+}  // namespace hippoLBM

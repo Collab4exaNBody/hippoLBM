@@ -20,10 +20,11 @@ under the License.
 #pragma once
 
 #include <hippoLBM/grid/field_view.hpp>
+
+// TODO: This file is a temporary place for the macro_variables functor. It should be moved to a more appropriate
 #define FLUIDE_ -1
 
 namespace hippoLBM {
-using namespace onika::math;
 template <int Q>
 struct mrt {};
 /**
@@ -31,8 +32,13 @@ struct mrt {};
  */
 template <>
 struct mrt<19> {
-  const onika::math::Vec3d m_Fext;
+  const onika::math::Vec3d m_Fext;  // External force term, used in the computation of macroscopic variables.
 
+  /** @brief Computes the MRT collision operator for a given lattice node.
+   * @param f The field view for the distribution functions.
+   * @param idx The index of the lattice node.
+   * @param tau The relaxation time.
+   */
   ONIKA_HOST_DEVICE_FUNC void mrt_core(const FieldView<19>& f, const size_t idx, double tau) const {
     const double s9 = 1 / tau, s13 = s9;
     // D'humiéres et al parametrization
