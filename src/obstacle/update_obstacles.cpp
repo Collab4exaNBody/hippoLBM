@@ -21,7 +21,7 @@ under the License.
 #include <onika/scg/operator_slot.h>
 
 #include <hippoLBM/grid/domain.hpp>
-#include <hippoLBM/grid/enum.hpp>
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
 #include <hippoLBM/obstacle/obstacles.hpp>

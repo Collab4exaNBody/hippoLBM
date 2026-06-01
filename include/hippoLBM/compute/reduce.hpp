@@ -29,6 +29,8 @@ under the License.
 #include <onika/parallel/parallel_execution_context.h>
 #include <onika/parallel/parallel_for.h>
 
+#include <hippoLBM/core/enum.hpp>
+
 namespace hippoLBM {
 
 struct reduce_thread_local_t {};

@@ -19,7 +19,7 @@ under the License.
 
 #pragma once
 
-#include <hippoLBM/grid/enum.hpp>
+#include <hippoLBM/core/enum.hpp>
 
 namespace hippoLBM {
 template <int Q, int DIM>

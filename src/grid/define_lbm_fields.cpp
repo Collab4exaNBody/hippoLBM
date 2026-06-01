@@ -32,7 +32,7 @@ under the License.
 // hippoLBM
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/domain.hpp>
-#include <hippoLBM/grid/enum.hpp>
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
 
 namespace hippoLBM {

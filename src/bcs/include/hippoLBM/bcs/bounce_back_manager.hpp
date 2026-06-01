@@ -20,7 +20,7 @@ under the License.
 #pragma once
 #include <onika/cuda/stl_adaptors.h>
 
-#include <hippoLBM/grid/enum.hpp>
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/field_view.hpp>
 #include <hippoLBM/grid/grid.hpp>
 
