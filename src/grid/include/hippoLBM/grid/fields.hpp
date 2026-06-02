@@ -45,6 +45,8 @@ struct LBMScheme<19> {
 
 template <int Q>
 struct LBMFields {
+  template <typename T>
+  using vector_t = onika::memory::CudaMMVector<T>;
   uint64_t grid_size;
   LBMScheme<Q> scheme;
 
