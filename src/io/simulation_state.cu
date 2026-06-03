@@ -62,7 +62,7 @@ class SimulationState : public OperatorNode {
 
     YAML configuration example:
     
-      - hippolbm_simulation_state
+      - simulation_state
 
         )EOF";
   }
@@ -99,7 +99,6 @@ using SimulationState3D19Q = SimulationState<19>;
 
 // === register factories ===
 ONIKA_AUTORUN_INIT(SimulationState) {
-  OperatorNodeFactory::instance()->register_factory("hippolbm_simulation_state",
-                                                    make_variant_operator<SimulationState>);
+  OperatorNodeFactory::instance()->register_factory("simulation_state", make_variant_operator<SimulationState>);
 }
 }  // namespace hippoLBM

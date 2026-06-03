@@ -29,9 +29,9 @@ under the License.
 #include <onika/scg/operator_slot.h>
 
 // hippoLBM
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/domain.hpp>
-#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
 #include <hippoLBM/grid/update_ghost.hpp>
@@ -76,7 +76,5 @@ class UpdateGhost : public OperatorNode {
 // === register factories ===
 ONIKA_AUTORUN_INIT(update_ghost) {
   OperatorNodeFactory::instance()->register_factory("update_ghost", make_variant_operator<UpdateGhost>);
-  OperatorNodeFactory::instance()->register_factory("hippolbm_update_ghost",
-                                                    make_variant_operator<UpdateGhost>);  // used for couplings
 }
 }  // namespace hippoLBM
