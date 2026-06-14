@@ -109,7 +109,7 @@ static inline ParallelExecutionWrapper local_reduce(FuncT& func, CudaMMVector<Re
   ParallelForOptions opts;
   opts.omp_scheduling = OMP_SCHED_STATIC;
   // reduce functor
-  ReduceFuncT<FuncT&, ResultT> rfunc = {func, result.data(), indexes};
+  ReduceFuncT<FuncT, ResultT> rfunc = {func, result.data(), indexes};
   return parallel_for(size, rfunc, exec_ctx, opts);
 }
 
@@ -120,7 +120,7 @@ namespace onika {
 namespace parallel {
 template <class FuncT, class ResultT>
 struct ParallelForFunctorTraits<hippoLBM::ReduceFuncT<FuncT, ResultT>> {
-  static inline constexpr bool CudaCompatible = FuncT::CudaCompatible;
+  static inline constexpr bool CudaCompatible = ParallelForFunctorTraits<FuncT>::CudaCompatible;
 };
 template <class ResultT>
 struct ParallelForFunctorTraits<hippoLBM::ResetScratch<ResultT>> {

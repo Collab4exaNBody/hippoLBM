@@ -29,13 +29,15 @@ under the License.
 #include <onika/scg/operator_factory.h>
 #include <onika/scg/operator_slot.h>
 
-#include <hippoLBM/compute/reduce.hpp>
 #include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
 #include <hippoLBM/io/simulation_state.hpp>
+
+// reduce
+#include <hippoLBM/compute/reduce.hpp>
 
 namespace hippoLBM {
 using namespace onika;
