@@ -53,10 +53,10 @@ ONIKA_HOST_DEVICE_FUNC inline bool check_level(int level) {
   static_assert(Type != Traversal::Plan_yz_0);
   static_assert(Type != Traversal::Plan_yz_l);
 
-  if constexpr (Traversal::All) return true;
-  if constexpr (Traversal::Extend) return level <= LEVEL_EXTEND;
-  if constexpr (Traversal::Real) return level <= LEVEL_REAL;
-  if constexpr (Traversal::Inside) return level == LEVEL_INSIDE;
+  if constexpr (Type == Traversal::All) return true;
+  if constexpr (Type == Traversal::Extend) return level <= LEVEL_EXTEND;
+  if constexpr (Type == Traversal::Real) return level <= LEVEL_REAL;
+  if constexpr (Type == Traversal::Inside) return level == LEVEL_INSIDE;
 }
 
 /** @brief Data structure for storing grid region information. */
@@ -297,7 +297,6 @@ using traversal_getter_t = traversal_data (*)(LBMGridRegion&);
 constexpr std::array<traversal_getter_t, 12> traversal_table = {
     +[](LBMGridRegion& r) { return r.get_data<Traversal::All>(); },
     +[](LBMGridRegion& r) { return r.get_data<Traversal::Real>(); },
-    +[](LBMGridRegion& r) { return r.get_data<Traversal::Extend>(); },
     +[](LBMGridRegion& r) { return r.get_data<Traversal::Inside>(); },
     +[](LBMGridRegion& r) { return r.get_data<Traversal::Edge>(); },
     +[](LBMGridRegion& r) { return r.get_data<Traversal::Ghost_Edge>(); },
@@ -306,14 +305,14 @@ constexpr std::array<traversal_getter_t, 12> traversal_table = {
     +[](LBMGridRegion& r) { return r.get_data<Traversal::Plan_xz_0>(); },
     +[](LBMGridRegion& r) { return r.get_data<Traversal::Plan_xz_l>(); },
     +[](LBMGridRegion& r) { return r.get_data<Traversal::Plan_yz_0>(); },
-    +[](LBMGridRegion& r) { return r.get_data<Traversal::Plan_yz_l>(); }};
+    +[](LBMGridRegion& r) { return r.get_data<Traversal::Plan_yz_l>(); },
+    +[](LBMGridRegion& r) { return r.get_data<Traversal::Extend>(); }};
 
 using const_traversal_getter_t = traversal_data (*)(const LBMGridRegion&);
 
 constexpr std::array<const_traversal_getter_t, 12> const_traversal_table = {
     +[](const LBMGridRegion& r) { return r.get_data<Traversal::All>(); },
     +[](const LBMGridRegion& r) { return r.get_data<Traversal::Real>(); },
-    +[](const LBMGridRegion& r) { return r.get_data<Traversal::Extend>(); },
     +[](const LBMGridRegion& r) { return r.get_data<Traversal::Inside>(); },
     +[](const LBMGridRegion& r) { return r.get_data<Traversal::Edge>(); },
     +[](const LBMGridRegion& r) { return r.get_data<Traversal::Ghost_Edge>(); },
@@ -322,7 +321,8 @@ constexpr std::array<const_traversal_getter_t, 12> const_traversal_table = {
     +[](const LBMGridRegion& r) { return r.get_data<Traversal::Plan_xz_0>(); },
     +[](const LBMGridRegion& r) { return r.get_data<Traversal::Plan_xz_l>(); },
     +[](const LBMGridRegion& r) { return r.get_data<Traversal::Plan_yz_0>(); },
-    +[](const LBMGridRegion& r) { return r.get_data<Traversal::Plan_yz_l>(); }};
+    +[](const LBMGridRegion& r) { return r.get_data<Traversal::Plan_yz_l>(); },
+    +[](const LBMGridRegion& r) { return r.get_data<Traversal::Extend>(); }};
 
 /** @brief Get traversal data for a mutable grid region.
  * @param region The grid region to retrieve traversal data from.

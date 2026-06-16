@@ -42,7 +42,7 @@ enum Traversal {
   Plan_xz_l,   ///< Plane at y = L in the XZ direction
   Plan_yz_0,   ///< Plane at x = 0 in the YZ direction
   Plan_yz_l,   ///< Plane at x = L in the YZ direction
-  Extend       ///< Used for ParaView output or to test if the grid contains a point
+  Extend       ///<
 };
 
 /**

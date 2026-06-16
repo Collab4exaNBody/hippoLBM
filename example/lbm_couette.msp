@@ -7,7 +7,7 @@ do_domain:
 set_lbm_parameters:
   - lbm_parameters:
      Fext: [0,0,0]
-     nuth: 1e-2
+     nuth: 1e-4
 
 boundary_conditions:
   - neumann_z_l:

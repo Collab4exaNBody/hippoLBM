@@ -20,6 +20,7 @@ under the License.
 #include <onika/math/basic_types.h>
 
 #include <hippoLBM/compute/reduce.hpp>
+#include <hippoLBM/grid/fields.hpp>
 
 namespace hippoLBM {
 /** @brief Structure to hold simulation statistics */

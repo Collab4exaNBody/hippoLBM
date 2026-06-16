@@ -43,7 +43,7 @@ struct mrt<19> {
     const double s9 = 1 / tau, s13 = s9;
     // D'humiéres et al parametrization
     const double s1 = 1.19, s2 = 1.4, s4 = 1.2, s10 = s2, s16 = 1.98;
-    const double weps = 0, wepsj = -475. / 63., wxx = 0;
+    const double weps = 3, wepsj = -475. / 63., wxx = 0;
     // LBGK parametrization
     // const double s1 = s9, s2 = s9, s4 = s9, s10 = s2, s16 = s9;
     // const double weps = 3., wepsj = -11./2, wxx = -1./2;

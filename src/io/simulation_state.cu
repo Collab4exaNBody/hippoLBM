@@ -37,6 +37,7 @@ under the License.
 #include <hippoLBM/io/simulation_state.hpp>
 
 // reduce
+#include <hippoLBM/compute/parallel_for_core.hpp>
 #include <hippoLBM/compute/reduce.hpp>
 
 namespace hippoLBM {

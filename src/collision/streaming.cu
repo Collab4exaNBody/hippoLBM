@@ -29,6 +29,7 @@ under the License.
 #include <onika/scg/operator_slot.h>
 
 // hippoLBM
+#include <hippoLBM/compute/reduce.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
 #include <hippoLBM/grid/update_ghost.hpp>
 
