@@ -1,0 +1,10 @@
+##### ADD Regression test #########
+
+checker_op:
+  - message: "Regression tests are not defined."
+
+checker:
+  - simulation_state  ## required if the user uses check_macro_quantities
+  - checker_op
+  
+

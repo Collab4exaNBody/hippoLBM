@@ -12,6 +12,7 @@ includes:
   - config_initialize.msp
   - config_compute_loop.msp
   - config_io.msp
+  - config_verification.msp
 
 simulation:
   - message: |
@@ -27,4 +28,5 @@ simulation:
   - initialize
   - compute_loop
   - write_paraview
+  - checker
   - finalize_cuda
