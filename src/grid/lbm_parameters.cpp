@@ -74,7 +74,7 @@ class LBMParametersOp : public OperatorNode {
     params.Fext = *Fext;
     params.celerity = *celerity;
 
-    if (*dt > 0.0) {
+    if (*dt > 0.0 && *dt < (params.dtLB = Dx / params.celerity)) {
       params.dtLB = *dt;
       if (params.dtLB > Dx / params.celerity) {
         lout << "\033[31m[lbm_parameters, Error] The LBM time step is not set correctly for this LBM mesh size. Please "

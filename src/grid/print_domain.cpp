@@ -31,9 +31,9 @@ under the License.
 #include <onika/scg/operator_slot.h>
 
 // hippoLBM
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/domain.hpp>
-#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
 
@@ -66,6 +66,7 @@ class PrintDomainLBM : public OperatorNode {
 
     lout << "=================================" << std::endl;
     lout << "== Domain size: " << bounds << std::endl;
+    lout << "== Dx: " << domain->dx() << std::endl;
     lout << "== Grid size: (LX: " << domain_size[0] << ", LY: " << domain_size[1] << ", LZ " << domain_size[2] << ")"
          << std::endl;
     lout << "=================================" << std::endl;
