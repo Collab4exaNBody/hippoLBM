@@ -33,7 +33,7 @@ namespace hippoLBM {
 template <int Q>
 struct macro_variables {
   const onika::math::Vec3d
-      Fext_2;  // External force term divided by 2, used in the computation of macroscopic variables.
+      Fext_2_;  // External force term divided by 2, used in the computation of macroscopic variables.
 
   /** @brief Computes the macroscopic variables for a given lattice node.
    * @param idx The index of the lattice node.
