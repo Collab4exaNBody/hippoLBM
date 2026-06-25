@@ -1,22 +1,28 @@
 do_domain:
   - domain:
      bounds:    [ [0,0,0],[0.1,0.1,0.1] ]
-     grid_dims: [ 200 , 200 , 200 ]
+     grid_dims: [ 100 , 100 , 100 ]
      periodic:  [ false, false, false ]
 
 set_lbm_parameters:
   - lbm_parameters:
      Fext: [0,0,0]
-     nuth: 1e-4
+     nuth: 1e-3
 
 pre_stream_bcs:
   - pre_bounce_back
   - cavity_z_l:
      U: [0.0, 0.1, 0]
+#     U: [0.0, 0.1, 0]
 
 post_stream_bcs:
   - post_bounce_back
 
+collision: mrt # default model
+
+
 global:
-   simulation_paraview_freq: 50
+   simulation_print_log_freq: 10
+   simulation_paraview_freq: 100
    simulation_end_iteration: 1000
+   output_directory: "CavityDir"

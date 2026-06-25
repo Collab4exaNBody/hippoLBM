@@ -47,10 +47,13 @@ class WriteParaviewLBM : public OperatorNode {
   ADD_SLOT(LBMGridRegion, grid_region, INPUT, REQUIRED, DocString{"The grid region for the simulation."});
   ADD_SLOT(LBMParameters, Params, INPUT, REQUIRED, DocString{"The LBM parameters for the simulation."});
   ADD_SLOT(std::string, filename, INPUT, "hippoLBM_%010d", DocString{"The filename for the Paraview output."});
-  ADD_SLOT(std::string, basedir, INPUT, "hippoLBMOutputDir/ParaviewOutput/",
+  ADD_SLOT(std::string, output_directory, INPUT, "hippoLBMOutputDir",
            DocString{"The base directory for the Paraview output."});
   ADD_SLOT(long, timestep, INPUT, 0, DocString{"The current timestep."});
   ADD_SLOT(bool, distributions, INPUT, false, DocString{"Whether to write distribution functions."});
+  ADD_SLOT(bool, display_filename, true, DocString{"Print filename"});
+
+  inline bool is_sink() const final { return true; }
 
   inline std::string documentation() const final {
     return R"EOF(
@@ -60,8 +63,8 @@ class WriteParaviewLBM : public OperatorNode {
 
       - write_paraview:
          filename: "hippoLBM_%010d"
-         basedir: "hippoLBMOutputDir/ParaviewOutput/"
-        distributions: false
+         outputdir: "hippoLBMOutputDir/ParaviewOutput/"
+         distributions: false
     )EOF";
   }
 
@@ -71,8 +74,9 @@ class WriteParaviewLBM : public OperatorNode {
       FieldView<Q> distributions = fields->distributions();
       external_paraview_fields.register_field("Fi", distributions.data_, Q, distributions.num_elements_);
     }
-    write_paraview(*mpi, *filename, *basedir, *timestep, *fields, *Params, *grid_region, *domain,
-                   external_paraview_fields);
+    std::string OutPutDirectory = *output_directory + "/ParaviewOutput/";
+    write_paraview(*mpi, *filename, OutPutDirectory, *timestep, *fields, *Params, *grid_region, *domain,
+                   external_paraview_fields, *display_filename);
   }
 };
 

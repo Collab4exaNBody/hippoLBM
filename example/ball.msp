@@ -31,5 +31,7 @@ pre_stream_bcs:
   - wall_bounce_back
 
 global:
-    simulation_paraview_freq: 20
-    simulation_end_iteration: 10000
+   simulation_paraview_freq: 1000
+   simulation_end_iteration: 10000
+   simulation_print_log_freq: 100   
+   output_directory: "TestObstacleBallDir"

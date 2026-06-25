@@ -27,3 +27,5 @@ post_stream_bcs:
 global:
    simulation_paraview_freq: 25
    simulation_end_iteration: 1000
+   simulation_print_log_freq: 10
+   output_directory: "CavityWithWallDir"   

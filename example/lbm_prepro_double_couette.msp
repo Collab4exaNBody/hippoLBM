@@ -24,3 +24,5 @@ boundary_conditions:
 global:
    simulation_paraview_freq: 1
    simulation_end_iteration: 20
+   simulation_print_log_freq: 1   
+   output_directory: "PreProDoubleCouetteDir"   

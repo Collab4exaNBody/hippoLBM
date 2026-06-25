@@ -52,3 +52,5 @@ post_stream_bcs:
 global:
    simulation_paraview_freq: 2500
    simulation_end_iteration: 25000
+   simulation_print_log_freq: 100   
+   output_directory: "TestDiffPressurWithWallsDir"   

@@ -301,7 +301,7 @@ inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data,
 template <int Q>
 void write_paraview(MPI_Comm comm, std::string filename, std::string basedir, long timestep, LBMFields<Q>& fields,
                     const LBMParameters& parameters, const LBMGridRegion& traversals, const LBMDomain<Q>& domain,
-                    const ExternalParaviewFields& external_paraview_fields) {
+                    const ExternalParaviewFields& external_paraview_fields, bool display_filename = false) {
   int rank, size;
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
@@ -312,6 +312,10 @@ void write_paraview(MPI_Comm comm, std::string filename, std::string basedir, lo
 
   if (rank == 0) {
     std::filesystem::create_directories(fullname);
+  }
+
+  if (display_filename) {
+    lout << "writing paraview file: " << fullname << std::endl;
   }
 
   fullname += "/%06d";

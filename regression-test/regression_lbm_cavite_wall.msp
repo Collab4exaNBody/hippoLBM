@@ -25,5 +25,5 @@ post_stream_bcs:
 
 
 global:
-   simulation_paraview_freq: 25
+   simulation_paraview_freq: -1
    simulation_end_iteration: 100
