@@ -20,7 +20,7 @@ jobs:
         persist-credentials: false 
     - uses: actions/setup-node@v4
     - name: Get Yaml Lcov and MPICH
-      run: sudo apt install libyaml-cpp-dev lcov mpich
+      run: apt install libyaml-cpp-dev lcov mpich
 
     - name: Install recent CMake (Kitware apt repo)
       run: |
