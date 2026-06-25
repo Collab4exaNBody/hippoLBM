@@ -58,7 +58,7 @@ class BuildTraversalLBM : public OperatorNode {
 
   inline void execute() final {
     LBMGridRegion traversal;
-    traversal.build_traversal(domain->m_grid, domain->MPI_coord, domain->MPI_grid_size);
+    traversal.build_traversal(domain->m_grid_, domain->MPI_coord_, domain->MPI_grid_size_);
     *grid_region = traversal;
   }
 };

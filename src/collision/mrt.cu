@@ -74,7 +74,7 @@ class CollisionMRT : public OperatorNode {
     auto& params = *Params;
 
     // define functor
-    mrt<Q> func = {params.Fext};
+    mrt<Q> func = {params.Fext_};
 
     // get fields
     int* const pobst = data.obstacles();
@@ -87,7 +87,7 @@ class CollisionMRT : public OperatorNode {
     auto [ptr, size] = traversals.get_data<Traversal::Real>();
 
     // run kernel
-    parallel_for_id(ptr, size, func, parallel_execution_context(), pobst, pf, pm0, pex, pey, pez, w, params.tau);
+    parallel_for_id(ptr, size, func, parallel_execution_context(), pobst, pf, pm0, pex, pey, pez, w, params.tau_);
   }
 };
 

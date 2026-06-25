@@ -64,12 +64,12 @@ class InitDomainLBM : public OperatorNode {
 
   inline void execute() final {
     GridConfig grid;
-    grid.dims = *grid_dims;
-    grid.bounds = *bounds;
-    grid.periodic = convert<std::array<bool, 3>>(*periodic);
+    grid.dims_ = *grid_dims;
+    grid.bounds_ = *bounds;
+    grid.periodic_ = convert<std::array<bool, 3>>(*periodic);
 
-    onika::math::IJK grid_size = grid.dims;
-    auto [inf, sup] = grid.bounds;
+    onika::math::IJK grid_size = grid.dims_;
+    auto [inf, sup] = grid.bounds_;
 
     onika::math::Vec3d resolution_dims;
     resolution_dims.x = (sup.x - inf.x) / double(grid_size.i);

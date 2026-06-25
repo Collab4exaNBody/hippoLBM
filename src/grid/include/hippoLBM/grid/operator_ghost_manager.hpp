@@ -64,23 +64,23 @@ inline std::tuple<bool, int3d> build_comm(const int3d& relative_pos, std::span<i
  */
 inline std::tuple<Box3D, Box3D> build_boxes(const int3d& shift, LBMGrid& g) {
   auto real = g.build_box<Local, Real>();
-  const int ghost_layer = g.ghost_layer;
+  const int ghost_layer = g.ghost_layer_;
   Box3D send = real;
   Box3D recv = real;
   auto lower = real.lower();
   auto upper = real.upper();
   for (int dim = 0; dim < Box3D::DIM; dim++) {
     if (shift[dim] == -1) {
-      send.sup.set_val(dim, lower[dim] + ghost_layer - 1);
-      recv.inf.set_val(dim, lower[dim] - ghost_layer);
-      recv.sup.set_val(dim, lower[dim] - ghost_layer + 1);
+      send.sup_.set_val(dim, lower[dim] + ghost_layer - 1);
+      recv.inf_.set_val(dim, lower[dim] - ghost_layer);
+      recv.sup_.set_val(dim, lower[dim] - ghost_layer + 1);
       assert(recv.get_length(dim) == ghost_layer);
       assert(send.get_length(dim) == ghost_layer);
     }
     if (shift[dim] == 1) {
-      send.inf.set_val(dim, upper[dim] - ghost_layer + 1);
-      recv.inf.set_val(dim, upper[dim] + ghost_layer - 1);
-      recv.sup.set_val(dim, upper[dim] + ghost_layer);
+      send.inf_.set_val(dim, upper[dim] - ghost_layer + 1);
+      recv.inf_.set_val(dim, upper[dim] + ghost_layer - 1);
+      recv.sup_.set_val(dim, upper[dim] + ghost_layer);
       assert(recv.get_length(dim) == ghost_layer);
       assert(send.get_length(dim) == ghost_layer);
     }
@@ -95,18 +95,18 @@ inline std::tuple<Box3D, Box3D> build_boxes(const int3d& shift, LBMGrid& g) {
  */
 inline Box3D fix_box_with_periodicity(const int3d& shift, LBMGrid& g) {
   auto real = g.build_box<Local, Real>();
-  const int ghost_layer = g.ghost_layer;
+  const int ghost_layer = g.ghost_layer_;
   Box3D send = real;
   auto lower = real.lower();
   auto upper = real.upper();
   static_assert(Box3D::DIM >= 1);
   for (int dim = 0; dim < Box3D::DIM; dim++) {
     if (shift[dim] == -1) {
-      send.inf.set_val(dim, upper[dim] - ghost_layer + 1);
+      send.inf_.set_val(dim, upper[dim] - ghost_layer + 1);
       assert(send.get_length(dim) == ghost_layer);
     }
     if (shift[dim] == 1) {
-      send.sup.set_val(dim, lower[dim] + ghost_layer - 1);
+      send.sup_.set_val(dim, lower[dim] + ghost_layer - 1);
       assert(send.get_length(dim) == ghost_layer);
     }
   }

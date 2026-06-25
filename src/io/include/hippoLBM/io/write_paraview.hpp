@@ -139,8 +139,8 @@ struct ParaviewBuffers {
 template <typename LBMDomain, typename EPF>
 inline void write_pvtr(std::string basedir, std::string basename, size_t number_of_files, LBMDomain& domain,
                        const EPF& external_paraview_fields = ExternalParaviewFieldsNullOp{}) {
-  const LBMGrid& grid = domain.m_grid;
-  auto [lx, ly, lz] = domain.domain_size;
+  const LBMGrid& grid = domain.m_grid_;
+  auto [lx, ly, lz] = domain.domain_size_;
   // I could be smarter here
   int box_size = sizeof(Box3D);
   auto global = grid.build_box<Area::Global, Traversal::All>();
@@ -203,9 +203,9 @@ template <typename LBMDomain, typename LBMFieds, typename EPF>
 inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data, const LBMGridRegion& traversals,
                       const LBMParameters& params,
                       const EPF& external_paraview_fields = ExternalParaviewFieldsNullOp{}) {
-  const LBMGrid& grid = domain.m_grid;
-  auto [lx, ly, lz] = domain.domain_size;
-  const double dx = grid.dx;
+  const LBMGrid& grid = domain.m_grid_;
+  auto [lx, ly, lz] = domain.domain_size_;
+  const double dx = grid.dx_;
   name = name + ".vtr";
   std::ofstream outFile(name);
   if (!outFile) {
@@ -225,12 +225,12 @@ inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data,
   NullFuncWriter nullop;
   write_file writer_obst = {nullop};
 
-  // double ratio_dx_dtLB = dx / params.dtLB;
+  // double ratio_dx_dtLB = dx / params.dtLB_;
   // UWriter u = {obst, ratio_dx_dtLB};
   // WriteVec3d writer_vec3d = {u, local};
   WriteVec3d writer_vec3d = {nullop, local};
 
-  // double c_c_avg_rho_div_three = 1./3. * params.celerity * params.celerity * params.avg_rho;
+  // double c_c_avg_rho_div_three = 1./3. * params.celerity_ * params.celerity_ * params.avg_rho_;
   // PressionWriter pression = {obst, c_c_avg_rho_div_three};
   // write_file writer_double = {pression};
   write_file writer_double = {nullop};
@@ -265,7 +265,7 @@ inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data,
   outFile << "          <DataArray type=\"Float32\" Name=\"P\" format=\"ascii\">" << std::endl;
   {
     std::stringstream paraview_stream_buffer;
-    for_all(traversal_ptr, traversal_size, writer_double, paraview_stream_buffer, onika::cuda::vector_data(data.m0));
+    for_all(traversal_ptr, traversal_size, writer_double, paraview_stream_buffer, onika::cuda::vector_data(data.m0_));
     outFile << paraview_stream_buffer.rdbuf();
   }
   outFile << std::endl;
@@ -281,7 +281,7 @@ inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data,
   outFile << "          <DataArray type=\"Float32\" Name=\"OBST\" format=\"ascii\">" << std::endl;
   {
     std::stringstream paraview_stream_buffer;
-    for_all(traversal_ptr, traversal_size, writer_obst, paraview_stream_buffer, onika::cuda::vector_data(data.obst));
+    for_all(traversal_ptr, traversal_size, writer_obst, paraview_stream_buffer, onika::cuda::vector_data(data.obst_));
     outFile << paraview_stream_buffer.rdbuf();
   }
   outFile << std::endl;

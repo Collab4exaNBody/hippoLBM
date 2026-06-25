@@ -29,19 +29,19 @@ namespace hippoLBM {
  */
 template <int Components>
 struct packer {
-  FieldView<Components> dst;  // Pointer to the destination field.
-  FieldView<Components> src;  // Pointer to the source field.
-  Box3D dst_box;              // The box defining the region in the destination field to be packed.
-  Box3D mesh_box;             // The box defining the region in the source field to be packed.
+  FieldView<Components> dst_;  // Pointer to the destination field.
+  FieldView<Components> src_;  // Pointer to the source field.
+  Box3D dst_box_;              // The box defining the region in the destination field to be packed.
+  Box3D mesh_box_;             // The box defining the region in the source field to be packed.
 
   /** @brief The operator for packing data.
    * @param coord The coordinate of the cell to be packed.
    */
   ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t&& coord) const {
-    const auto& inf = dst_box.inf;
-    const int dst_idx = compute_idx(dst_box, coord.x - inf[0], coord.y - inf[1], coord.z - inf[2]);
-    const int src_idx = compute_idx(mesh_box, coord.x, coord.y, coord.z);
-    copyTo<Components>(dst, dst_idx, src, src_idx, 1);
+    const auto& inf = dst_box_.inf_;
+    const int dst_idx = compute_idx(dst_box_, coord.x - inf[0], coord.y - inf[1], coord.z - inf[2]);
+    const int src_idx = compute_idx(mesh_box_, coord.x, coord.y, coord.z);
+    copyTo<Components>(dst_, dst_idx, src_, src_idx, 1);
   }
 };
 
@@ -50,19 +50,19 @@ struct packer {
  */
 template <int Components>
 struct unpacker {
-  FieldView<Components> dst;  // Pointer to the destination field.
-  FieldView<Components> src;  // Pointer to the source field.
-  Box3D src_box;              // The box defining the region in the source field to be unpacked.
-  Box3D mesh_box;             // The box defining the region in the destination field to be unpacked.
+  FieldView<Components> dst_;  // Pointer to the destination field.
+  FieldView<Components> src_;  // Pointer to the source field.
+  Box3D src_box_;              // The box defining the region in the source field to be unpacked.
+  Box3D mesh_box_;             // The box defining the region in the destination field to be unpacked.
 
   /** @brief The operator for unpacking data.
    * @param coord The coordinate of the cell to be unpacked.
    */
   ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t&& coord) const {
-    const auto& inf = src_box.inf;
-    const int dst_idx = compute_idx(mesh_box, coord.x, coord.y, coord.z);
-    const int src_idx = compute_idx(src_box, coord.x - inf[0], coord.y - inf[1], coord.z - inf[2]);
-    copyTo<Components>(dst, dst_idx, src, src_idx, 1);
+    const auto& inf = src_box_.inf_;
+    const int dst_idx = compute_idx(mesh_box_, coord.x, coord.y, coord.z);
+    const int src_idx = compute_idx(src_box_, coord.x - inf[0], coord.y - inf[1], coord.z - inf[2]);
+    copyTo<Components>(dst_, dst_idx, src_, src_idx, 1);
   }
 };
 }  // namespace hippoLBM

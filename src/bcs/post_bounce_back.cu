@@ -82,12 +82,12 @@ class PostBounceBack : public OperatorNode {
   void launcher(LBMGridRegion& traversals, FieldView<Q>& pf, bounce_back_manager<Q>& bbm) {
     constexpr int idx = helper_dim_idx<dim, dir>();
     FieldView<bounce_back_manager<Q>::Un> pfi = bbm.get_data(idx);
-    if (pfi.num_elements > 0) {
+    if (pfi.num_elements_ > 0) {
       constexpr Traversal Tr = get_traversal<dim, dir>();
       auto [ptr, size] = traversals.get_data<Tr>();
 
       assert(ptr != nullptr);
-      assert(pfi.num_elements == int(size));
+      assert(pfi.num_elements_ == int(size));
 
       ParallelForOptions opts;
       opts.omp_scheduling = OMP_SCHED_STATIC;

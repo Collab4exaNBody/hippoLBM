@@ -69,7 +69,7 @@ class WriteParaviewLBM : public OperatorNode {
     ExternalParaviewFields external_paraview_fields;
     if (*distributions) {
       FieldView<Q> distributions = fields->distributions();
-      external_paraview_fields.register_field("Fi", distributions.data, Q, distributions.num_elements);
+      external_paraview_fields.register_field("Fi", distributions.data_, Q, distributions.num_elements_);
     }
     write_paraview(*mpi, *filename, *basedir, *timestep, *fields, *Params, *grid_region, *domain,
                    external_paraview_fields);

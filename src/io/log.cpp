@@ -68,7 +68,7 @@ class LogLBM : public OperatorNode {
   }
 
   inline void execute() final {
-    auto [lx, ly, lz] = domain->domain_size;
+    auto [lx, ly, lz] = domain->domain_size_;
     long long int size_xyz = (long long int)(lx) * (long long int)(ly) * (long long int)(lz);
 
     double MLUPS;  // Million Lattice Updates Per Second

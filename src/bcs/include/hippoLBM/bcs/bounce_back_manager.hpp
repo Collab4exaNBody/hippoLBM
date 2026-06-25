@@ -50,16 +50,16 @@ struct bounce_back_manager<19> {
   // data[3] : y right
   // data[4] : z bottom
   // data[5] : z top
-  std::array<onika::memory::CudaMMVector<double>, 2 * DIM_MAX> _data;
+  std::array<onika::memory::CudaMMVector<double>, 2 * DIM_MAX> _data_;
 
   /** @brief Get the data for a given dimension and side.
    * @param dim The dimension for which to get the data.
    * @tparam Un The number of unknowns per point.
    */
   FieldView<Un> get_data(int i) {
-    assert(onika::cuda::vector_size(_data[i]) % Un == 0);
-    uint64_t size = onika::cuda::vector_size(_data[i]) / Un;
-    double* ptr = onika::cuda::vector_data(_data[i]);
+    assert(onika::cuda::vector_size(_data_[i]) % Un == 0);
+    uint64_t size = onika::cuda::vector_size(_data_[i]) / Un;
+    double* ptr = onika::cuda::vector_data(_data_[i]);
     return FieldView<Un>{ptr, size};
   }
 
@@ -83,7 +83,7 @@ struct bounce_back_manager<19> {
   void resize_data(const onika::math::IJK& lgs) {
     const uint64_t size_dim = get_size<Dim>(lgs) * Un;
     int i = helper_dim_idx<Dim, S>();
-    auto& data = _data[i];
+    auto& data = _data_[i];
     if (size_dim != onika::cuda::vector_size(data)) {
       data.resize(size_dim);
     }

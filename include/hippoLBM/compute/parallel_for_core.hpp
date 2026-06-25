@@ -66,11 +66,11 @@ inline void for_all(const LBMGrid& grid, Func& a_func, Args&&... a_args) {
 // CPU AND GPU
 template <typename Func, typename... Args>
 struct parallel_for_id_runner {
-  Func kernel;
-  std::tuple<Args...> params; /**< Tuple of parameters to be passed to the kernel function. */
+  Func kernel_;
+  std::tuple<Args...> params_; /**< Tuple of parameters to be passed to the kernel function. */
   template <size_t... Is>
   ONIKA_HOST_DEVICE_FUNC inline void apply(uint64_t i, tuple_helper::index<Is...> indexes) const {
-    kernel(i, std::get<Is>(params)...);
+    kernel_(i, std::get<Is>(params_)...);
   }
   ONIKA_HOST_DEVICE_FUNC inline void operator()(uint64_t i) const {
     apply(i, tuple_helper::gen_seq<sizeof...(Args)>{});
@@ -79,14 +79,14 @@ struct parallel_for_id_runner {
 
 template <typename Func, typename... Args>
 struct parallel_for_id_traversal_runner {
-  const int* const __restrict__ traversal;
-  Func kernel;
-  std::tuple<Args...> params; /**< Tuple of parameters to be passed to the kernel function. */
+  const int* const __restrict__ traversal_;
+  Func kernel_;
+  std::tuple<Args...> params_; /**< Tuple of parameters to be passed to the kernel function. */
   parallel_for_id_traversal_runner(const int* const trvl, Func& func, Args... parameters)
-      : traversal(trvl), kernel(func), params(parameters...) {}
+      : traversal_(trvl), kernel_(func), params_(parameters...) {}
   template <size_t... Is>
   ONIKA_HOST_DEVICE_FUNC inline void apply(uint64_t i, tuple_helper::index<Is...> indexes) const {
-    kernel(traversal[i], std::get<Is>(params)...);
+    kernel_(traversal_[i], std::get<Is>(params_)...);
   }
   ONIKA_HOST_DEVICE_FUNC inline void operator()(uint64_t i) const {
     apply(i, tuple_helper::gen_seq<sizeof...(Args)>{});
@@ -95,12 +95,12 @@ struct parallel_for_id_traversal_runner {
 
 template <typename Func, typename... Args>
 struct wrapper_parallel_for_ijk {
-  Func kernel;
-  std::tuple<Args...> params; /**< Tuple of parameters to be passed to the kernel function. */
-  wrapper_parallel_for_ijk(Func& func, Args... parameters) : kernel(func), params(parameters...) {}
+  Func kernel_;
+  std::tuple<Args...> params_; /**< Tuple of parameters to be passed to the kernel function. */
+  wrapper_parallel_for_ijk(Func& func, Args... parameters) : kernel_(func), params_(parameters...) {}
   template <size_t... Is>
   ONIKA_HOST_DEVICE_FUNC inline void apply(int i, int j, int k, tuple_helper::index<Is...> indexes) const {
-    kernel(i, j, k, std::get<Is>(params)...);
+    kernel_(i, j, k, std::get<Is>(params_)...);
   }
   ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t&& coord) const {
     apply(coord.x, coord.y, coord.z, tuple_helper::gen_seq<sizeof...(Args)>{});

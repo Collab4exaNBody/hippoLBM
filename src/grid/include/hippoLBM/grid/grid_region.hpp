@@ -34,8 +34,8 @@ using namespace onika::cuda;
 
 /** @brief Data structure for storing traversal information. */
 struct traversal_data {
-  const int* const ptr;  // Pointer to the traversal data.
-  const size_t size;     // Size of the traversal data.
+  const int* const ptr_;  // Pointer to the traversal data.
+  const size_t size_;     // Size of the traversal data.
 };
 
 /** @brief Check if a level is within the specified traversal type.
@@ -63,16 +63,16 @@ ONIKA_HOST_DEVICE_FUNC inline bool check_level(int level) {
 struct LBMGridRegion {
   template <typename T>
   using vector_t = onika::memory::CudaMMVector<T>;
-  vector_t<int> level;  // 0 inside, 1 real, 2 extend ,3 All
-  vector_t<int> ghost_edge;
-  vector_t<int> inside;
-  vector_t<int> real;
-  vector_t<int> all;
-  vector_t<int> edge;
-  vector_t<int> extend;
-  vector_t<int> plane_xy_0, plane_xy_l;
-  vector_t<int> plane_xz_0, plane_xz_l;
-  vector_t<int> plane_yz_0, plane_yz_l;
+  vector_t<int> level_;  // 0 inside_, 1 real_, 2 extend_ ,3 All
+  vector_t<int> ghost_edge_;
+  vector_t<int> inside_;
+  vector_t<int> real_;
+  vector_t<int> all_;
+  vector_t<int> edge_;
+  vector_t<int> extend_;
+  vector_t<int> plane_xy_0_, plane_xy_l_;
+  vector_t<int> plane_xz_0_, plane_xz_l_;
+  vector_t<int> plane_yz_0_, plane_yz_l_;
 
   LBMGridRegion() {};
 
@@ -82,7 +82,7 @@ struct LBMGridRegion {
   template <Traversal Tr>
   const traversal_data get_data() const;
 
-  inline traversal_data get_levels() { return {vector_data(level), vector_size(level)}; }
+  inline traversal_data get_levels() { return {vector_data(level_), vector_size(level_)}; }
 
   void build_traversal(LBMGrid& G, const onika::math::IJK MPI_coord, const onika::math::IJK MPI_grid) {
     constexpr Area L = Area::Local;
@@ -94,12 +94,12 @@ struct LBMGridRegion {
     auto br = G.build_box<L, R>();
     auto bi = G.build_box<L, I>();
     auto ex = G.build_box<L, E>();
-    all.resize(ba.number_of_points());
-    level.resize(ba.number_of_points());
-    real.resize(br.number_of_points());
-    inside.resize(bi.number_of_points());
-    ghost_edge.resize(all.size() - inside.size());
-    extend.resize(ex.number_of_points());
+    all_.resize(ba.number_of_points());
+    level_.resize(ba.number_of_points());
+    real_.resize(br.number_of_points());
+    inside_.resize(bi.number_of_points());
+    ghost_edge_.resize(all_.size() - inside_.size());
+    extend_.resize(ex.number_of_points());
 
     size_t shift_a(0), shift_r(0), shift_i(0), shift_ge(0), shift_ex(0);
     for (int z = ba.start(2); z <= ba.end(2); z++) {
@@ -107,33 +107,33 @@ struct LBMGridRegion {
         for (int x = ba.start(0); x <= ba.end(0); x++) {
           Point3D p = {x, y, z};
           int idx = G(x, y, z);
-          all[shift_a++] = idx;
-          level[idx] = 3;  // ALL
+          all_[shift_a++] = idx;
+          level_[idx] = 3;  // ALL
           if (ex.contains(p)) {
-            extend[shift_ex++] = idx;
-            level[idx] = LEVEL_EXTEND;
+            extend_[shift_ex++] = idx;
+            level_[idx] = LEVEL_EXTEND;
             if (br.contains(p)) {
-              real[shift_r++] = idx;
-              level[idx] = LEVEL_REAL;
+              real_[shift_r++] = idx;
+              level_[idx] = LEVEL_REAL;
               if (bi.contains(p)) {
-                inside[shift_i++] = idx;
-                level[idx] = LEVEL_INSIDE;
+                inside_[shift_i++] = idx;
+                level_[idx] = LEVEL_INSIDE;
               }
             }
           }
 
           if (!bi.contains(p)) {
-            ghost_edge[shift_ge++] = idx;
+            ghost_edge_[shift_ge++] = idx;
           }
         }
       }
     }
 
-    assert(shift_ex == extend.size());
-    assert(shift_i == inside.size());
-    assert(shift_r == real.size());
-    assert(shift_a == all.size());
-    assert(shift_ge == ghost_edge.size());
+    assert(shift_ex == extend_.size());
+    assert(shift_i == inside_.size());
+    assert(shift_r == real_.size());
+    assert(shift_a == all_.size());
+    assert(shift_ge == ghost_edge_.size());
 
     // used by bcs functors
     int plane_size_xy = ba.get_length(0) * ba.get_length(1);
@@ -150,24 +150,24 @@ struct LBMGridRegion {
     int plane_ly = br.end(1);
     int plane_lz = br.end(2);
 
-    if (MPI_coord.i == 0) plane_yz_0.resize(plane_size_yz);
-    if (MPI_coord.i == MPI_grid.i - 1) plane_yz_l.resize(plane_size_yz);
+    if (MPI_coord.i == 0) plane_yz_0_.resize(plane_size_yz);
+    if (MPI_coord.i == MPI_grid.i - 1) plane_yz_l_.resize(plane_size_yz);
 
-    if (MPI_coord.j == 0) plane_xz_0.resize(plane_size_xz);
-    if (MPI_coord.j == MPI_grid.j - 1) plane_xz_l.resize(plane_size_xz);
+    if (MPI_coord.j == 0) plane_xz_0_.resize(plane_size_xz);
+    if (MPI_coord.j == MPI_grid.j - 1) plane_xz_l_.resize(plane_size_xz);
 
-    if (MPI_coord.k == 0) plane_xy_0.resize(plane_size_xy);
-    if (MPI_coord.k == MPI_grid.k - 1) plane_xy_l.resize(plane_size_xy);
+    if (MPI_coord.k == 0) plane_xy_0_.resize(plane_size_xy);
+    if (MPI_coord.k == MPI_grid.k - 1) plane_xy_l_.resize(plane_size_xy);
 
     // Plan XY
     for (int y = ba.start(1); y <= ba.end(1); y++) {
       for (int x = ba.start(0); x <= ba.end(0); x++) {
         if (MPI_coord.k == 0) {
-          plane_xy_0[idx_xy0++] = G(x, y, plane_0z);
+          plane_xy_0_[idx_xy0++] = G(x, y, plane_0z);
         }
         if (MPI_coord.k == MPI_grid.k - 1) {
           // onika::lout << "( "<<x << " , " << y << " , " << plane_lz << " )" << std::endl;
-          plane_xy_l[idx_xyl++] = G(x, y, plane_lz);
+          plane_xy_l_[idx_xyl++] = G(x, y, plane_lz);
         }
       }
     }
@@ -177,16 +177,16 @@ struct LBMGridRegion {
     // Plan XZ
     for (int z = ba.start(2); z <= ba.end(2); z++) {
       for (int x = ba.start(0); x <= ba.end(0); x++) {
-        if (MPI_coord.j == 0) plane_xz_0[idx_xz0++] = G(x, plane_0y, z);
-        if (MPI_coord.j == MPI_grid.j - 1) plane_xz_l[idx_xzl++] = G(x, plane_ly, z);
+        if (MPI_coord.j == 0) plane_xz_0_[idx_xz0++] = G(x, plane_0y, z);
+        if (MPI_coord.j == MPI_grid.j - 1) plane_xz_l_[idx_xzl++] = G(x, plane_ly, z);
       }
     }
 
     // Plane YZ
     for (int z = ba.start(2); z <= ba.end(2); z++) {
       for (int y = ba.start(1); y <= ba.end(1); y++) {
-        if (MPI_coord.i == 0) plane_yz_0[idx_yz0++] = G(plane_0x, y, z);
-        if (MPI_coord.i == MPI_grid.i - 1) plane_yz_l[idx_yzl++] = G(plane_lx, y, z);
+        if (MPI_coord.i == 0) plane_yz_0_[idx_yz0++] = G(plane_0x, y, z);
+        if (MPI_coord.i == MPI_grid.i - 1) plane_yz_l_[idx_yzl++] = G(plane_lx, y, z);
       }
     }
 
@@ -197,99 +197,99 @@ struct LBMGridRegion {
 
 template <>
 inline traversal_data LBMGridRegion::get_data<Traversal::All>() {
-  return {vector_data(all), vector_size(all)};
+  return {vector_data(all_), vector_size(all_)};
 }
 template <>
 inline traversal_data LBMGridRegion::get_data<Traversal::Real>() {
-  return {vector_data(real), vector_size(real)};
+  return {vector_data(real_), vector_size(real_)};
 }
 template <>
 inline traversal_data LBMGridRegion::get_data<Traversal::Extend>() {
-  return {vector_data(extend), vector_size(extend)};
+  return {vector_data(extend_), vector_size(extend_)};
 }
 template <>
 inline traversal_data LBMGridRegion::get_data<Traversal::Inside>() {
-  return {vector_data(inside), vector_size(inside)};
+  return {vector_data(inside_), vector_size(inside_)};
 }
 template <>
 inline traversal_data LBMGridRegion::get_data<Traversal::Edge>() {
-  return {vector_data(edge), vector_size(edge)};
+  return {vector_data(edge_), vector_size(edge_)};
 }
 template <>
 inline traversal_data LBMGridRegion::get_data<Traversal::Ghost_Edge>() {
-  return {vector_data(ghost_edge), vector_size(ghost_edge)};
+  return {vector_data(ghost_edge_), vector_size(ghost_edge_)};
 }
 template <>
 inline traversal_data LBMGridRegion::get_data<Traversal::Plan_xy_0>() {
-  return {vector_data(plane_xy_0), vector_size(plane_xy_0)};
+  return {vector_data(plane_xy_0_), vector_size(plane_xy_0_)};
 }
 template <>
 inline traversal_data LBMGridRegion::get_data<Traversal::Plan_xy_l>() {
-  return {vector_data(plane_xy_l), vector_size(plane_xy_l)};
+  return {vector_data(plane_xy_l_), vector_size(plane_xy_l_)};
 }
 template <>
 inline traversal_data LBMGridRegion::get_data<Traversal::Plan_xz_0>() {
-  return {vector_data(plane_xz_0), vector_size(plane_xz_0)};
+  return {vector_data(plane_xz_0_), vector_size(plane_xz_0_)};
 }
 template <>
 inline traversal_data LBMGridRegion::get_data<Traversal::Plan_xz_l>() {
-  return {vector_data(plane_xz_l), vector_size(plane_xz_l)};
+  return {vector_data(plane_xz_l_), vector_size(plane_xz_l_)};
 }
 template <>
 inline traversal_data LBMGridRegion::get_data<Traversal::Plan_yz_0>() {
-  return {vector_data(plane_yz_0), vector_size(plane_yz_0)};
+  return {vector_data(plane_yz_0_), vector_size(plane_yz_0_)};
 }
 template <>
 inline traversal_data LBMGridRegion::get_data<Traversal::Plan_yz_l>() {
-  return {vector_data(plane_yz_l), vector_size(plane_yz_l)};
+  return {vector_data(plane_yz_l_), vector_size(plane_yz_l_)};
 }
 template <>
 const inline traversal_data LBMGridRegion::get_data<Traversal::All>() const {
-  return {vector_data(all), vector_size(all)};
+  return {vector_data(all_), vector_size(all_)};
 }
 template <>
 inline const traversal_data LBMGridRegion::get_data<Traversal::Real>() const {
-  return {vector_data(real), vector_size(real)};
+  return {vector_data(real_), vector_size(real_)};
 }
 template <>
 inline const traversal_data LBMGridRegion::get_data<Traversal::Extend>() const {
-  return {vector_data(extend), vector_size(extend)};
+  return {vector_data(extend_), vector_size(extend_)};
 }
 template <>
 inline const traversal_data LBMGridRegion::get_data<Traversal::Inside>() const {
-  return {vector_data(inside), vector_size(inside)};
+  return {vector_data(inside_), vector_size(inside_)};
 }
 template <>
 inline const traversal_data LBMGridRegion::get_data<Traversal::Edge>() const {
-  return {vector_data(edge), vector_size(edge)};
+  return {vector_data(edge_), vector_size(edge_)};
 }
 template <>
 inline const traversal_data LBMGridRegion::get_data<Traversal::Ghost_Edge>() const {
-  return {vector_data(ghost_edge), vector_size(ghost_edge)};
+  return {vector_data(ghost_edge_), vector_size(ghost_edge_)};
 }
 template <>
 inline const traversal_data LBMGridRegion::get_data<Traversal::Plan_xy_0>() const {
-  return {vector_data(plane_xy_0), vector_size(plane_xy_0)};
+  return {vector_data(plane_xy_0_), vector_size(plane_xy_0_)};
 }
 template <>
 inline const traversal_data LBMGridRegion::get_data<Traversal::Plan_xy_l>() const {
-  return {vector_data(plane_xy_l), vector_size(plane_xy_l)};
+  return {vector_data(plane_xy_l_), vector_size(plane_xy_l_)};
 }
 template <>
 inline const traversal_data LBMGridRegion::get_data<Traversal::Plan_xz_0>() const {
-  return {vector_data(plane_xz_0), vector_size(plane_xz_0)};
+  return {vector_data(plane_xz_0_), vector_size(plane_xz_0_)};
 }
 template <>
 inline const traversal_data LBMGridRegion::get_data<Traversal::Plan_xz_l>() const {
-  return {vector_data(plane_xz_l), vector_size(plane_xz_l)};
+  return {vector_data(plane_xz_l_), vector_size(plane_xz_l_)};
 }
 template <>
 inline const traversal_data LBMGridRegion::get_data<Traversal::Plan_yz_0>() const {
-  return {vector_data(plane_yz_0), vector_size(plane_yz_0)};
+  return {vector_data(plane_yz_0_), vector_size(plane_yz_0_)};
 }
 template <>
 inline const traversal_data LBMGridRegion::get_data<Traversal::Plan_yz_l>() const {
-  return {vector_data(plane_yz_l), vector_size(plane_yz_l)};
+  return {vector_data(plane_yz_l_), vector_size(plane_yz_l_)};
 }
 
 using traversal_getter_t = traversal_data (*)(LBMGridRegion&);

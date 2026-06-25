@@ -35,59 +35,59 @@ struct LBMScheme<19> {
   using vector_t = onika::memory::CudaMMVector<T>;
 
   // D3Q19 LBM scheme parameters
-  const vector_t<double> w = {1. / 3,  1. / 18, 1. / 18, 1. / 18, 1. / 18, 1. / 18, 1. / 18, 1. / 36, 1. / 36, 1. / 36,
-                              1. / 36, 1. / 36, 1. / 36, 1. / 36, 1. / 36, 1. / 36, 1. / 36, 1. / 36, 1. / 36};
-  const vector_t<int> ex = {0, 1, -1, 0, 0, 0, 0, 1, -1, 1, -1, 1, -1, 1, -1, 0, 0, 0, 0};
-  const vector_t<int> ey = {0, 0, 0, 1, -1, 0, 0, 1, -1, -1, 1, 0, 0, 0, 0, 1, -1, 1, -1};
-  const vector_t<int> ez = {0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 1, -1, -1, 1, 1, -1, -1, 1};
-  const vector_t<int> iopp = {0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15, 18, 17};
+  const vector_t<double> w_ = {1. / 3,  1. / 18, 1. / 18, 1. / 18, 1. / 18, 1. / 18, 1. / 18, 1. / 36, 1. / 36, 1. / 36,
+                               1. / 36, 1. / 36, 1. / 36, 1. / 36, 1. / 36, 1. / 36, 1. / 36, 1. / 36, 1. / 36};
+  const vector_t<int> ex_ = {0, 1, -1, 0, 0, 0, 0, 1, -1, 1, -1, 1, -1, 1, -1, 0, 0, 0, 0};
+  const vector_t<int> ey_ = {0, 0, 0, 1, -1, 0, 0, 1, -1, -1, 1, 0, 0, 0, 0, 1, -1, 1, -1};
+  const vector_t<int> ez_ = {0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 1, -1, -1, 1, 1, -1, -1, 1};
+  const vector_t<int> iopp_ = {0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15, 18, 17};
 };
 
 template <int Q>
 struct LBMFields {
   template <typename T>
   using vector_t = onika::memory::CudaMMVector<T>;
-  uint64_t grid_size;
-  LBMScheme<Q> scheme;
+  uint64_t grid_size_;
+  LBMScheme<Q> scheme_;
 
   // fields
-  vector_t<double> f;   // fi
-  vector_t<double> m0;  // densities
-  vector_t<double> m1;  // flux
-  vector_t<int> obst;   // obstacles
+  vector_t<double> f_;   // fi
+  vector_t<double> m0_;  // densities
+  vector_t<double> m1_;  // flux
+  vector_t<int> obst_;   // obstacles
 
   // dunno
-  vector_t<double> fi_x_0, fi_x_l, fi_y_0, fi_y_l, fi_z_0, fi_z_l;
+  vector_t<double> fi_x_0_, fi_x_l_, fi_y_0_, fi_y_l_, fi_z_0_, fi_z_l_;
 
   LBMFields() {}
 
   // accessors
-  uint64_t size() { return grid_size; }
-  FieldView<Q> distributions() { return FieldView<Q>{onika::cuda::vector_data(f), grid_size}; }
+  uint64_t size() { return grid_size_; }
+  FieldView<Q> distributions() { return FieldView<Q>{onika::cuda::vector_data(f_), grid_size_}; }
 
-  double* densities() { return onika::cuda::vector_data(m0); }
+  double* densities() { return onika::cuda::vector_data(m0_); }
 
-  FieldView<3> flux() { return FieldView<3>{onika::cuda::vector_data(m1), grid_size}; }
+  FieldView<3> flux() { return FieldView<3>{onika::cuda::vector_data(m1_), grid_size_}; }
 
-  int* obstacles() { return onika::cuda::vector_data(obst); }
+  int* obstacles() { return onika::cuda::vector_data(obst_); }
 
-  const int* obstacles() const { return onika::cuda::vector_data(obst); }
+  const int* obstacles() const { return onika::cuda::vector_data(obst_); }
 
-  const double* weights() { return onika::cuda::vector_data(scheme.w); }
+  const double* weights() { return onika::cuda::vector_data(scheme_.w_); }
 
-  const int* iopp() { return onika::cuda::vector_data(scheme.iopp); }
+  const int* iopp() { return onika::cuda::vector_data(scheme_.iopp_); }
 
   std::tuple<const int*, const int*, const int*> exyz() {
-    const int* ex = onika::cuda::vector_data(scheme.ex);
-    const int* ey = onika::cuda::vector_data(scheme.ey);
-    const int* ez = onika::cuda::vector_data(scheme.ez);
+    const int* ex = onika::cuda::vector_data(scheme_.ex_);
+    const int* ey = onika::cuda::vector_data(scheme_.ey_);
+    const int* ez = onika::cuda::vector_data(scheme_.ez_);
     return {ex, ey, ez};
   }
 
-  const int* ex() { return onika::cuda::vector_data(scheme.ex); }
+  const int* ex() { return onika::cuda::vector_data(scheme_.ex_); }
 
-  const int* ey() { return onika::cuda::vector_data(scheme.ey); }
+  const int* ey() { return onika::cuda::vector_data(scheme_.ey_); }
 
-  const int* ez() { return onika::cuda::vector_data(scheme.ez); }
+  const int* ez() { return onika::cuda::vector_data(scheme_.ez_); }
 };
 }  // namespace hippoLBM
