@@ -90,7 +90,7 @@ class LogLBM : public OperatorNode {
     std::string header = "     Step     Time          Mesh Size   Sum(density)   min(||V||)   max(||V||)     MLUPS";
     std::string line =
         onika::format_string("%9ld % .6e %13lld       %.2e     %.2e     %.2e   %.2e", *timestep, *physical_time,
-                             size_xyz, ss.sum_density, ss.min_velocity_norm, ss.max_velocity_norm, MLUPS);
+                             size_xyz, ss.sum_density_, ss.min_velocity_norm_, ss.max_velocity_norm_, MLUPS);
 
     if (*print_log_header) {
       lout << header << std::endl;

@@ -25,19 +25,19 @@ under the License.
 namespace hippoLBM {
 /** @brief Structure to hold simulation statistics */
 struct SimulationStatistics {
-  double sum_density = 0.0;
-  double min_velocity_norm = std::numeric_limits<double>::max();
-  double max_velocity_norm = std::numeric_limits<double>::lowest();
+  double sum_density_ = 0.0;
+  double min_velocity_norm_ = std::numeric_limits<double>::max();
+  double max_velocity_norm_ = std::numeric_limits<double>::lowest();
   void display() {
-    lout << "sum_density: " << sum_density << ", min_velocity_norm: " << min_velocity_norm
-         << ", max_velocity_norm: " << max_velocity_norm << std::endl;
+    lout << "sum_density: " << sum_density_ << ", min_velocity_norm: " << min_velocity_norm_
+         << ", max_velocity_norm: " << max_velocity_norm_ << std::endl;
   }
 };
 
 /** @brief Function object to compute simulation state */
 struct ComputeSimulationStateFunc {
-  double* const density;  // Pointer to the density field.
-  FieldView<3> velocity;  // View of the velocity field.
+  double* const density_;  // Pointer to the density field.
+  FieldView<3> velocity_;  // View of the velocity field.
 
   /** @brief Operator to compute simulation state
    * @param local Local simulation statistics to be updated.
@@ -46,12 +46,12 @@ struct ComputeSimulationStateFunc {
    */
   ONIKA_HOST_DEVICE_FUNC
   inline void operator()(SimulationStatistics& local, const uint64_t idx, reduce_thread_local_t = {}) const {
-    local.sum_density += density[idx];
-    onika::math::Vec3d v = velocity.get(idx);
+    local.sum_density_ += density_[idx];
+    onika::math::Vec3d v = velocity_.get(idx);
     double v_norm = onika::math::norm(v);
-    local.min_velocity_norm = std::min(local.min_velocity_norm, v_norm);
-    local.max_velocity_norm = std::max(local.max_velocity_norm, v_norm);
-    // std::cout << "max_velocity_norm " << local.max_velocity_norm << " v_norm " << v_norm << std::endl;
+    local.min_velocity_norm_ = std::min(local.min_velocity_norm_, v_norm);
+    local.max_velocity_norm_ = std::max(local.max_velocity_norm_, v_norm);
+    // std::cout << "max_velocity_norm " << local.max_velocity_norm_ << " v_norm " << v_norm << std::endl;
   }
 
   /** @brief Operator to reduce simulation statistics across threads
@@ -61,9 +61,9 @@ struct ComputeSimulationStateFunc {
    */
   ONIKA_HOST_DEVICE_FUNC inline void operator()(SimulationStatistics& global, SimulationStatistics& local,
                                                 reduce_thread_block_t) const {
-    ONIKA_CU_ATOMIC_ADD(global.sum_density, local.sum_density);
-    ONIKA_CU_ATOMIC_MIN(global.min_velocity_norm, local.min_velocity_norm);
-    ONIKA_CU_ATOMIC_MAX(global.max_velocity_norm, local.max_velocity_norm);
+    ONIKA_CU_ATOMIC_ADD(global.sum_density_, local.sum_density_);
+    ONIKA_CU_ATOMIC_MIN(global.min_velocity_norm_, local.min_velocity_norm_);
+    ONIKA_CU_ATOMIC_MAX(global.max_velocity_norm_, local.max_velocity_norm_);
   }
 
   /** @brief Operator to reduce simulation statistics globally
@@ -73,9 +73,9 @@ struct ComputeSimulationStateFunc {
    */
   ONIKA_HOST_DEVICE_FUNC inline void operator()(SimulationStatistics& global, SimulationStatistics& local,
                                                 reduce_global_t) const {
-    ONIKA_CU_ATOMIC_ADD(global.sum_density, local.sum_density);
-    ONIKA_CU_ATOMIC_MIN(global.min_velocity_norm, local.min_velocity_norm);
-    ONIKA_CU_ATOMIC_MAX(global.max_velocity_norm, local.max_velocity_norm);
+    ONIKA_CU_ATOMIC_ADD(global.sum_density_, local.sum_density_);
+    ONIKA_CU_ATOMIC_MIN(global.min_velocity_norm_, local.min_velocity_norm_);
+    ONIKA_CU_ATOMIC_MAX(global.max_velocity_norm_, local.max_velocity_norm_);
   }
 };
 }  // namespace hippoLBM

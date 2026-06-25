@@ -90,9 +90,9 @@ class SimulationState : public OperatorNode {
     SimulationStatistics local = buffer[0];
     SimulationStatistics global = {};
     int master = 0;
-    MPI_Reduce(&local.sum_density, &global.sum_density, 1, MPI_DOUBLE, MPI_SUM, master, *mpi);
-    MPI_Reduce(&local.min_velocity_norm, &global.min_velocity_norm, 1, MPI_DOUBLE, MPI_MIN, master, *mpi);
-    MPI_Reduce(&local.max_velocity_norm, &global.max_velocity_norm, 1, MPI_DOUBLE, MPI_MAX, master, *mpi);
+    MPI_Reduce(&local.sum_density_, &global.sum_density_, 1, MPI_DOUBLE, MPI_SUM, master, *mpi);
+    MPI_Reduce(&local.min_velocity_norm_, &global.min_velocity_norm_, 1, MPI_DOUBLE, MPI_MIN, master, *mpi);
+    MPI_Reduce(&local.max_velocity_norm_, &global.max_velocity_norm_, 1, MPI_DOUBLE, MPI_MAX, master, *mpi);
 
     *simulation_statistics = global;
   }

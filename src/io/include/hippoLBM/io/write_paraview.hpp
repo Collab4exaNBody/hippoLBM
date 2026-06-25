@@ -23,8 +23,8 @@ under the License.
 
 #include <filesystem>
 #include <hippoLBM/compute/parallel_for_core.hpp>
-#include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/core/enum.hpp>
+#include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/grid/lbm_parameters.hpp>
@@ -33,15 +33,15 @@ under the License.
 namespace hippoLBM {
 /** Currently, it works for double */
 struct ExternalParaviewField {
-  std::string field_name;    // The name of the field to be written.
-  double* const input_data;  // Pointer to the input data array that contains the values to be written.
-  int number_of_components;  // The number of components in the data (e.g., 1 for scalar fields, 3 for vector fields).
-  uint64_t number_of_elements;  // The total number of elements in the data array (e.g., the number of grid points).
+  std::string field_name_;    // The name of the field to be written.
+  double* const input_data_;  // Pointer to the input data array that contains the values to be written.
+  int number_of_components_;  // The number of components in the data (e.g., 1 for scalar fields, 3 for vector fields).
+  uint64_t number_of_elements_;  // The total number of elements in the data array (e.g., the number of grid points).
 };
 
 /** @brief Structure to hold external Paraview fields */
 struct ExternalParaviewFields {
-  std::vector<ExternalParaviewField> fields;  // A vector to store multiple external Paraview fields.
+  std::vector<ExternalParaviewField> fields_;  // A vector to store multiple external Paraview fields.
 
   /** @brief Register a new field to be written
    * @param field_name The name of the field to be written.
@@ -50,18 +50,18 @@ struct ExternalParaviewFields {
    * @param elements The total number of elements in the data array (e.g., the number of grid points).
    */
   void register_field(std::string field_name, double* const data, int components, uint64_t elements) {
-    fields.push_back(ExternalParaviewField{field_name, data, components, elements});
+    fields_.push_back(ExternalParaviewField{field_name, data, components, elements});
   }
 
   /** @brief Write the Paraview XML header for the external fields
    * @param outFile The output file stream.
    */
   inline void write_pvtr(std::ofstream& outFile) const {
-    for (auto& field : fields) {
+    for (auto& field : fields_) {
       outFile << "       <PDataArray"
-              << " Name=\"" << field.field_name << "\""
+              << " Name=\"" << field.field_name_ << "\""
               << " type=\"Float32\""
-              << " NumberOfComponents=\"" << field.number_of_components << "\"/>" << std::endl;
+              << " NumberOfComponents=\"" << field.number_of_components_ << "\"/>" << std::endl;
     }
   }
 
@@ -70,14 +70,14 @@ struct ExternalParaviewFields {
    * @param outFile The output file stream.
    */
   inline void write_vtr(const LBMGrid& grid, std::ofstream& outFile) const {
-    for (auto& field : fields) {
-      WriterExternalData writer_external_data = {field.number_of_components, field.number_of_elements};
+    for (auto& field : fields_) {
+      WriterExternalData writer_external_data = {field.number_of_components_, field.number_of_elements_};
       outFile << "          <DataArray type=\"Float32\""
-              << " Name=\"" << field.field_name << "\""
+              << " Name=\"" << field.field_name_ << "\""
               << " format=\"ascii\""
-              << " NumberOfComponents=\"" << field.number_of_components << "\">" << std::endl;
+              << " NumberOfComponents=\"" << field.number_of_components_ << "\">" << std::endl;
       std::stringstream paraview_stream_buffer;
-      for_all<Area::Local, Traversal::All>(grid, writer_external_data, paraview_stream_buffer, field.input_data);
+      for_all<Area::Local, Traversal::All>(grid, writer_external_data, paraview_stream_buffer, field.input_data_);
       outFile << paraview_stream_buffer.rdbuf();
       outFile << std::endl;
       outFile << "          </DataArray>" << std::endl;
@@ -92,22 +92,22 @@ struct ExternalParaviewFieldsNullOp {
 
 struct ParaviewBuffers {
   /** Buffers */
-  onika::memory::CudaMMVector<float> u;   // velocity, scaled to float for paraview
-  onika::memory::CudaMMVector<float> p;   // pressure
-  onika::memory::CudaMMVector<int> obst;  // obstacle flag
+  onika::memory::CudaMMVector<float> u_;   // velocity, scaled to float for paraview
+  onika::memory::CudaMMVector<float> p_;   // pressure
+  onika::memory::CudaMMVector<int> obst_;  // obstacle flag
 
   /** streams */
-  std::stringstream i;  // x-coordinates of the grid points
-  std::stringstream j;  // y-coordinates of the grid points
-  std::stringstream k;  // z-coordinates of the grid points
+  std::stringstream i_;  // x-coordinates of the grid points
+  std::stringstream j_;  // y-coordinates of the grid points
+  std::stringstream k_;  // z-coordinates of the grid points
 
   /** @brief Resize the buffers
    * @param size The new size of the buffers
    */
   void resize(const int size) {
-    u.resize(3 * size);  // Vec3d
-    p.resize(size);
-    obst.resize(size);
+    u_.resize(3 * size);  // Vec3d
+    p_.resize(size);
+    obst_.resize(size);
   }
 
   /** @brief Convert simulation data to stream
@@ -123,9 +123,9 @@ struct ParaviewBuffers {
    * @param dx The grid spacing
    */
   void sim_header_to_stream(Box3D& Box, double dx) {
-    for (int x = Box.start(0); x <= Box.end(0); x++) i << (double)(x * dx) << " ";
-    for (int y = Box.start(1); y <= Box.end(1); y++) j << (double)(y * dx) << " ";
-    for (int z = Box.start(2); z <= Box.end(2); z++) k << (double)(z * dx) << " ";
+    for (int x = Box.start(0); x <= Box.end(0); x++) i_ << (double)(x * dx) << " ";
+    for (int y = Box.start(1); y <= Box.end(1); y++) j_ << (double)(y * dx) << " ";
+    for (int z = Box.start(2); z <= Box.end(2); z++) k_ << (double)(z * dx) << " ";
   }
 };
 
@@ -249,15 +249,15 @@ inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data,
           << global.end(1) << " " << global.start(2) << " " << global.end(2) << " \">" << std::endl;
   outFile << "      <Coordinates>" << std::endl;
   outFile << "          <DataArray type=\"Float32\" Name=\"X\" format=\"ascii\">" << std::endl;
-  outFile << paraview_streams.i.rdbuf();
+  outFile << paraview_streams.i_.rdbuf();
   outFile << std::endl;
   outFile << "          </DataArray>" << std::endl;
   outFile << "          <DataArray type=\"Float32\" Name=\"Y\" format=\"ascii\">" << std::endl;
-  outFile << paraview_streams.j.rdbuf();
+  outFile << paraview_streams.j_.rdbuf();
   outFile << std::endl;
   outFile << "          </DataArray>" << std::endl;
   outFile << "          <DataArray type=\"Float32\" Name=\"Z\" format=\"ascii\">" << std::endl;
-  outFile << paraview_streams.k.rdbuf();
+  outFile << paraview_streams.k_.rdbuf();
   outFile << std::endl;
   outFile << "          </DataArray>" << std::endl;
   outFile << "      </Coordinates>" << std::endl;

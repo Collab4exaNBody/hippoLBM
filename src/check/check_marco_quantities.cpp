@@ -78,15 +78,15 @@ class CheckerMacroQuantitiesOp : public OperatorNode {
       bool error_spotted = false;
       std::string msg = "Regression test checker [macro quantities]\n";
 
-      if (stats.min_velocity_norm < *vmin) {
-        msg += "min vel (simulation): " + std::to_string(stats.min_velocity_norm) +
+      if (stats.min_velocity_norm_ < *vmin) {
+        msg += "min vel (simulation): " + std::to_string(stats.min_velocity_norm_) +
                " is below (user-defined check): " + std::to_string(*vmin) + "\n";
         error_spotted = true;
       }
 
       if (vmax.has_value()) {
-        if (stats.max_velocity_norm > *vmax) {
-          msg += "max vel (simulation): " + std::to_string(stats.max_velocity_norm) +
+        if (stats.max_velocity_norm_ > *vmax) {
+          msg += "max vel (simulation): " + std::to_string(stats.max_velocity_norm_) +
                  " is upper (user-defined check): " + std::to_string(*vmax) + "\n";
           error_spotted = true;
         }
@@ -97,8 +97,8 @@ class CheckerMacroQuantitiesOp : public OperatorNode {
           lout << "Please add a tolerance if you use the density INPUT slot." << std::endl;
           std::exit(EXIT_FAILURE);
         }
-        if (std::abs(stats.sum_density - (*density)) > *tol) {
-          msg += "Sum of densities (simulation): " + std::to_string(stats.sum_density) +
+        if (std::abs(stats.sum_density_ - (*density)) > *tol) {
+          msg += "Sum of densities (simulation): " + std::to_string(stats.sum_density_) +
                  " is not closed to (user-defined check): " + std::to_string(*density) + " +/- " +
                  std::to_string(*tol) + "\n";
           error_spotted = true;
