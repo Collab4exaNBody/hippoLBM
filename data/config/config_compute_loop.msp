@@ -15,7 +15,7 @@ end_iteration:
     - dump_paraview_if_triggered
     - trigger_print_log
     - print_log_if_triggered
-    - next_time_step
+
 
 collision: bgk # default model
 
@@ -33,4 +33,5 @@ compute_loop:
   - post_stream_bcs
   - boundary_conditions
   - end_iteration
+  - next_time_step  
   - compute_loop_stop
