@@ -59,8 +59,8 @@ class DefineLBMFields : public OperatorNode {
     constexpr Area L = Area::Local;
     constexpr Traversal Tr = Traversal::All;
     LBMFields<Q>& grid_data = *fields;
-    LBMGrid& Grid = domain->m_grid;
-    Box3D& Box = domain->m_box;
+    LBMGrid& Grid = domain->m_grid_;
+    Box3D& Box = domain->m_box_;
 
     // compute sizes
     constexpr int Un = 5;
@@ -70,18 +70,18 @@ class DefineLBMFields : public OperatorNode {
     int size_XZU = bx.get_length(0) * bx.get_length(2) * Un;
     const size_t np = Box.number_of_points();
 
-    grid_data.grid_size = np;
-    if (grid_data.obst.size() != np) {
-      grid_data.f.resize(np * Q, 0);
-      grid_data.obst.resize(np);
-      grid_data.m0.resize(np, 0);
-      grid_data.m1.resize(np * 3, 0);
-      grid_data.fi_x_0.resize(size_YZU);
-      grid_data.fi_x_l.resize(size_YZU);
-      grid_data.fi_y_0.resize(size_XZU);
-      grid_data.fi_y_l.resize(size_XZU);
-      grid_data.fi_z_0.resize(size_XYU);
-      grid_data.fi_z_l.resize(size_XYU);
+    grid_data.grid_size_ = np;
+    if (grid_data.obst_.size() != np) {
+      grid_data.f_.resize(np * Q, 0);
+      grid_data.obst_.resize(np);
+      grid_data.m0_.resize(np, 0);
+      grid_data.m1_.resize(np * 3, 0);
+      grid_data.fi_x_0_.resize(size_YZU);
+      grid_data.fi_x_l_.resize(size_YZU);
+      grid_data.fi_y_0_.resize(size_XZU);
+      grid_data.fi_y_l_.resize(size_XZU);
+      grid_data.fi_z_0_.resize(size_XYU);
+      grid_data.fi_z_l_.resize(size_XYU);
     }
   }
 };

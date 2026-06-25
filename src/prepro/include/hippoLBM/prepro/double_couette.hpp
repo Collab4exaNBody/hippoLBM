@@ -24,29 +24,29 @@ under the License.
 namespace hippoLBM {
 template <int Q, int DIM>
 struct InitDoubleCouetteFunc {
-  LBMGrid g;
-  FieldView<Q> f;
-  const onika::math::Vec3d dU_lbm;  // u_lbm.x / (.5 * (l_dir (x,y,z) - 1));
-  const onika::math::Vec3d U;       // U_real / c;
-  const int* ex;
-  const int* ey;
-  const int* ez;
-  const double* const w;
+  LBMGrid g_;
+  FieldView<Q> f_;
+  const onika::math::Vec3d dU_lbm_;  // u_lbm.x / (.5 * (l_dir (x,y,z) - 1));
+  const onika::math::Vec3d U_;       // U_real / c;
+  const int* ex_;
+  const int* ey_;
+  const int* ez_;
+  const double* const w_;
 
   ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t coord) const {
-    const int idx = g(coord.x, coord.y, coord.z);
+    const int idx = g_(coord.x, coord.y, coord.z);
     double value;
-    if constexpr (DIM == DIMX) value = coord.x + g.offset[0];
-    if constexpr (DIM == DIMY) value = coord.y + g.offset[1];
-    if constexpr (DIM == DIMZ) value = coord.z + g.offset[2];
+    if constexpr (DIM == DIMX) value = coord.x + g_.offset_[0];
+    if constexpr (DIM == DIMY) value = coord.y + g_.offset_[1];
+    if constexpr (DIM == DIMZ) value = coord.z + g_.offset_[2];
 
-    onika::math::Vec3d uii = U - dU_lbm * value;
+    onika::math::Vec3d uii = U_ - dU_lbm_ * value;
 
     double eu;
     double u_squ = dot(uii, uii);
     for (int iLB = 0; iLB < Q; iLB++) {
-      eu = uii.x * double(ex[iLB]) + uii.y * ey[iLB] + uii.z * ez[iLB];
-      f(idx, iLB) = 1. * w[iLB] * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
+      eu = uii.x * double(ex_[iLB]) + uii.y * ey_[iLB] + uii.z * ez_[iLB];
+      f_(idx, iLB) = 1. * w_[iLB] * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
     }
   }
 };

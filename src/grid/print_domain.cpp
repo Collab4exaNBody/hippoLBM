@@ -60,9 +60,9 @@ class PrintDomainLBM : public OperatorNode {
     constexpr Area G = Area::Global;
     constexpr Traversal R = Traversal::Real;
 
-    LBMGrid& g = domain->m_grid;
-    const onika::math::AABB& bounds = domain->bounds;
-    const int3d& domain_size = domain->domain_size;
+    LBMGrid& g = domain->m_grid_;
+    const onika::math::AABB& bounds = domain->bounds_;
+    const int3d& domain_size = domain->domain_size_;
 
     lout << "=================================" << std::endl;
     lout << "== Domain size: " << bounds << std::endl;
@@ -76,7 +76,7 @@ class PrintDomainLBM : public OperatorNode {
     auto real = g.build_box<G, R>();
     real.print();
     lout << "= Extended Grid: " << std::endl;
-    auto& ext = g.ext;
+    auto& ext = g.ext_;
     ext.print();
     lout << "=================================" << std::endl;
   }
@@ -85,6 +85,5 @@ class PrintDomainLBM : public OperatorNode {
 // === register factories ===
 ONIKA_AUTORUN_INIT(print_domain) {
   OperatorNodeFactory::instance()->register_factory("print_domain", make_variant_operator<PrintDomainLBM>);
-  OperatorNodeFactory::instance()->register_factory("hippoLBM_print_domain", make_variant_operator<PrintDomainLBM>);
 }
 }  // namespace hippoLBM

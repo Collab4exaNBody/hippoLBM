@@ -22,13 +22,13 @@ under the License.
 namespace hippoLBM {
 /** @brief Lattice Boltzmann Method parameters. */
 struct LBMParameters {
-  onika::math::Vec3d Fext;  // External forces
-  double celerity;          // Netword celerity
-  double dtLB;              // Celerity time step
-  double nuth;              // Viscosity in real unit
-  double nu;                // Viscoty in LB unit
-  double tau;               // relexation time
-  double avg_rho;           // Average density in real unit, 1 in LB unit
+  onika::math::Vec3d Fext_;  // External forces
+  double celerity_;          // Netword celerity
+  double dtLB_;              // Celerity time step
+  double nuth_;              // Viscosity in real unit
+  double nu_;                // Viscoty in LB unit
+  double tau_;               // relexation time
+  double avg_rho_;           // Average density in real unit, 1 in LB unit
 
   LBMParameters() {}
 
@@ -36,13 +36,13 @@ struct LBMParameters {
     using onika::lout;
     lout << "=================================" << std::endl;
     lout << "= LBM Parameters" << std::endl;
-    lout << "= External forces Fext:           [" << Fext << "]" << std::endl;
-    lout << "= Network celerity celerity:      " << celerity << std::endl;
-    lout << "= Celerity time step dtLB:        " << dtLB << " [dx / celerity]" << std::endl;
-    lout << "= Viscosity nuth:                 " << nuth << std::endl;
-    lout << "= Viscosity with lattice unit nu: " << nu << " [nuth * dtLB / (dx²)]" << std::endl;
-    lout << "= Relaxation time tau:            " << tau << " [3nu + 0.5]" << std::endl;
-    lout << "= Average Rho avg_rho:            " << avg_rho << std::endl;
+    lout << "= External forces Fext:           [" << Fext_ << "]" << std::endl;
+    lout << "= Network celerity celerity:      " << celerity_ << std::endl;
+    lout << "= Celerity time step dtLB:        " << dtLB_ << " [dx / celerity]" << std::endl;
+    lout << "= Viscosity nuth:                 " << nuth_ << std::endl;
+    lout << "= Viscosity with lattice unit nu: " << nu_ << " [nuth * dtLB / (dx²)]" << std::endl;
+    lout << "= Relaxation time tau:            " << tau_ << " [3nu + 0.5]" << std::endl;
+    lout << "= Average Rho avg_rho:            " << avg_rho_ << std::endl;
     lout << "=================================" << std::endl;
   }
 };

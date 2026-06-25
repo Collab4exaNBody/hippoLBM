@@ -33,16 +33,16 @@ using vector_t = onika::memory::CudaMMVector<T>;
  */
 template <int Components>
 struct LBMComm {
-  int m_dest;  ///< The destination process ID.
-  int m_tag;   ///< The MPI communication tag.
-  Box3D m_box;
-  vector_t<double> m_data;  ///< The communication buffer.
+  int m_dest_;  ///< The destination process ID.
+  int m_tag_;   ///< The MPI communication tag.
+  Box3D m_box_;
+  vector_t<double> m_data_;  ///< The communication buffer.
 
   // used for debuging
   void debug_print_comm() {
-    onika::lout << "Dest: " << m_dest << " Tag: " << m_tag << " Data Size: " << m_data.size() << std::endl;
+    onika::lout << "Dest: " << m_dest_ << " Tag: " << m_tag_ << " Data Size: " << m_data_.size() << std::endl;
     onika::lout << "Box: " << std::endl;
-    m_box.print();
+    m_box_.print();
   }
 
   /**
@@ -52,7 +52,7 @@ struct LBMComm {
    * @param tag The MPI communication tag.
    * @param b The communication box.
    */
-  LBMComm(const int dest, const int tag, const Box3D& b) : m_dest(dest), m_tag(tag), m_box(b), m_data() {
+  LBMComm(const int dest, const int tag, const Box3D& b) : m_dest_(dest), m_tag_(tag), m_box_(b), m_data_() {
     int size = b.number_of_points();
     allocate(size);
   }
@@ -64,37 +64,37 @@ struct LBMComm {
    * @brief Get the size of the data buffer.
    * @return The size of the data buffer.
    */
-  int get_size() { return onika::cuda::vector_size(m_data); }
+  int get_size() { return onika::cuda::vector_size(m_data_); }
 
   /**
    * @brief Get the destination process ID.
    * @return The destination process ID.
    */
-  int get_dest() { return m_dest; }
+  int get_dest() { return m_dest_; }
 
   /**
    * @brief Get the MPI communication tag.
    * @return The MPI communication tag.
    */
-  int get_tag() { return m_tag; }
+  int get_tag() { return m_tag_; }
 
   /**
    * @brief Get the communication box.
    * @return Reference to the communication box.
    */
-  Box3D& get_box() { return m_box; }
+  Box3D& get_box() { return m_box_; }
 
   /**
    * @brief Get a pointer to the data buffer.
    * @return Pointer to the data buffer.
    */
-  double* get_data() { return onika::cuda::vector_data(m_data); }
+  double* get_data() { return onika::cuda::vector_data(m_data_); }
 
   /**
    * @brief Allocate memory for the data buffer.
    * @param size The size of the data buffer.
    */
-  void allocate(int size) { m_data.resize(size * Components); }
+  void allocate(int size) { m_data_.resize(size * Components); }
 };
 
 /**
@@ -104,8 +104,8 @@ struct LBMComm {
  */
 template <int Components>
 struct LBMGhostComm {
-  LBMComm<Components> send;  ///< The send communication.
-  LBMComm<Components> recv;  ///< The receive communication.
+  LBMComm<Components> send_;  ///< The send communication.
+  LBMComm<Components> recv_;  ///< The receive communication.
 
   LBMGhostComm() {}
   /**
@@ -113,14 +113,14 @@ struct LBMGhostComm {
    * @param s The send communication.
    * @param r The receive communication.
    */
-  LBMGhostComm(LBMComm<Components>& s, LBMComm<Components>& r) : send(s), recv(r) {}
+  LBMGhostComm(LBMComm<Components>& s, LBMComm<Components>& r) : send_(s), recv_(r) {}
 
   // used for debuging
   void debug_print_comm() {
     onika::lout << " Ghost Comm[Send]" << std::endl;
-    send.debug_print_comm();
+    send_.debug_print_comm();
     onika::lout << " Ghost Comm[Recv]" << std::endl;
-    recv.debug_print_comm();
+    recv_.debug_print_comm();
   }
 };
 }  // namespace hippoLBM

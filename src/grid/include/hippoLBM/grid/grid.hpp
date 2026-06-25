@@ -9,30 +9,30 @@
 namespace hippoLBM {
 /**
  * @brief Lattice Boltzmann Method grid representation.
- * Stores the local grid, extended grid, offset, ghost layers, and spatial resolution.
+ * Stores the local grid, extended grid, offset_, ghost layers, and spatial resolution.
  */
 struct LBMGrid {
   static constexpr int DIM = 3;  ///< Number of spatial dimensions
 
-  Box3D bx;             ///< Box covering the actual computational grid
-  Box3D ext;            ///< Box covering the extended grid (includes ghost layers)
-  Point3D offset;       ///< Offset of the real grid (useful for global indexing)
-  int ghost_layer = 2;  ///< Number of ghost layers (default 2 for DEM + LBM)
-  double dx;            ///< Distance between two grid points (spatial resolution)
+  Box3D bx_;             ///< Box covering the actual computational grid
+  Box3D ext_;            ///< Box covering the extended grid (includes ghost layers)
+  Point3D offset_;       ///< Offset of the real grid (useful for global indexing)
+  int ghost_layer_ = 2;  ///< Number of ghost layers (default 2 for DEM + LBM)
+  double dx_;            ///< Distance between two grid points (spatial resolution)
 
   LBMGrid() {};
 
-  LBMGrid(Box3D& b, Point3D& o, const int g, double d) : bx(b), offset(o), ghost_layer(g), dx(d) {
+  LBMGrid(Box3D& b, Point3D& o, const int g, double d) : bx_(b), offset_(o), ghost_layer_(g), dx_(d) {
     // add a print function here ?
   }
 
   // setter
-  inline void set_box(Box3D& b) { bx = b; }
-  inline void set_ext(Box3D& e) { ext = e; }
-  inline void set_offset(Point3D& o) { offset = o; }
-  inline void set_offset(Point3D&& o) { offset = o; }
-  inline void set_ghost_layer(const int g) { ghost_layer = g; }
-  inline void set_dx(const double d) { dx = d; }
+  inline void set_box(Box3D& b) { bx_ = b; }
+  inline void set_ext(Box3D& e) { ext_ = e; }
+  inline void set_offset(Point3D& o) { offset_ = o; }
+  inline void set_offset(Point3D&& o) { offset_ = o; }
+  inline void set_ghost_layer(const int g) { ghost_layer_ = g; }
+  inline void set_dx(const double d) { dx_ = d; }
 
   /**
    * @brief Computes the starting index of a given dimension for a subdomain traversal.
@@ -51,18 +51,18 @@ struct LBMGrid {
    * - `Traversal::Real` → Excludes ghost layer.
    * - `Traversal::Inside` → Excludes ghost layer + one additional layer.
    * - `Traversal::Extend` → Uses the extended box.
-   * - If `Area::Global`, the global offset is added.
+   * - If `Area::Global`, the global offset_ is added.
    */
   template <Area A, Traversal Tr>
   ONIKA_HOST_DEVICE_FUNC inline int start(const int dim) const {
     // static_assert(A == Area::Local);
     int res = 0;
     static_assert(Tr == Traversal::All || Tr == Traversal::Real || Tr == Traversal::Inside || Tr == Traversal::Extend);
-    if constexpr (Tr == Traversal::All) res = bx.start(dim);
-    if constexpr (Tr == Traversal::Real) res = bx.start(dim) + ghost_layer;
-    if constexpr (Tr == Traversal::Inside) res = bx.start(dim) + ghost_layer + 1;
-    if constexpr (Tr == Traversal::Extend) res = ext.start(dim);
-    if constexpr (A == Area::Global) res += offset[dim];
+    if constexpr (Tr == Traversal::All) res = bx_.start(dim);
+    if constexpr (Tr == Traversal::Real) res = bx_.start(dim) + ghost_layer_;
+    if constexpr (Tr == Traversal::Inside) res = bx_.start(dim) + ghost_layer_ + 1;
+    if constexpr (Tr == Traversal::Extend) res = ext_.start(dim);
+    if constexpr (A == Area::Global) res += offset_[dim];
     return res;
   }
 
@@ -83,7 +83,7 @@ struct LBMGrid {
    * - `Traversal::Real` → Excludes ghost layer.
    * - `Traversal::Inside` → Excludes ghost layer + one additional layer.
    * - `Traversal::Extend` → Uses the extended box.
-   * - If `Area::Global`, the global offset is added.
+   * - If `Area::Global`, the global offset_ is added.
    */
   template <Area A, Traversal Tr>
   ONIKA_HOST_DEVICE_FUNC inline int end(const int dim) const {
@@ -91,11 +91,11 @@ struct LBMGrid {
     static_assert(Tr == Traversal::All || Tr == Traversal::Real || Tr == Traversal::Inside || Tr == Traversal::Extend);
 
     int res = 0;
-    if constexpr (Tr == Traversal::All) res = bx.end(dim);
-    if constexpr (Tr == Traversal::Real) res = bx.end(dim) - ghost_layer;
-    if constexpr (Tr == Traversal::Inside) res = bx.end(dim) - ghost_layer - 1;
-    if constexpr (Tr == Traversal::Extend) res = ext.end(dim);
-    if constexpr (A == Area::Global) res += offset[dim];
+    if constexpr (Tr == Traversal::All) res = bx_.end(dim);
+    if constexpr (Tr == Traversal::Real) res = bx_.end(dim) - ghost_layer_;
+    if constexpr (Tr == Traversal::Inside) res = bx_.end(dim) - ghost_layer_ - 1;
+    if constexpr (Tr == Traversal::Extend) res = ext_.end(dim);
+    if constexpr (A == Area::Global) res += offset_[dim];
     return res;
   }
 
@@ -111,14 +111,14 @@ struct LBMGrid {
    * @return A Box3D object representing the requested region.
    *
    * @note
-   * - `(Area::Local, Traversal::All)` returns the full local box (`bx`).
-   * - `(Area::Local, Traversal::Extend)` returns the extended box (`ext`).
+   * - `(Area::Local, Traversal::All)` returns the full local box (`bx_`).
+   * - `(Area::Local, Traversal::Extend)` returns the extended box (`ext_`).
    * - For other cases, the box is built from `start<A,Tr>(dim)` and `end<A,Tr>(dim)` for each dimension.
    */
   template <Area A, Traversal Tr>
   ONIKA_HOST_DEVICE_FUNC Box3D build_box() const {
-    if constexpr (A == Area::Local && Tr == Traversal::All) return bx;
-    if constexpr (A == Area::Local && Tr == Traversal::Extend) return ext;
+    if constexpr (A == Area::Local && Tr == Traversal::All) return bx_;
+    if constexpr (A == Area::Local && Tr == Traversal::Extend) return ext_;
     Point3D lower, upper;
     for (int dim = 0; dim < DIM; dim++) {
       lower[dim] = this->start<A, Tr>(dim);
@@ -159,18 +159,18 @@ struct LBMGrid {
    * @brief Checks whether a point lies inside the extended grid region.
    *
    * A point is considered defined if all its coordinates are within the
-   * lower and upper bounds of the extended box (`ext`).
+   * lower and upper bounds of the extended box (`ext_`).
    *
    * @param p Point coordinates to be tested.
    * @return true if the point is inside the extended region, false otherwise.
    *
    * @note
-   * - The lower bound (`ext.start(dim)`) is inclusive.
-   * - The upper bound (`ext.end(dim)`) is also inclusive.
+   * - The lower bound (`ext_.start(dim)`) is inclusive.
+   * - The upper bound (`ext_.end(dim)`) is also inclusive.
    */
   ONIKA_HOST_DEVICE_FUNC inline bool is_defined(Point3D& p) const {
     for (int dim = 0; dim < DIM; dim++) {
-      if (p[dim] < ext.start(dim) || p[dim] > ext.end(dim)) {
+      if (p[dim] < ext_.start(dim) || p[dim] > ext_.end(dim)) {
         return false;
       }
     }
@@ -189,13 +189,13 @@ struct LBMGrid {
    * @return true if the indices are inside the extended region, false otherwise.
    *
    * @note
-   * - The lower bound (`ext.start(dim)`) is inclusive.
-   * - The upper bound (`ext.end(dim)`) is also inclusive.
+   * - The lower bound (`ext_.start(dim)`) is inclusive.
+   * - The upper bound (`ext_.end(dim)`) is also inclusive.
    */
   ONIKA_HOST_DEVICE_FUNC inline bool is_defined(int i, int j, int k) const {
-    if (i < ext.start(0) || i > ext.end(0)) return false;
-    if (j < ext.start(1) || j > ext.end(1)) return false;
-    if (k < ext.start(2) || k > ext.end(2)) return false;
+    if (i < ext_.start(0) || i > ext_.end(0)) return false;
+    if (j < ext_.start(1) || j > ext_.end(1)) return false;
+    if (k < ext_.start(2) || k > ext_.end(2)) return false;
     return true;
   }
 
@@ -203,18 +203,18 @@ struct LBMGrid {
    * @brief Checks whether a point lies inside the local grid region.
    *
    * A point is considered local if all its coordinates fall within the
-   * bounds of the local box (`bx`).
+   * bounds of the local box (`bx_`).
    *
    * @param p Point coordinates to be tested.
    * @return true if the point is inside the local region, false otherwise.
    *
    * @note
-   * - The lower bound (`bx.start(dim)`) is inclusive.
-   * - The upper bound (`bx.end(dim)`) is also inclusive.
+   * - The lower bound (`bx_.start(dim)`) is inclusive.
+   * - The upper bound (`bx_.end(dim)`) is also inclusive.
    */
   ONIKA_HOST_DEVICE_FUNC inline bool is_local(Point3D& p) const {
     for (int dim = 0; dim < DIM; dim++) {
-      if (p[dim] < bx.start(dim) || p[dim] > bx.end(dim)) return false;
+      if (p[dim] < bx_.start(dim) || p[dim] > bx_.end(dim)) return false;
     }
     return true;
   }
@@ -223,16 +223,16 @@ struct LBMGrid {
    * @brief Checks whether a point lies inside the global grid region.
    *
    * The global coordinates are first converted to local coordinates
-   * using the domain offset, then checked against the local box.
+   * using the domain offset_, then checked against the local box.
    *
    * @param p Point in global coordinates.
    * @return true if the point belongs to the global region, false otherwise.
    *
    * @note
-   * - Internally, this computes `local = p + offset` and calls `is_local(local)`.
+   * - Internally, this computes `local = p + offset_` and calls `is_local(local)`.
    */
   ONIKA_HOST_DEVICE_FUNC inline bool is_global(Point3D& p) {
-    Point3D local = p + offset;
+    Point3D local = p + offset_;
     return is_local(local);
   }
 
@@ -262,7 +262,7 @@ struct LBMGrid {
     static_assert(A == Area::Local || A == Area::Global);
     if constexpr (A == Area::Local) {
       /** Convert global → local **/
-      res = res - offset;
+      res = res - offset_;
       /** Optional runtime check: point must be inside local domain **/
       if constexpr (Check) assert(this->is_local(res));
     }
@@ -271,7 +271,7 @@ struct LBMGrid {
       /** Optional runtime check: point must be valid before conversion **/
       if constexpr (Check) assert(this->is_local(res));
       /** Convert local → global **/
-      res = res + offset;
+      res = res + offset_;
     }
     return res;
   }
@@ -289,13 +289,13 @@ struct LBMGrid {
    * @return Point3D corresponding to the discrete grid coordinates.
    *
    * @note
-   * - Each coordinate is divided by `dx` and truncated to an integer.
+   * - Each coordinate is divided by `dx_` and truncated to an integer.
    * - The result is then passed to `convert<A,Check>` to handle the
    *   local/global conversion and optional validity check.
    */
   template <Area A, bool Check = false>
   ONIKA_HOST_DEVICE_FUNC inline Point3D project_to_grid(const onika::math::Vec3d&& r) const {
-    Point3D p = {int(r.x / dx), int(r.y / dx), int(r.z / dx)};
+    Point3D p = {int(r.x / dx_), int(r.y / dx_), int(r.z / dx_)};
     return convert<A, Check>(p[0], p[1], p[2]);
   }
 
@@ -312,12 +312,12 @@ struct LBMGrid {
     static_assert(A == Area::Local || A == Area::Global);
     if constexpr (A == Area::Local) {
       /** Shift the point **/
-      res = res - offset[dim];
+      res = res - offset_[dim];
     }
 
     if constexpr (A == Area::Global) {
       /** Shift the point **/
-      res = res + offset[dim];
+      res = res + offset_[dim];
     }
     return res;
   }
@@ -325,8 +325,8 @@ struct LBMGrid {
   template <Area A>
   ONIKA_HOST_DEVICE_FUNC onika::math::Vec3d compute_position(int x, int y, int z) const {
     static_assert(A == Area::Global);
-    onika::math::Vec3d res = {(double)(x + offset[0]), (double)(y + offset[1]), (double)(z + offset[2])};
-    res = {res.x * dx, res.y * dx, res.z * dx};  // add operator *=
+    onika::math::Vec3d res = {(double)(x + offset_[0]), (double)(y + offset_[1]), (double)(z + offset_[2])};
+    res = {res.x * dx_, res.y * dx_, res.z * dx_};  // add operator *=
     return res;
   }
 
@@ -345,8 +345,8 @@ struct LBMGrid {
   ONIKA_HOST_DEVICE_FUNC onika::math::Vec3d compute_position(int id) const {
     static_assert(A == Area::Global);
     auto [x, y, z] = this->operator()(id);
-    onika::math::Vec3d res = {(double)(x + offset[0]), (double)(y + offset[1]), (double)(z + offset[2])};
-    res = {res.x * dx, res.y * dx, res.z * dx};  // add operator *=
+    onika::math::Vec3d res = {(double)(x + offset_[0]), (double)(y + offset_[1]), (double)(z + offset_[2])};
+    res = {res.x * dx_, res.y * dx_, res.z * dx_};  // add operator *=
     return res;
   }
 
@@ -368,8 +368,8 @@ struct LBMGrid {
   ONIKA_HOST_DEVICE_FUNC std::tuple<bool, Box3D> restrict_box_to_grid(const Box3D& input_box) const {
     // Convert input box to local/global coordinates
     Box3D adjusted_box;
-    adjusted_box.inf = convert<A, false>(input_box.inf);
-    adjusted_box.sup = convert<A, false>(input_box.sup);
+    adjusted_box.inf_ = convert<A, false>(input_box.inf_);
+    adjusted_box.sup_ = convert<A, false>(input_box.sup_);
     Box3D subdomain = build_box<A, Tr>();
 
     // Check if there is any intersection
@@ -380,16 +380,16 @@ struct LBMGrid {
 
     // Clip the box to the subdomain boundaries
     for (int dim = 0; dim < 3; dim++) {
-      adjusted_box.inf[dim] = std::max(adjusted_box.inf[dim], subdomain.inf[dim]);
-      adjusted_box.sup[dim] = std::min(adjusted_box.sup[dim], subdomain.sup[dim]);
+      adjusted_box.inf_[dim] = std::max(adjusted_box.inf_[dim], subdomain.inf_[dim]);
+      adjusted_box.sup_[dim] = std::min(adjusted_box.sup_[dim], subdomain.sup_[dim]);
     }
     return {true, adjusted_box};
   }
 
-  ONIKA_HOST_DEVICE_FUNC int operator()(Point3D& p) const { return bx(p[0], p[1], p[2]); }
-  ONIKA_HOST_DEVICE_FUNC int operator()(Point3D&& p) const { return bx(p[0], p[1], p[2]); }
-  ONIKA_HOST_DEVICE_FUNC int operator()(int x, int y, int z) const { return bx(x, y, z); }
-  ONIKA_HOST_DEVICE_FUNC inline std::tuple<int, int, int> operator()(int idx) const { return bx(idx); }
+  ONIKA_HOST_DEVICE_FUNC int operator()(Point3D& p) const { return bx_(p[0], p[1], p[2]); }
+  ONIKA_HOST_DEVICE_FUNC int operator()(Point3D&& p) const { return bx_(p[0], p[1], p[2]); }
+  ONIKA_HOST_DEVICE_FUNC int operator()(int x, int y, int z) const { return bx_(x, y, z); }
+  ONIKA_HOST_DEVICE_FUNC inline std::tuple<int, int, int> operator()(int idx) const { return bx_(idx); }
 };
 
 /**
@@ -398,14 +398,14 @@ struct LBMGrid {
  * This is used locally within a grid to map (i,j,k) coordinates to a linear index and vice versa.
  */
 struct GridIKJtoIdx {
-  Box3D bx;  ///< The underlying 3D box for indexing
+  Box3D bx_;  ///< The underlying 3D box for indexing
 
   GridIKJtoIdx() = delete;
-  GridIKJtoIdx(const LBMGrid& grid) { bx = grid.bx; }
-  GridIKJtoIdx(const Box3D& in) { bx = in; }
-  ONIKA_HOST_DEVICE_FUNC int operator()(Point3D& p) const { return bx(p[0], p[1], p[2]); }
-  ONIKA_HOST_DEVICE_FUNC int operator()(Point3D&& p) const { return bx(p[0], p[1], p[2]); }
-  ONIKA_HOST_DEVICE_FUNC int operator()(int x, int y, int z) const { return bx(x, y, z); }
-  ONIKA_HOST_DEVICE_FUNC inline std::tuple<int, int, int> operator()(int idx) const { return bx(idx); }
+  GridIKJtoIdx(const LBMGrid& grid) { bx_ = grid.bx_; }
+  GridIKJtoIdx(const Box3D& in) { bx_ = in; }
+  ONIKA_HOST_DEVICE_FUNC int operator()(Point3D& p) const { return bx_(p[0], p[1], p[2]); }
+  ONIKA_HOST_DEVICE_FUNC int operator()(Point3D&& p) const { return bx_(p[0], p[1], p[2]); }
+  ONIKA_HOST_DEVICE_FUNC int operator()(int x, int y, int z) const { return bx_(x, y, z); }
+  ONIKA_HOST_DEVICE_FUNC inline std::tuple<int, int, int> operator()(int idx) const { return bx_(idx); }
 };
 }  // namespace hippoLBM

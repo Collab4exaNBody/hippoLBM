@@ -74,7 +74,7 @@ class MacroVariables : public OperatorNode {
     auto& params = *Params;
 
     // define functor
-    macro_variables<Q> func = {params.Fext / 2};
+    macro_variables<Q> func = {params.Fext_ / 2};
 
     // get fields
     FieldView<3> pm1 = data.flux();

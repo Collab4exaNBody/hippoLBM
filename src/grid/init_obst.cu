@@ -53,10 +53,10 @@ class InitObstLBM : public OperatorNode {
 
   inline void execute() override final {
     auto& data = *fields;
-    init_obst func = {onika::cuda::vector_data(data.obst)};
+    init_obst func = {onika::cuda::vector_data(data.obst_)};
     constexpr Area A = Area::Local;
     constexpr Traversal Tr = Traversal::All;
-    parallel_for_id<A, Tr>(domain->m_grid, func, parallel_execution_context());
+    parallel_for_id<A, Tr>(domain->m_grid_, func, parallel_execution_context());
   }
 };
 

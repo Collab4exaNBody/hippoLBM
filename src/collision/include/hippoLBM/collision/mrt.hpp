@@ -32,7 +32,7 @@ struct mrt {};
  */
 template <>
 struct mrt<19> {
-  const onika::math::Vec3d m_Fext;  // External force term, used in the computation of macroscopic variables.
+  const onika::math::Vec3d m_Fext_;  // External force term, used in the computation of macroscopic variables.
 
   /** @brief Computes the MRT collision operator for a given lattice node.
    * @param f The field view for the distribution functions.
@@ -186,7 +186,7 @@ struct mrt<19> {
       mrt_core(f, idx, tau);
       // step 2, adjust with Fext
       for (int iLB = 0; iLB < 19; iLB++) {
-        const double ef = ex[iLB] * m_Fext.x + ey[iLB] * m_Fext.y + ez[iLB] * m_Fext.z;
+        const double ef = ex[iLB] * m_Fext_.x + ey[iLB] * m_Fext_.y + ez[iLB] * m_Fext_.z;
         double& fiLB = f(idx, iLB);
         fiLB += 3. * rho * w[iLB] * ef;
       }

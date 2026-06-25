@@ -48,18 +48,18 @@ using namespace onika::parallel;
  */
 template <class FuncT, class ResultT>
 struct ReduceFuncT {
-  const FuncT m_func;     /**< Functor that defines how reduction is performed. */
-  ResultT* m_reduced_val; /**< Pointer to the result of the reduction. */
-  const int* const idxs;  /**< Conatains lattice indexes */
+  const FuncT m_func_;     /**< Functor that defines how reduction is performed. */
+  ResultT* m_reduced_val_; /**< Pointer to the result of the reduction. */
+  const int* const idxs_;  /**< Conatains lattice indexes */
 
   /**
    * @brief Operator to perform the reduction.
    * @param i The index of the data to reduce.
    */
   ONIKA_HOST_DEVICE_FUNC inline void operator()(uint64_t idx) const {
-    int i = idxs[idx];
+    int i = idxs_[idx];
     ResultT local_val = ResultT();
-    m_func(local_val, i, reduce_thread_local_t{});
+    m_func_(local_val, i, reduce_thread_local_t{});
 
     ONIKA_CU_BLOCK_SHARED onika::cuda::UnitializedPlaceHolder<ResultT> team_val_place_holder;
     ResultT& team_val = team_val_place_holder.get_ref();
@@ -70,20 +70,20 @@ struct ReduceFuncT {
     ONIKA_CU_BLOCK_SYNC();
 
     if (ONIKA_CU_THREAD_IDX != 0) {
-      m_func(team_val, local_val, reduce_thread_block_t{});
+      m_func_(team_val, local_val, reduce_thread_block_t{});
     }
     ONIKA_CU_BLOCK_SYNC();
 
     if (ONIKA_CU_THREAD_IDX == 0) {
-      m_func(*m_reduced_val, team_val, reduce_global_t{});
+      m_func_(*m_reduced_val_, team_val, reduce_global_t{});
     }
   }
 };
 
 template <class ResultT>
 struct ResetScratch {
-  ResultT* m_reduced_val; /**< Pointer to the result of the reduction. */
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(uint64_t idx) const { *m_reduced_val = ResultT{}; }
+  ResultT* m_reduced_val_; /**< Pointer to the result of the reduction. */
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(uint64_t idx) const { *m_reduced_val_ = ResultT{}; }
 };
 }  // namespace hippoLBM
 

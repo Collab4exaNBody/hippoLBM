@@ -36,17 +36,17 @@ struct hippoLBMGridConfig {
  * @brief Describes the global simulation grid.
  */
 struct GridConfig {
-  onika::math::IJK dims;                               ///< Number of nodes in each direction (i,j,k).
-  onika::math::AABB bounds;                            ///< Physical bounding box of the grid domain.
-  std::array<bool, hippoLBMGridConfig::dim> periodic;  ///< Periodicity flags along each axis.
+  onika::math::IJK dims_;                               ///< Number of nodes in each direction (i,j,k).
+  onika::math::AABB bounds_;                            ///< Physical bounding box of the grid domain.
+  std::array<bool, hippoLBMGridConfig::dim> periodic_;  ///< Periodicity flags along each axis.
 
   /** @brief Display the grid configuration. */
   void display() const {
     std::cout << "=================================" << std::endl;
     std::cout << "GridConfig: " << std::endl;
-    std::cout << "Grid dim size: [" << dims << "]" << std::endl;
-    std::cout << "Bounds inf:    [" << bounds.bmin << "]" << std::endl;
-    std::cout << "Bounds sup:    [" << bounds.bmax << "]" << std::endl;
+    std::cout << "Grid dim size: [" << dims_ << "]" << std::endl;
+    std::cout << "Bounds inf:    [" << bounds_.bmin << "]" << std::endl;
+    std::cout << "Bounds sup:    [" << bounds_.bmax << "]" << std::endl;
     std::cout << "=================================" << std::endl;
   }
 };
@@ -55,23 +55,23 @@ struct GridConfig {
  * @brief Describes a subgrid, e.g. a partition of the global grid for parallel computations.
  */
 struct SubGridConfig {
-  double dx;                                           ///< Grid node size.
-  onika::math::IJK cart_coordinate;                    ///< Cartesian coordinates of the subgrid in the process grid.
-  onika::math::IJK cart_dims;                          ///< Dimensions of the Cartesian process grid.
-  MPI_Comm cart_comm;                                  ///< MPI Cartesian communicator.
-  onika::math::Vec3d offset;                           ///< Offset of the subgrid relative to the global origin.
-  onika::math::GridBlock block;                        ///< Local block of cells owned by this subgrid.
-  std::array<bool, hippoLBMGridConfig::dim> periodic;  ///< Periodicity flags along each axis.
+  double dx_;                                           ///< Grid node size.
+  onika::math::IJK cart_coordinate_;                   ///< Cartesian coordinates of the subgrid in the process grid.
+  onika::math::IJK cart_dims_;                         ///< Dimensions of the Cartesian process grid.
+  MPI_Comm cart_comm_;                                 ///< MPI Cartesian communicator.
+  onika::math::Vec3d offset_;                           ///< Offset of the subgrid relative to the global origin.
+  onika::math::GridBlock block_;                       ///< Local block of cells owned by this subgrid.
+  std::array<bool, hippoLBMGridConfig::dim> periodic_;  ///< Periodicity flags along each axis.
 
   /** @brief Display the subgrid configuration. */
   void display() const {
     std::cout << "=================================" << std::endl;
     std::cout << "SubGridConfig: " << std::endl;
-    std::cout << "SubGrid node size:   " << dx << std::endl;
-    std::cout << "SubGrid offset:      [" << offset << "]" << std::endl;
-    std::cout << "SubGrid block start: [" << block.start << "]" << std::endl;
-    std::cout << "SubGrid block end:   [" << block.end << "]" << std::endl;
-    std::cout << "Periodicity:         [" << periodic[0] << "," << periodic[1] << "," << periodic[2] << "]"
+    std::cout << "SubGrid node size:   " << dx_ << std::endl;
+    std::cout << "SubGrid offset:      [" << offset_ << "]" << std::endl;
+    std::cout << "SubGrid block start: [" << block_.start << "]" << std::endl;
+    std::cout << "SubGrid block end:   [" << block_.end << "]" << std::endl;
+    std::cout << "Periodicity:         [" << periodic_[0] << "," << periodic_[1] << "," << periodic_[2] << "]"
               << std::endl;
     std::cout << "=================================" << std::endl;
   }
@@ -86,9 +86,9 @@ struct SubGridConfig {
  */
 inline SubGridConfig sub_grid_resolution(const SubGridConfig& coarse_grid, ssize_t resolution) {
   SubGridConfig refined_grid = coarse_grid;
-  refined_grid.block.start = refined_grid.block.start * resolution;
-  refined_grid.block.end = refined_grid.block.end * resolution;
-  refined_grid.dx /= double(resolution);
+  refined_grid.block_.start = refined_grid.block_.start * resolution;
+  refined_grid.block_.end = refined_grid.block_.end * resolution;
+  refined_grid.dx_ /= double(resolution);
   return refined_grid;
 }
 
@@ -100,7 +100,7 @@ inline SubGridConfig sub_grid_resolution(const SubGridConfig& coarse_grid, ssize
  */
 inline GridConfig grid_resolution(const GridConfig& coarse_grid, ssize_t resolution) {
   GridConfig refined_grid = coarse_grid;
-  refined_grid.dims = refined_grid.dims * resolution;
+  refined_grid.dims_ = refined_grid.dims_ * resolution;
   return refined_grid;
 }
 
@@ -160,19 +160,19 @@ LBMDomain<Q> make_domain(const GridConfig grid, const SubGridConfig& subgrid) {
   // subgrid.display();
   constexpr int ghost_layer = hippoLBMGridConfig::ghost_layer;
 
-  auto periodic = subgrid.periodic;
-  int3d domain_size = convert<int3d>(grid.dims);
+  auto periodic = subgrid.periodic_;
+  int3d domain_size = convert<int3d>(grid.dims_);
 
-  onika::math::IJK mpi_coords = subgrid.cart_coordinate;
-  onika::math::IJK mpi_grid_dims = subgrid.cart_dims;
+  onika::math::IJK mpi_coords = subgrid.cart_coordinate_;
+  onika::math::IJK mpi_grid_dims = subgrid.cart_dims_;
 
   int3d coord = convert<int3d>(mpi_coords);
   int3d ndims = convert<int3d>(mpi_grid_dims);
 
   int3d relative_position;
 
-  int3d subdomain_with_ghost_size = convert<int3d>(subgrid.block.end - subgrid.block.start + 2 * ghost_layer - 1);
-  int3d offset = convert<int3d>(subgrid.block.start - ghost_layer);
+  int3d subdomain_with_ghost_size = convert<int3d>(subgrid.block_.end - subgrid.block_.start + 2 * ghost_layer - 1);
+  int3d offset = convert<int3d>(subgrid.block_.start - ghost_layer);
 
   /// Local domain including ghost cells
   Box3D local_box = {{0, 0, 0}, subdomain_with_ghost_size};
@@ -182,8 +182,8 @@ LBMDomain<Q> make_domain(const GridConfig grid, const SubGridConfig& subgrid) {
   for (int dim = 0; dim < hippoLBMGridConfig::dim; dim++) {
     if (!periodic[dim])  // not periodic
     {
-      if (coord[dim] == 0) ext.inf[dim] += ghost_layer;
-      if (coord[dim] == ndims[dim] - 1) ext.sup[dim] -= ghost_layer;
+      if (coord[dim] == 0) ext.inf_[dim] += ghost_layer;
+      if (coord[dim] == ndims[dim] - 1) ext.sup_[dim] -= ghost_layer;
     }
   }
 
@@ -196,7 +196,7 @@ LBMDomain<Q> make_domain(const GridConfig grid, const SubGridConfig& subgrid) {
   g.set_ext(ext);
   g.set_offset({offset[0], offset[1], offset[2]});
   g.set_ghost_layer(ghost_layer);
-  g.set_dx(subgrid.dx);
+  g.set_dx(subgrid.dx_);
 
   // ----------------------------
   // Setup ghost communication manager
@@ -204,7 +204,7 @@ LBMDomain<Q> make_domain(const GridConfig grid, const SubGridConfig& subgrid) {
   LBMGhostManager<Q> manager;
 
   int neig;
-  const MPI_Comm& MPI_COMM_CART = subgrid.cart_comm;
+  const MPI_Comm& MPI_COMM_CART = subgrid.cart_comm_;
   int mpi_rank;
   MPI_Comm_rank(MPI_COMM_CART, &mpi_rank);
 
@@ -256,7 +256,7 @@ LBMDomain<Q> make_domain(const GridConfig grid, const SubGridConfig& subgrid) {
   // manager.debug_print_comm();
   // write_comm(manager);
 
-  auto bounds_cpy = grid.bounds;
+  auto bounds_cpy = grid.bounds_;
 
   LBMDomain<Q> domain(manager, local_box, g, bounds_cpy, domain_size, mpi_coords, mpi_grid_dims);
   return domain;
@@ -336,13 +336,13 @@ SubGridConfig load_balancing(const GridConfig& grid, MPI_Comm comm) {
   // Build subgrid configuration
   // ----------------------------
   SubGridConfig res;
-  res.dx = GridDx;
-  res.cart_coordinate = convert<onika::math::IJK>(mpi_coords);
-  res.cart_dims = convert<onika::math::IJK>(mpi_dims);
-  res.offset = offset;
-  res.block = {inf, sup};
-  res.periodic = periodic;
-  res.cart_comm = MPI_COMM_CART;
+  res.dx_ = GridDx;
+  res.cart_coordinate_ = convert<onika::math::IJK>(mpi_coords);
+  res.cart_dims_ = convert<onika::math::IJK>(mpi_dims);
+  res.offset_ = offset;
+  res.block_ = {inf, sup};
+  res.periodic_ = periodic;
+  res.cart_comm_ = MPI_COMM_CART;
 
   return res;
 }

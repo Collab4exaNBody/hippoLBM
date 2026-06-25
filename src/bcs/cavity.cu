@@ -66,7 +66,7 @@ class Cavity : public OperatorNode {
   inline void execute() final {
     auto& data = *fields;
     auto& bb = *bbmanager;
-    auto [lx, ly, lz] = domain->domain_size;
+    auto [lx, ly, lz] = domain->domain_size_;
     auto [ux, uy, uz] = *U;
 
     // define functors
@@ -85,7 +85,7 @@ class Cavity : public OperatorNode {
     // run kernel
     auto params = make_tuple(pobst, pfi);
     parallel_for_id_runner runner = {bcs, params};
-    onika::parallel::parallel_for(pfi.num_elements, runner, parallel_execution_context(),
+    onika::parallel::parallel_for(pfi.num_elements_, runner, parallel_execution_context(),
                                   onika::parallel::ParallelForOptions());
   }
 };

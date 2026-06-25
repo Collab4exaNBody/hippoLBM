@@ -68,7 +68,7 @@ class LogLBM : public OperatorNode {
   }
 
   inline void execute() final {
-    auto [lx, ly, lz] = domain->domain_size;
+    auto [lx, ly, lz] = domain->domain_size_;
     long long int size_xyz = (long long int)(lx) * (long long int)(ly) * (long long int)(lz);
 
     double MLUPS;  // Million Lattice Updates Per Second
@@ -88,8 +88,9 @@ class LogLBM : public OperatorNode {
     const auto& ss = *simulation_statistics;
 
     std::string header = "     Step     Time          Mesh Size   Sum(density)   min(||V||)   max(||V||)     MLUPS";
-    std::string line = format_string("%9ld % .6e %13lld       %.2e     %.2e     %.2e   %.2e", *timestep, *physical_time,
-                                     size_xyz, ss.sum_density, ss.min_velocity_norm, ss.max_velocity_norm, MLUPS);
+    std::string line =
+        onika::format_string("%9ld % .6e %13lld       %.2e     %.2e     %.2e   %.2e", *timestep, *physical_time,
+                             size_xyz, ss.sum_density_, ss.min_velocity_norm_, ss.max_velocity_norm_, MLUPS);
 
     if (*print_log_header) {
       lout << header << std::endl;

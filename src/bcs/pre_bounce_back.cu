@@ -71,10 +71,10 @@ class PreBounceBack : public OperatorNode {
   void launcher(LBMGridRegion& traversals, FieldView<Q>& pf, bounce_back_manager<Q>& bbm) {
     int idx = helper_dim_idx<dim, dir>();
     FieldView<bounce_back_manager<Q>::Un> pfi = bbm.get_data(idx);
-    if (pfi.num_elements > 0) {
+    if (pfi.num_elements_ > 0) {
       constexpr Traversal Tr = get_traversal<dim, dir>();
       auto [ptr, size] = traversals.get_data<Tr>();
-      assert(size == size_t(pfi.num_elements));
+      assert(size == size_t(pfi.num_elements_));
       assert(ptr != nullptr);
 
       ParallelForOptions opts;
@@ -89,7 +89,7 @@ class PreBounceBack : public OperatorNode {
   inline void execute() final {
     auto& data = *fields;
     auto& traversals = *grid_region;
-    LBMGrid& Grid = domain->m_grid;
+    LBMGrid& Grid = domain->m_grid_;
 
     // fill grid size;
     constexpr Area L = Area::Local;
@@ -100,7 +100,7 @@ class PreBounceBack : public OperatorNode {
 
     // storage
     auto& bb = *bbmanager;
-    bb.resize_data(*periodic, local_grid_size, domain->MPI_coord, domain->MPI_grid_size);
+    bb.resize_data(*periodic, local_grid_size, domain->MPI_coord_, domain->MPI_grid_size_);
 
     // get fields
     FieldView<Q> pf = data.distributions();

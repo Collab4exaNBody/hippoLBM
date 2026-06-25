@@ -28,8 +28,8 @@ namespace hippoLBM {
  */
 template <int Q>
 struct init_distributions {
-  double coeff;
-  GridIJKtoIdx ijk_to_idx;
+  double coeff_;
+  GridIJKtoIdx ijk_to_idx_;
   /**
    * @brief Operator to initialize distributions at a given index.
    * @param idx The index to initialize distributions.
@@ -38,13 +38,13 @@ struct init_distributions {
    */
   ONIKA_HOST_DEVICE_FUNC inline void operator()(const int idx, const FieldView<Q>& f, const double* const w) const {
     for (int iLB = 0; iLB < Q; iLB++) {
-      f(idx, iLB) = coeff * w[iLB];
+      f(idx, iLB) = coeff_ * w[iLB];
     }
   };
 
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int i, int j, int k, const FieldView<Q>& f,
                                                 const double* const w) const {
-    this->operator()(ijk_to_idx(i, j, k), f, w);
+    this->operator()(ijk_to_idx_(i, j, k), f, w);
   }
 };
 }  // namespace hippoLBM

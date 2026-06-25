@@ -27,8 +27,8 @@ namespace hippoLBM {
  */
 template <int Components>
 struct FieldView {
-  double* const data = nullptr;  ///< Pointer to the field data.
-  uint64_t num_elements = 0;     ///< The number of elements in the field.
+  double* const data_ = nullptr;  ///< Pointer to the field data.
+  uint64_t num_elements_ = 0;     ///< The number of elements in the field.
 
   /** @brief Reset the field values at the specified index.
    * @param idx The index of the element to reset.
@@ -50,10 +50,10 @@ struct FieldView {
   inline double& access(size_t idx, size_t component_index) {
 #ifdef WFAOS
     // Access the field value based on the memory layout defined by WFAOS
-    return data[idx * Components + component_index];
+    return data_[idx * Components + component_index];
 #else
 
-    return data[num_elements * component_index + idx];
+    return data_[num_elements_ * component_index + idx];
 #endif
   }
 
@@ -66,10 +66,10 @@ struct FieldView {
   inline double& access(size_t idx, size_t component_index) const {
 #ifdef WFAOS
     // Access the field value based on the memory layout defined by WFAOS
-    return data[idx * Components + component_index];
+    return data_[idx * Components + component_index];
 #else
     // Access the field value based on the memory layout defined by AOSOAOS
-    return data[num_elements * component_index + idx];
+    return data_[num_elements_ * component_index + idx];
 #endif
   }
 
@@ -81,7 +81,7 @@ struct FieldView {
    */
   ONIKA_HOST_DEVICE_FUNC
   inline double& operator()(size_t idx, size_t component_index) {
-    assert(idx < num_elements);
+    assert(idx < num_elements_);
     assert(component_index < Components);
     return access(idx, component_index);
   }
@@ -93,7 +93,7 @@ struct FieldView {
    */
   ONIKA_HOST_DEVICE_FUNC
   inline double& operator()(size_t idx, size_t component_index) const {
-    assert(idx < num_elements);
+    assert(idx < num_elements_);
     assert(component_index < Components);
     return access(idx, component_index);
   }
@@ -103,8 +103,8 @@ struct FieldView {
    */
   ONIKA_HOST_DEVICE_FUNC
   inline void operator=(FieldView<Components>& fv) {
-    this->data = fv.data;
-    this->num_elements = fv.num_elements;
+    this->data_ = fv.data_;
+    this->num_elements_ = fv.num_elements_;
   }
 
   /** @brief Get the field value at the specified index as a 3D vector.

@@ -80,7 +80,7 @@ class InitDoubleCouette : public OperatorNode {
     LBMGrid& grid = domain->grid();
 
     // define variables
-    onika::math::Vec3d Uc = (*U) / params.celerity;
+    onika::math::Vec3d Uc = (*U) / params.celerity_;
 
     // get fields
     FieldView<Q> pf = data.distributions();

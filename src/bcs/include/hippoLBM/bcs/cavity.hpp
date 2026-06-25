@@ -32,11 +32,11 @@ struct cavity_coeff {};
 
 template <>
 struct cavity_coeff<DIMZ, Side::Left, 19> {
-  int fid[5] = {5, 14, 11, 18, 15};
+  int fid_[5] = {5, 14, 11, 18, 15};
 };
 template <>
 struct cavity_coeff<DIMZ, Side::Right, 19> {
-  int fid[5] = {6, 13, 12, 17, 16};
+  int fid_[5] = {6, 13, 12, 17, 16};
 };
 
 /** @brief Cavity boundary condition */
@@ -44,7 +44,7 @@ template <int Dim, Side S>
 struct cavity<Dim, S, 19> {
   static constexpr int Q = 19;  // number of discrete velocities
   static constexpr int Un = 5;  // number of unknowns per point in the cavity boundary condition
-  double coeff[Un];             // coefficients for the cavity boundary condition
+  double coeff_[Un];            // coefficients for the cavity boundary condition
 
   /** @brief Compute the coefficients for the cavity boundary condition
    * @param ux The x-component of the velocity at the boundary.
@@ -69,8 +69,8 @@ struct cavity<Dim, S, 19> {
     const double uyy = uy * (1 + 0.5 / (L - 1));
     const double uzz = uz * (1 + 0.5 / (L - 1));
     for (int i = 0; i < Un; i++) {
-      const int fid = c_coeff.fid[i];
-      coeff[i] = 6. * w[fid] * (ex[fid] * uxx + ey[fid] * uyy + ez[fid] * uzz);
+      const int fid = c_coeff.fid_[i];
+      coeff_[i] = 6. * w[fid] * (ex[fid] * uxx + ey[fid] * uyy + ez[fid] * uzz);
     }
   }
 
@@ -82,7 +82,7 @@ struct cavity<Dim, S, 19> {
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<Un>& fi) const {
     if (obst[idx] == FLUIDE_) {
       for (int i = 0; i < Un; i++) {
-        fi(idx, i) += coeff[i];
+        fi(idx, i) += coeff_[i];
       }
     }
   }

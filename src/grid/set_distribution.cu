@@ -70,7 +70,7 @@ class SetDistributionsLBM : public OperatorNode {
     auto& data = *fields;
     auto& traversals = *grid_region;
     LBMDomain<Q>& Domain = *domain;
-    LBMGrid& Grid = Domain.m_grid;
+    LBMGrid& Grid = Domain.m_grid_;
     GridIJKtoIdx ijk_to_idx(Grid);
 
     FieldView pf = data.distributions();
@@ -86,7 +86,7 @@ class SetDistributionsLBM : public OperatorNode {
       auto& bound = *bounds;
       onika::math::Vec3d min = bound.bmin;
       onika::math::Vec3d max = bound.bmax;
-      double Dx = Grid.dx;
+      double Dx = Grid.dx_;
       Point3D _min = {int(min.x / Dx), int(min.y / Dx), int(min.z / Dx)};
       Point3D _max = {int(max.x / Dx), int(max.y / Dx), int(max.z / Dx)};
 

@@ -29,12 +29,13 @@ namespace hippoLBM {
  */
 template <int Q, Traversal Tr>
 struct streaming_step1 {
-  const int* __restrict__ levels;  // It contains the traversal level (0 inside, 0 1 Real, 0 1 2 Extend, and 0 1 2 3 All
-  const FieldView<Q> f;            // The field view for the distribution functions.
+  const int* __restrict__ levels_;  // It contains the traversal level (0 inside, 0 1 Real, 0 1 2 Extend, and 0 1 2 3
+                                    // All
+  const FieldView<Q> f_;            // The field view for the distribution functions.
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx) const {
-    if (check_level<Tr>(levels[idx])) {
+    if (check_level<Tr>(levels_[idx])) {
       for (int iLB = 1; iLB < Q; iLB += 2) {
-        std::swap(f(idx, iLB), f(idx, iLB + 1));
+        std::swap(f_(idx, iLB), f_(idx, iLB + 1));
       }
     }
   }
@@ -45,40 +46,41 @@ struct streaming_step1 {
  */
 template <int Q, Traversal Tr>
 struct streaming_step2 {
-  const int* __restrict__ levels;  // It contains the traversal level (0 inside, 0 1 Real, 0 1 2 Extend, and 0 1 2 3 All
-  LBMGrid g;                       // The LBM grid containing the lattice structure and related information.
-  const FieldView<Q> f;            // The field view for the distribution functions.
-  const int* __restrict__ const ex;  // Pointer to an array of integers for X-direction.
-  const int* __restrict__ const ey;  // Pointer to an array of integers for Y-direction.
-  const int* __restrict__ const ez;  // Pointer to an array of integers for Z-direction.
+  const int* __restrict__ levels_;    // It contains the traversal level (0 inside, 0 1 Real, 0 1 2 Extend, and 0 1 2 3
+                                      // All
+  LBMGrid g_;                         // The LBM grid containing the lattice structure and related information.
+  const FieldView<Q> f_;              // The field view for the distribution functions.
+  const int* __restrict__ const ex_;  // Pointer to an array of integers for X-direction.
+  const int* __restrict__ const ey_;  // Pointer to an array of integers for Y-direction.
+  const int* __restrict__ const ez_;  // Pointer to an array of integers for Z-direction.
   /**
    * @brief Operator for performing the second step of streaming at given coordinates (x, y, z).
    */
   ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t&& coord) const {
-    const int idx = g(coord.x, coord.y, coord.z);
+    const int idx = g_(coord.x, coord.y, coord.z);
     for (int iLB = 1; iLB < Q; iLB += 2) {
-      const int next_x = coord.x + ex[iLB];
-      const int next_y = coord.y + ey[iLB];
-      const int next_z = coord.z + ez[iLB];
+      const int next_x = coord.x + ex_[iLB];
+      const int next_y = coord.y + ey_[iLB];
+      const int next_z = coord.z + ez_[iLB];
 
-      if (g.is_defined(next_x, next_y, next_z)) {
-        const int next_idx = g(next_x, next_y, next_z);
-        std::swap(f(idx, iLB + 1), f(next_idx, iLB));
+      if (g_.is_defined(next_x, next_y, next_z)) {
+        const int next_idx = g_(next_x, next_y, next_z);
+        std::swap(f_(idx, iLB + 1), f_(next_idx, iLB));
       }
     }
   }
 
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx) const {
-    if (check_level<Tr>(levels[idx])) {
-      auto [x, y, z] = g(idx);
+    if (check_level<Tr>(levels_[idx])) {
+      auto [x, y, z] = g_(idx);
       for (int iLB = 1; iLB < Q; iLB += 2) {
-        const int next_x = x + ex[iLB];
-        const int next_y = y + ey[iLB];
-        const int next_z = z + ez[iLB];
+        const int next_x = x + ex_[iLB];
+        const int next_y = y + ey_[iLB];
+        const int next_z = z + ez_[iLB];
 
-        if (g.is_defined(next_x, next_y, next_z)) {
-          const int next_idx = g(next_x, next_y, next_z);
-          std::swap(f(idx, iLB + 1), f(next_idx, iLB));
+        if (g_.is_defined(next_x, next_y, next_z)) {
+          const int next_idx = g_(next_x, next_y, next_z);
+          std::swap(f_(idx, iLB + 1), f_(next_idx, iLB));
         }
       }
     }

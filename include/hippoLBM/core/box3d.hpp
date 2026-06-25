@@ -26,19 +26,19 @@ namespace hippoLBM {
  * @brief A geometric box in a multi-dimensional space.
  *
  * This template struct represents a geometric box in a multi-dimensional space.
- * It is defined by two points, `inf` and `sup`, which represent the lower-left and
+ * It is defined by two points, `inf_` and `sup_`, which represent the lower-left and
  * upper-right corners of the box in 2D, respectively. The struct also provides methods
  * for computing the box's dimensions and number of points within it.
  *
  * @tparam DIM  The dimensionality of the box (number of spatial dimensions).
  *
- * @param inf  The lower-left corner of the box.
- * @param sup  The upper-right corner of the box.
+ * @param inf_  The lower-left corner of the box.
+ * @param sup_  The upper-right corner of the box.
  */
 struct Box3D {
   static constexpr int DIM = 3;
-  Point3D inf; /**< The lower-left corner of the box. */
-  Point3D sup; /**< The upper-right corner of the box. */
+  Point3D inf_; /**< The lower-left corner of the box. */
+  Point3D sup_; /**< The upper-right corner of the box. */
 
   /**
    * @brief Get the length of the box along a specified dimension.
@@ -47,8 +47,8 @@ struct Box3D {
    * @return     The length of the box along the specified dimension.
    */
   ONIKA_HOST_DEVICE_FUNC inline int get_length(int dim) {
-    assert(sup[dim] >= inf[dim]);
-    return (sup[dim] - inf[dim]) + 1;
+    assert(sup_[dim] >= inf_[dim]);
+    return (sup_[dim] - inf_[dim]) + 1;
   }
 
   /**
@@ -58,13 +58,13 @@ struct Box3D {
    * @return     The length of the box along the specified dimension.
    */
   ONIKA_HOST_DEVICE_FUNC inline int get_length(int dim) const {
-    assert(sup[dim] >= inf[dim]);
-    return (sup[dim] - inf[dim]) + 1;
+    assert(sup_[dim] >= inf_[dim]);
+    return (sup_[dim] - inf_[dim]) + 1;
   }
 
-  ONIKA_HOST_DEVICE_FUNC inline int start(int dim) const { return inf[dim]; }
+  ONIKA_HOST_DEVICE_FUNC inline int start(int dim) const { return inf_[dim]; }
 
-  ONIKA_HOST_DEVICE_FUNC inline int end(int dim) const { return sup[dim]; }
+  ONIKA_HOST_DEVICE_FUNC inline int end(int dim) const { return sup_[dim]; }
 
   /**
    * @brief Calculate the total number of points within the box.
@@ -73,20 +73,20 @@ struct Box3D {
    */
   ONIKA_HOST_DEVICE_FUNC inline int number_of_points() const {
     int res = 1;
-    for (int dim = 0; dim < DIM; dim++) res *= (this->get_length(dim));  // sup is included (+1)
+    for (int dim = 0; dim < DIM; dim++) res *= (this->get_length(dim));  // sup_ is included (+1)
     return res;
   }
 
   ONIKA_HOST_DEVICE_FUNC inline bool contains(Point3D& p) {
     for (int dim = 0; dim < DIM; dim++) {
-      if ((p[dim] < inf[dim]) || (p[dim] > sup[dim])) return false;
+      if ((p[dim] < inf_[dim]) || (p[dim] > sup_[dim])) return false;
     }
     return true;
   }
 
   ONIKA_HOST_DEVICE_FUNC inline bool contains(Point3D&& p) {
     for (int dim = 0; dim < DIM; dim++) {
-      if ((p[dim] < inf[dim]) || (p[dim] > sup[dim])) return false;
+      if ((p[dim] < inf_[dim]) || (p[dim] > sup_[dim])) return false;
     }
     return true;
   }
@@ -95,10 +95,10 @@ struct Box3D {
    * @brief Print the box's lower-left and upper-right corners.
    */
   void print() {
-    onika::lout << " inf:";
-    inf.print();
-    onika::lout << " sup:";
-    sup.print();
+    onika::lout << " inf_:";
+    inf_.print();
+    onika::lout << " sup_:";
+    sup_.print();
   }
 
   /**
@@ -159,21 +159,21 @@ struct Box3D {
   ONIKA_HOST_DEVICE_FUNC inline int operator[](int dim) const { return get_length(dim); }
 
   /**
-   * @brief accessor to the `inf` member
+   * @brief accessor to the `inf_` member
    */
-  ONIKA_HOST_DEVICE_FUNC inline Point3D& lower() { return inf; }
+  ONIKA_HOST_DEVICE_FUNC inline Point3D& lower() { return inf_; }
   /**
-   * @brief accessor to the `inf` member
+   * @brief accessor to the `inf_` member
    */
-  ONIKA_HOST_DEVICE_FUNC inline const Point3D& lower() const { return inf; }
+  ONIKA_HOST_DEVICE_FUNC inline const Point3D& lower() const { return inf_; }
   /**
-   * @brief accessor to the `sup` member
+   * @brief accessor to the `sup_` member
    */
-  ONIKA_HOST_DEVICE_FUNC inline Point3D& upper() { return sup; }
+  ONIKA_HOST_DEVICE_FUNC inline Point3D& upper() { return sup_; }
   /**
-   * @brief accessor to the `sup` member
+   * @brief accessor to the `sup_` member
    */
-  ONIKA_HOST_DEVICE_FUNC inline const Point3D& upper() const { return sup; }
+  ONIKA_HOST_DEVICE_FUNC inline const Point3D& upper() const { return sup_; }
 };
 
 /**
@@ -196,7 +196,7 @@ ONIKA_HOST_DEVICE_FUNC inline int compute_idx(const Box3D& b, const int x, const
 ONIKA_HOST_DEVICE_FUNC inline bool intersect(Box3D& a, Box3D& b) {
   // Vérifier les conditions de non-intersection sur l'axe x
   for (int dim = 0; dim < Box3D::DIM; dim++) {
-    if (a.sup[dim] < b.inf[dim] || b.sup[dim] < a.inf[dim]) {
+    if (a.sup_[dim] < b.inf_[dim] || b.sup_[dim] < a.inf_[dim]) {
       return false;
     }
   }

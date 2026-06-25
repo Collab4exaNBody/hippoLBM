@@ -30,41 +30,44 @@ namespace hippoLBM {
  */
 template <int Q, Traversal TR>
 struct bgk {
-  const int* __restrict__ levels;  // It contains the traversal level (0 inside, 0 1 Real, 0 1 2 Extend, and 0 1 2 3 All
-  const onika::math::Vec3d m_Fext;     // External force term, used in the computation of macroscopic variables.
-  const FieldView<3> m1;               // The field view for the first-order moments (momentum).
-  int* const __restrict__ obst;        // Pointer to the obstacle field.
-  const FieldView<Q> f;                // The field view for the distribution functions.
-  double* const __restrict__ m0;       // Pointer to the density field (zeroth-order moment).
-  const int* const __restrict__ ex;    // Pointer to an array of integers for X-direction.
-  const int* const __restrict__ ey;    // Pointer to an array of integers for Y-direction.
-  const int* const __restrict__ ez;    // Pointer to an array of integers for Z-direction.
-  const double* const __restrict__ w;  // Pointer to an array of doubles for the weights of the discrete velocity
-                                       // directions.
-  const double tau;                    // Relaxation time for the BGK collision model.
+  const int* __restrict__ levels_;  // It contains the traversal level (0 inside,
+  // 0 1 Real,
+  // 0 1 2 Extend,
+  // and 0 1 2 3 All
+  const onika::math::Vec3d m_Fext_;     // External force term, used in the computation of macroscopic variables.
+  const FieldView<3> m1_;               // The field view for the first-order moments (momentum).
+  int* const __restrict__ obst_;        // Pointer to the obstacle field.
+  const FieldView<Q> f_;                // The field view for the distribution functions.
+  double* const __restrict__ m0_;       // Pointer to the density field (zeroth-order moment).
+  const int* const __restrict__ ex_;    // Pointer to an array of integers for X-direction.
+  const int* const __restrict__ ey_;    // Pointer to an array of integers for Y-direction.
+  const int* const __restrict__ ez_;    // Pointer to an array of integers for Z-direction.
+  const double* const __restrict__ w_;  // Pointer to an array of doubles for the weights of the discrete velocity
+                                        // directions.
+  const double tau_;                    // Relaxation time for the BGK collision model.
 
   /**
    * @brief Operator for performing collision operations at a given index.
    */
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx) const {
-    bool update = check_level<TR>(levels[idx]) && (obst[idx] == FLUIDE_);
-    const double rho = m0[idx];
-    const double ux = m1(idx, 0);
-    const double uy = m1(idx, 1);
-    const double uz = m1(idx, 2);
+    bool update = check_level<TR>(levels_[idx]) && (obst_[idx] == FLUIDE_);
+    const double rho = m0_[idx];
+    const double ux = m1_(idx, 0);
+    const double uy = m1_(idx, 1);
+    const double uz = m1_(idx, 2);
     const double u_squ = (ux * ux + uy * uy + uz * uz);
 
     for (int iLB = 0; iLB < Q; iLB++) {
-      const int& exiLB = ex[iLB];
-      const int& eyiLB = ey[iLB];
-      const int& eziLB = ez[iLB];
-      const double& wiLB = w[iLB];
-      double& fiLB = f(idx, iLB);
-      double ef = exiLB * m_Fext.x + eyiLB * m_Fext.y + eziLB * m_Fext.z;
+      const int& exiLB = ex_[iLB];
+      const int& eyiLB = ey_[iLB];
+      const int& eziLB = ez_[iLB];
+      const double& wiLB = w_[iLB];
+      double& fiLB = f_(idx, iLB);
+      double ef = exiLB * m_Fext_.x + eyiLB * m_Fext_.y + eziLB * m_Fext_.z;
       double eu = exiLB * ux + eyiLB * uy + eziLB * uz;
       double feq = wiLB * rho * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
       // double feq = wiLB * rho * (1. +  eu * (3. + 4.5 * eu) + - 1.5 * u_squ);
-      fiLB += update * ((feq - fiLB) / tau + 3. * rho * wiLB * ef);
+      fiLB += update * ((feq - fiLB) / tau_ + 3. * rho * wiLB * ef);
     }
   }
 };

@@ -71,26 +71,26 @@ class LBMParametersOp : public OperatorNode {
   inline void execute() final {
     double Dx = domain->dx();
     LBMParameters params;
-    params.Fext = *Fext;
-    params.celerity = *celerity;
+    params.Fext_ = *Fext;
+    params.celerity_ = *celerity;
 
-    if (*dt > 0.0 && *dt < (params.dtLB = Dx / params.celerity)) {
-      params.dtLB = *dt;
-      if (params.dtLB > Dx / params.celerity) {
+    if (*dt > 0.0 && *dt < (params.dtLB_ = Dx / params.celerity_)) {
+      params.dtLB_ = *dt;
+      if (params.dtLB_ > Dx / params.celerity_) {
         lout << "\033[31m[lbm_parameters, Error] The LBM time step is not set correctly for this LBM mesh size. Please "
                 "set a time step below: "
-             << Dx / params.celerity << " s" << std::endl;
+             << Dx / params.celerity_ << " s" << std::endl;
       }
     } else {
-      params.dtLB = Dx / params.celerity;
+      params.dtLB_ = Dx / params.celerity_;
     }
 
-    params.nuth = *nuth;
-    params.nu = params.nuth * params.dtLB / (Dx * Dx);
-    params.tau = 3. * params.nu + 0.5;
-    params.avg_rho = *avg_rho;
+    params.nuth_ = *nuth;
+    params.nu_ = params.nuth_ * params.dtLB_ / (Dx * Dx);
+    params.tau_ = 3. * params.nu_ + 0.5;
+    params.avg_rho_ = *avg_rho;
     params.print();
-    *dt = params.dtLB;
+    *dt = params.dtLB_;
     *Params = params;
   }
 };
