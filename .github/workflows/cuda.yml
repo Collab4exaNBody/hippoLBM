@@ -21,8 +21,8 @@ jobs:
     - uses: actions/setup-node@v4
     - name: Get Yaml-cpp and MPICH
       run: | 
-        apt install libyaml-cpp-dev
-        apt install mpich
+        apt install -y libyaml-cpp-dev
+        apt install -y mpich
 
     - name: Install recent CMake (Kitware apt repo)
       run: |
