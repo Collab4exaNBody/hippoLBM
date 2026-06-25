@@ -1,7 +1,7 @@
 name: Spack [latest version]
-on:
-  push:
-    branches: [ "main" ]
+on: [push]
+#  push:
+#    branches: [ "main" ]
 
 jobs:
   build:
