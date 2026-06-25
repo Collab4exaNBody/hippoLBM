@@ -26,7 +26,7 @@ initialize:
   - setup_obstacles
   - update_obstacles
   - macro_variables
-  - end_iteration
+#  - end_iteration
 
 global:
    timestep: 0

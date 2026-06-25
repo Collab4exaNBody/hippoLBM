@@ -47,6 +47,13 @@ set_distributions:
 post_stream_bcs:
   - post_bounce_back
 
+checker_op:
+  - check_macro_quantities:
+     density: 29210
+     tol: 1
+     vmin: 0.00
+     vmax: 1.00e-01
+
 global:
    simulation_paraview_freq: -1
    simulation_end_iteration: 100

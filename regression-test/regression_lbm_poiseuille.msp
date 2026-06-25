@@ -15,6 +15,13 @@ boundary_conditions:
   - neumann_z_0:
      U: [0.0,0,0]
 
+checker_op:
+  - check_macro_quantities:
+     density: 2.70e+04
+     tol: 0.1
+     vmin: 0.00
+     vmax: 1.00e-02
+
 global:
    simulation_paraview_freq: -1
    simulation_end_iteration: 100

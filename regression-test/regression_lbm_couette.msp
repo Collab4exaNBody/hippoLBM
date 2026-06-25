@@ -13,6 +13,13 @@ boundary_conditions:
   - neumann_z_l:
      U: [0.001,0,0]
 
+checker_op:
+  - check_macro_quantities:
+     density: 27000
+     tol: 0.1
+     vmin: 0.00
+     vmax: 1.00001e-03
+
 global:
    timestep: 0
    physical_time: 0.

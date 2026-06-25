@@ -13,9 +13,9 @@ end_iteration:
   body:
     - trigger_dump_paraview
     - dump_paraview_if_triggered
-    - next_time_step
     - trigger_print_log
     - print_log_if_triggered
+    - next_time_step
 
 collision: bgk # default model
 
