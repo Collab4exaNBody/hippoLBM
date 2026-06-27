@@ -64,17 +64,19 @@ struct ProfileStatistics {
   }
 };
 
+// Could be optimized on GPU
+// Or on CPU also
 template <int DIM>
-struct Profile2D {
-  Box3D bx_;
-  Point3D offset_;
-  double ratio_dx_dtLB_;
-  int* const obst_;  // Pointer to the obstacle field in the LBM grid.
-  FieldView<3> density_;
-  double* const sum_;
-  int* const fluid_points_;
-  double* const min_;
-  double* const max_;
+struct PlaneVelocityProfileFunctor {
+  Box3D bx_;                 // The local grid box, used to compute the linear index of a point.
+  Point3D offset_;           // Global offset of the local grid, used to convert a local coordinate to a global one.
+  double ratio_dx_dtLB_;     // Conversion factor from LBM units to physical units (dx / dtLB).
+  int* const obst_;          // Pointer to the obstacle field in the LBM grid.
+  FieldView<3> density_;     // View of the velocity field (first-order moments).
+  double* const sum_;        // Per-plane sum of the velocity norm, indexed by position along DIM.
+  int* const fluid_points_;  // Per-plane count of fluid points, indexed by position along DIM.
+  double* const min_;        // Per-plane minimum velocity norm, indexed by position along DIM.
+  double* const max_;        // Per-plane maximum velocity norm, indexed by position along DIM.
 
   ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t coord) const {
     using namespace onika::math;
@@ -89,8 +91,13 @@ struct Profile2D {
       double v = norm(ratio_dx_dtLB_ * Vec3d{density_(idx, 0), density_(idx, 1), density_(idx, 2)});
       ONIKA_CU_ATOMIC_ADD(sum_[out], v);
       ONIKA_CU_ATOMIC_ADD(fluid_points_[out], 1);
-      ONIKA_CU_ATOMIC_MIN(min_[out], v);
-      ONIKA_CU_ATOMIC_MAX(max_[out], v);
+      // just avoid some synchos ... optimize it latter
+      if (min_[out] > v) {
+        ONIKA_CU_ATOMIC_MIN(min_[out], v);
+      }
+      if (max_[out] < v) {
+        ONIKA_CU_ATOMIC_MAX(max_[out], v);
+      }
     }
   }
 };
@@ -113,7 +120,7 @@ struct ResetStatistics {
 namespace onika {
 namespace parallel {
 template <int DIM>
-struct ParallelForFunctorTraits<hippoLBM::Profile2D<DIM>> {
+struct ParallelForFunctorTraits<hippoLBM::PlaneVelocityProfileFunctor<DIM>> {
   static inline constexpr bool RequiresBlockSynchronousCall = true;
   static inline constexpr bool CudaCompatible = true;
 };
@@ -157,10 +164,8 @@ class PlaneVelocityProfile : public OperatorNode {
 
   inline std::string documentation() const final {
     return R"EOF(
-    This operator computes the velocity profile of the LBM simulation along a given dimension (X, Y or Z).
-    For each plane perpendicular to that dimension, it averages the velocity norm over every fluid point,
-    and also tracks the minimum and maximum velocity norm reached on that plane. These statistics are
-    reduced across all MPI ranks, then dumped to a CSV file with the columns "position avg min max".
+    This operator produces a CSV file with columns "position avg min max", giving the average, minimum
+    and maximum velocity norm for each plane perpendicular to the chosen dimension (X, Y or Z).
 
     YAML example:
 
@@ -186,9 +191,10 @@ class PlaneVelocityProfile : public OperatorNode {
 
     Box3D real = grid.build_box<Area::Local, Traversal::Real>();
     onika::parallel::ParallelExecutionSpace<3> parallel_range = set(real);
-    Profile2D<DIM> func = {grid.bx_,          grid.offset_,       domain->dx() / Params->dtLB_, fields->obstacles(),
-                           fields->flux(),    points.sum_.data(), points.fluid_points_.data(),  points.min_.data(),
-                           points.max_.data()};
+    PlaneVelocityProfileFunctor<DIM> func = {
+        grid.bx_,          grid.offset_,       domain->dx() / Params->dtLB_, fields->obstacles(),
+        fields->flux(),    points.sum_.data(), points.fluid_points_.data(),  points.min_.data(),
+        points.max_.data()};
 
     ONIKA_CU_DEVICE_SYNCHRONIZE();
     parallel_for(parallel_range, func, parallel_execution_context("plane_velocity_profile"));
@@ -270,6 +276,6 @@ class PlaneVelocityProfile : public OperatorNode {
 // === register factories ===
 ONIKA_AUTORUN_INIT(plane_velocity_profile) {
   OperatorNodeFactory::instance()->register_factory("plane_velocity_profile",
-                                                      make_variant_operator<PlaneVelocityProfile>);
+                                                    make_variant_operator<PlaneVelocityProfile>);
 }
 }  // namespace hippoLBM
