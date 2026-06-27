@@ -29,7 +29,7 @@ Main developers:
   - Vincent Topin (CEA/DES)
   - Guillaume bareigts (CEA/DES)
 
-Past Contributions (LBMDEM3D Code):
+Past Contributions (`DEMLBM3D` Code):
   - Jean-Yves delenne (INRAE)
-  - Farhang Radjaï (LMGC/CNR S)
+  - Farhang Radjaï (LMGC/CNRS)
   - Abdelbarie El Metni (Intership at CEA-2023)
