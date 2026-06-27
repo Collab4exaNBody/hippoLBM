@@ -60,11 +60,6 @@ struct LBMParameters {
   void print();
 };
 
-/** @brief Convert a velocity between physical and LBM units.
- * @tparam To The target unit system (the value is assumed to be in the other one).
- * @param value The velocity to convert.
- * @param params The LBM parameters, used to retrieve celerity_ (and dtLB_ via the grid spacing dx = celerity_ * dtLB_).
- */
 template <UNITS To>
 inline double convert_velocity(double value, const LBMParameters& params);
 
