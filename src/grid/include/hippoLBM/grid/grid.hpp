@@ -3,8 +3,8 @@
 #include <onika/math/basic_types_def.h>
 
 #include <hippoLBM/core/box3d.hpp>
-#include <hippoLBM/core/point3d.hpp>
 #include <hippoLBM/core/enum.hpp>
+#include <hippoLBM/core/point3d.hpp>
 
 namespace hippoLBM {
 /**

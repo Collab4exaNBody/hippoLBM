@@ -14,6 +14,10 @@ boundary_conditions:
      U: [0.0,0,0]
      regions: [plan_xy_0, plan_xy_l]
 
+checker:
+  - profile_stats:
+     dimension: Z
+
 global:
    simulation_paraview_freq: 100
    simulation_end_iteration: 3000
