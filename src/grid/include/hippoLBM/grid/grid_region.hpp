@@ -22,6 +22,8 @@ under the License.
 #include <onika/math/basic_types_def.h>
 
 #include <hippoLBM/grid/grid.hpp>
+#include <string>
+#include <vector>
 
 #define LEVEL_EXTEND 2
 #define LEVEL_REAL 1
@@ -348,5 +350,42 @@ inline traversal_data get_traversal(const LBMGridRegion& region, Traversal Tr) {
     throw std::out_of_range("Invalid traversal type");
   }
   return const_traversal_table[idx](region);
+}
+
+/** @brief Convert a traversal name (e.g. "real", "ghost_edge", "plan_xy_l") to a Traversal value. */
+inline Traversal traversal_from_string(const std::string& name) {
+  if (name == "all") return Traversal::All;
+  if (name == "real") return Traversal::Real;
+  if (name == "inside") return Traversal::Inside;
+  if (name == "edge") return Traversal::Edge;
+  if (name == "ghost" || name == "ghost_edge") return Traversal::Ghost_Edge;
+  if (name == "plan_xy_0") return Traversal::Plan_xy_0;
+  if (name == "plan_xy_l") return Traversal::Plan_xy_l;
+  if (name == "plan_xz_0") return Traversal::Plan_xz_0;
+  if (name == "plan_xz_l") return Traversal::Plan_xz_l;
+  if (name == "plan_yz_0") return Traversal::Plan_yz_0;
+  if (name == "plan_yz_l") return Traversal::Plan_yz_l;
+  if (name == "extend") return Traversal::Extend;
+  throw std::out_of_range("Unknown traversal name: " + name);
+}
+
+/** @brief Get traversal data for several traversal names at once (e.g. {"real", "ghost", "plan_xy_l"}). */
+inline std::vector<traversal_data> get_traversal(LBMGridRegion& region, const std::vector<std::string>& names) {
+  std::vector<traversal_data> result;
+  result.reserve(names.size());
+  for (const auto& name : names) {
+    result.push_back(get_traversal(region, traversal_from_string(name)));
+  }
+  return result;
+}
+
+/** @brief Get traversal data for several traversal names at once (e.g. {"real", "ghost", "plan_xy_l"}). */
+inline std::vector<traversal_data> get_traversal(const LBMGridRegion& region, const std::vector<std::string>& names) {
+  std::vector<traversal_data> result;
+  result.reserve(names.size());
+  for (const auto& name : names) {
+    result.push_back(get_traversal(region, traversal_from_string(name)));
+  }
+  return result;
 }
 };  // namespace hippoLBM
