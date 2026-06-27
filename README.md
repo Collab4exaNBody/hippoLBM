@@ -2,7 +2,7 @@
 
 # hippoLBM
 
-``HippoLBM`` is a high-performance Lattice Boltzmann Method (LBM) simulation code developed in C++ and built on the ``Onika`` runtime. It is designed for large-scale fluid dynamics simulations and features a parallelization strategy to maximize computational efficiency. ``HippoLBM`` integrates hybrid MPI + OpenMP parallelism for CPU execution and CUDA acceleration for GPU architectures, ensuring scalability across different hardware configurations.
+``HippoLBM`` is a high-performance Lattice Boltzmann Method (LBM) simulation code developed in C++ and built on the ``Onika`` runtime and and inherits several physical functionalities from the DEMLBM3D code. It is designed for large-scale fluid dynamics simulations and features a parallelization strategy to maximize computational efficiency. ``HippoLBM`` integrates hybrid MPI + OpenMP parallelism for CPU execution and CUDA acceleration for GPU architectures, ensuring scalability across different hardware configurations.
 
 One of ``HippoLBM``’s key strengths is its ability to couple with other physics solvers, enabling multiphysics simulations. With a focus on modularity and extensibility, HippoLBM provides researchers and engineers with a flexible and efficient tool for tackling complex fluid dynamics problems in high-performance computing environments.
 
@@ -26,9 +26,10 @@ For more details, see CONTRIBUTING.md. Main guidelines are:
 Main developers:
   - Raphaël Prat (CEA/DES) (raphael.prat@cea.fr)
   - Lhassan Amarsid (CEA/DES)
-
-Contributors:
+  - Vincent Topin (CEA/DES)
   - Guillaume bareigts (CEA/DES)
+
+Past Contributions (LBMDEM3D Code):
   - Jean-Yves delenne (INRAE)
-  - Farhang Radjaï (LMGC/CNRS)
-  - Abdelbarie El Metni 
+  - Farhang Radjaï (LMGC/CNR S)
+  - Abdelbarie El Metni (Intership at CEA-2023)
