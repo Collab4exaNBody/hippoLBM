@@ -72,7 +72,6 @@ struct neumann_z_l<19> {
  */
 template <>
 struct neumann_z_0<19> {
-  static constexpr int Q = 19;
   /**
    * @brief Operator for applying Neumann boundary conditions at z=0.
    *
@@ -83,7 +82,7 @@ struct neumann_z_0<19> {
    * @param uy The y-component of velocity.
    * @param uz The z-component of velocity.
    */
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<Q>& f, const double& ux,
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double& ux,
                                                 const double& uy, const double& uz) const {
     if (obst[idx] == FLUIDE_) {
       const double rho =

@@ -16,10 +16,12 @@ set_lbm_parameters:
      celerity: 1.0
 
 boundary_conditions:
-  - neumann_z_l:
+  - neumann:
      U: [-0.001,0,0]
-  - neumann_z_0:
+     regions: [plan_xy_l]
+  - neumann:
      U: [0.001,0,0]
+     regions: [plan_xy_0]        
 
 global:
    simulation_paraview_freq: 1

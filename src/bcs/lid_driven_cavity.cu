@@ -47,7 +47,6 @@ using namespace onika::cuda;
 
 template <int Q>
 class LidDrivenCavityBCs : public OperatorNode {
-  typedef std::array<double, 3> readVec3;
   ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED);
   ADD_SLOT(LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED,
            DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
@@ -56,11 +55,12 @@ class LidDrivenCavityBCs : public OperatorNode {
   ADD_SLOT(LBMGridRegion, grid_region, INPUT, REQUIRED,
            DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
   ADD_SLOT(LBMParameters, Params, INPUT, REQUIRED, DocString{"Contains global LBM simulation parameters"});
-  ADD_SLOT(std::vector<std::string>, regions, INPUT, REQUIRED, DocString{"Lists of grid regions to apply BCS."});
+  ADD_SLOT(std::vector<std::string>, regions, INPUT, REQUIRED,
+           DocString{"Lists of grid regions to apply BCS. Ex: [plan_xy_0]"});
 
  public:
   inline std::string documentation() const final {
-    return R"EOF( This operator enforces a Cavity boundary condition at z = lz in an LBM simulation. 
+    return R"EOF( This operator enforces a Cavity boundary condition in an LBM simulation. 
                       The Cavity boundary condition ensures that the gradient of the distribution function 
                       follows a prescribed value
         )EOF";
@@ -79,8 +79,11 @@ class LidDrivenCavityBCs : public OperatorNode {
     // define functors
     LidDrivenCavityBCsFunctor<Q> bcs = {uLB, data.distributions(), data.obstacles(), pex, pey, pez, pw};
 
+    // define areas
+    const std::vector<std::string> allowed_tr = {"plan_xy_0", "plan_xy_l", "plan_xz_0",
+                                                 "plan_xz_l", "plan_yz_0", "plan_yz_l"};
     const std::vector<std::string>& region_names = *regions;
-    const std::vector<traversal_data> trs = get_traversal(traversals, region_names);
+    const std::vector<traversal_data> trs = get_traversal(traversals, region_names, allowed_tr);
 
     auto it = region_names.begin();
     // run kernel

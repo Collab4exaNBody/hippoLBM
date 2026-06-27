@@ -10,8 +10,9 @@ set_lbm_parameters:
      nuth: 1e-4
 
 boundary_conditions:
-  - neumann_z_l:
+  - neumann:
      U: [0.001,0,0]
+     regions: [plan_xy_l]
 
 global:
    simulation_paraview_freq: 100
