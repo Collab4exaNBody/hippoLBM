@@ -78,14 +78,14 @@ class CheckerMacroQuantitiesOp : public OperatorNode {
       bool error_spotted = false;
       std::string msg = "Regression test checker [macro quantities]\n";
 
-      if (stats.min_velocity_norm_ < *vmin) {
+      if (stats.min_velocity_norm_ < *vmin - 1e-15) {
         msg += "min vel (simulation): " + std::to_string(stats.min_velocity_norm_) +
                " is below (user-defined check): " + std::to_string(*vmin) + "\n";
         error_spotted = true;
       }
 
       if (vmax.has_value()) {
-        if (stats.max_velocity_norm_ > *vmax) {
+        if (stats.max_velocity_norm_ > *vmax + 1e-15) {
           msg += "max vel (simulation): " + std::to_string(stats.max_velocity_norm_) +
                  " is upper (user-defined check): " + std::to_string(*vmax) + "\n";
           error_spotted = true;

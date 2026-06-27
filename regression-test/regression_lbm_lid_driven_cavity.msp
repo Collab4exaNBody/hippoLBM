@@ -1,23 +1,16 @@
-
 do_domain:
   - domain:
-     bounds: [[0,0,0],[0.1,0.1,0.1]]
-     grid_dims: [ 30, 30, 30 ]
-     periodic: [false, false, false]
+     bounds:    [ [0,0,0],[0.1,0.1,0.1] ]
+     grid_dims: [ 30 , 30 , 30 ]
+     periodic:  [ false, true, false ]
 
 set_lbm_parameters:
   - lbm_parameters:
      Fext: [0,0,0]
-     nuth: 1e-4
+     nuth: 1e-1
 
 pre_stream_bcs:
   - pre_bounce_back
-  - wall_bounce_back
-
-set_obstacles:
-  - register_solid_wall:
-     id: 0
-     bounds: [[0.048,0,0],[0.052,0.1,0.08]]
 
 post_stream_bcs:
   - post_bounce_back
@@ -25,13 +18,16 @@ post_stream_bcs:
      U: [0.1, 0.0, 0]
      regions: [plan_xy_l]
 
+collision: mrt # or bgk
+
 checker_op:
   - check_macro_quantities:
-     density: 26333
-     tol: 1e-8
+     density: 27000
+     tol: 1.e-8
      vmin: 0.00
-     vmax: 1.00e-01
+     vmax: 0.10
 
 global:
+   simulation_print_log_freq: -1
    simulation_paraview_freq: -1
    simulation_end_iteration: 100

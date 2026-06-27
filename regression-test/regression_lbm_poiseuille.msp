@@ -18,7 +18,7 @@ boundary_conditions:
 checker_op:
   - check_macro_quantities:
      density: 2.70e+04
-     tol: 0.1
+     tol: 1.e-8
      vmin: 0.00
      vmax: 1.00e-02
 
