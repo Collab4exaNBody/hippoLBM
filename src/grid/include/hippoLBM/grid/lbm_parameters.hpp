@@ -19,9 +19,34 @@ under the License.
 
 #pragma once
 
+#include <iomanip>
+
 namespace hippoLBM {
+enum UNITS { PHYSICAL_UNITS, LBM_UNITS, ADIMENSIONAL };
+
+/** @brief Human-readable name of a unit system, for display purposes. */
+inline const char* units_name(UNITS u) {
+  switch (u) {
+    case PHYSICAL_UNITS:
+      return "physical units";
+    case LBM_UNITS:
+      return "LBM units";
+    case ADIMENSIONAL:
+      return "adimensional";
+  }
+  return "unknown units";
+}
+
 /** @brief Lattice Boltzmann Method parameters. */
 struct LBMParameters {
+  static constexpr UNITS Fext_units_ = LBM_UNITS;
+  static constexpr UNITS celerity_units_ = PHYSICAL_UNITS;
+  static constexpr UNITS dtLB_units_ = PHYSICAL_UNITS;
+  static constexpr UNITS nuth_units_ = PHYSICAL_UNITS;
+  static constexpr UNITS nu_units_ = LBM_UNITS;
+  static constexpr UNITS tau_units_ = ADIMENSIONAL;
+  static constexpr UNITS avg_rho_units_ = PHYSICAL_UNITS;
+
   onika::math::Vec3d Fext_;  // External forces
   double celerity_;          // Netword celerity
   double dtLB_;              // Celerity time step
@@ -32,18 +57,75 @@ struct LBMParameters {
 
   LBMParameters() {}
 
-  void print() {
-    using onika::lout;
-    lout << "=================================" << std::endl;
-    lout << "= LBM Parameters" << std::endl;
-    lout << "= External forces Fext:           [" << Fext_ << "]" << std::endl;
-    lout << "= Network celerity celerity:      " << celerity_ << std::endl;
-    lout << "= Celerity time step dtLB:        " << dtLB_ << " [dx / celerity]" << std::endl;
-    lout << "= Viscosity nuth:                 " << nuth_ << std::endl;
-    lout << "= Viscosity with lattice unit nu: " << nu_ << " [nuth * dtLB / (dx²)]" << std::endl;
-    lout << "= Relaxation time tau:            " << tau_ << " [3nu + 0.5]" << std::endl;
-    lout << "= Average Rho avg_rho:            " << avg_rho_ << std::endl;
-    lout << "=================================" << std::endl;
-  }
+  void print();
 };
+
+/** @brief Convert a velocity between physical and LBM units.
+ * @tparam To The target unit system (the value is assumed to be in the other one).
+ * @param value The velocity to convert.
+ * @param params The LBM parameters, used to retrieve celerity_ (and dtLB_ via the grid spacing dx = celerity_ * dtLB_).
+ */
+template <UNITS To>
+inline double convert_velocity(double value, const LBMParameters& params);
+
+template <>
+inline double convert_velocity<LBM_UNITS>(double value, const LBMParameters& params) {
+  return value / params.celerity_;
+}
+
+template <>
+inline double convert_velocity<PHYSICAL_UNITS>(double value, const LBMParameters& params) {
+  return value * params.celerity_;
+}
+
+template <UNITS To>
+inline double convert_viscosity(double value, const LBMParameters& params);
+
+template <>
+inline double convert_viscosity<LBM_UNITS>(double value, const LBMParameters& params) {
+  const double dx = params.celerity_ * params.dtLB_;
+  return value * params.dtLB_ / (dx * dx);
+}
+
+template <>
+inline double convert_viscosity<PHYSICAL_UNITS>(double value, const LBMParameters& params) {
+  const double dx = params.celerity_ * params.dtLB_;
+  return value * (dx * dx) / params.dtLB_;
+}
+
+template <UNITS To>
+inline onika::math::Vec3d convert_force(const onika::math::Vec3d& value, const LBMParameters& params);
+
+template <>
+inline onika::math::Vec3d convert_force<LBM_UNITS>(const onika::math::Vec3d& value, const LBMParameters& params) {
+  const double dx = params.celerity_ * params.dtLB_;
+  return value * params.dtLB_ * params.dtLB_ / dx;
+}
+
+template <>
+inline onika::math::Vec3d convert_force<PHYSICAL_UNITS>(const onika::math::Vec3d& value, const LBMParameters& params) {
+  const double dx = params.celerity_ * params.dtLB_;
+  return value * dx / (params.dtLB_ * params.dtLB_);
+}
+
+inline void LBMParameters::print() {
+  using onika::lout;
+  lout << std::setprecision(4);
+  lout << "=================================" << std::endl;
+  lout << "= LBM Parameters" << std::endl;
+  lout << "= External forces Fext:           [" << convert_force<PHYSICAL_UNITS>(Fext_, *this) << "] (physical) / ["
+       << Fext_ << "] (LBM)" << std::endl;
+  lout << "= Network celerity celerity:      " << celerity_ << " (physical) / "
+       << convert_velocity<LBM_UNITS>(celerity_, *this) << " (LBM)" << std::endl;
+  lout << "= Celerity time step dtLB:        " << dtLB_ << " (physical) [dx / celerity] / 1 (LBM, by convention)"
+       << std::endl;
+  lout << "= Viscosity nuth / nu:            " << nuth_ << " (physical) / " << nu_
+       << " (LBM) [nu = nuth * dtLB / (dx²)]" << std::endl;
+  lout << "= Relaxation time tau:            " << tau_ << " [3nu + 0.5] (" << units_name(tau_units_) << ")"
+       << std::endl;
+  lout << "= Average Rho avg_rho:            " << avg_rho_ << " (physical) / 1 (LBM, by convention)" << std::endl;
+  lout << "=================================" << std::endl;
+  lout << std::setprecision(6);  // restore the default precision
+}
+
 }  // namespace hippoLBM

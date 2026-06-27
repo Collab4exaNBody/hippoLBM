@@ -71,7 +71,6 @@ class LBMParametersOp : public OperatorNode {
   inline void execute() final {
     double Dx = domain->dx();
     LBMParameters params;
-    params.Fext_ = *Fext;
     params.celerity_ = *celerity;
 
     if (*dt > 0.0 && *dt < (params.dtLB_ = Dx / params.celerity_)) {
@@ -85,10 +84,11 @@ class LBMParametersOp : public OperatorNode {
       params.dtLB_ = Dx / params.celerity_;
     }
 
-    params.nuth_ = *nuth;
-    params.nu_ = params.nuth_ * params.dtLB_ / (Dx * Dx);
+    params.nuth_ = *nuth;  // Physical Units
+    params.nu_ = convert_viscosity<LBM_UNITS>(params.nuth_, params);
     params.tau_ = 3. * params.nu_ + 0.5;
     params.avg_rho_ = *avg_rho;
+    params.Fext_ = convert_force<LBM_UNITS>(*Fext, params);
     params.print();
     *dt = params.dtLB_;
     *Params = params;

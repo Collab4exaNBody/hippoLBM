@@ -35,6 +35,7 @@ under the License.
 #include <chrono>
 #include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/domain.hpp>
+#include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
 #include <hippoLBM/io/simulation_state.hpp>
 
@@ -50,6 +51,8 @@ class LogLBM : public OperatorNode {
   ADD_SLOT(LBMDomain<Q>, domain, INPUT_OUTPUT, REQUIRED, DocString{"The LBM domain containing the simulation data."});
   ADD_SLOT(SimulationStatistics, simulation_statistics, INPUT, REQUIRED,
            DocString{"Contains general information about the LBM grid, such as minimum and maximum fluid velocity."});
+  ADD_SLOT(LBMParameters, Params, INPUT, REQUIRED,
+           DocString{"Contains global LBM simulation parameters, used to convert the velocity to physical units."});
   ADD_SLOT(long, timestep, INPUT, REQUIRED, DocString{"The current timestep."});
   ADD_SLOT(double, physical_time, INPUT, REQUIRED, DocString{"The physical time of the simulation."});
   ADD_SLOT(bool, print_log_header, INPUT_OUTPUT, true, DocString{"Whether to print the log header."});
@@ -86,11 +89,13 @@ class LogLBM : public OperatorNode {
     *previous_time = current_time;
     *previous_step = *timestep;
     const auto& ss = *simulation_statistics;
+    const double min_velocity_phys = convert_velocity<PHYSICAL_UNITS>(ss.min_velocity_norm_, *Params);
+    const double max_velocity_phys = convert_velocity<PHYSICAL_UNITS>(ss.max_velocity_norm_, *Params);
 
     std::string header = "     Step     Time          Mesh Size   Sum(density)   min(||V||)   max(||V||)     MLUPS";
     std::string line =
         onika::format_string("%9ld % .6e %13lld       %.2e     %.2e     %.2e   %.2e", *timestep, *physical_time,
-                             size_xyz, ss.sum_density_, ss.min_velocity_norm_, ss.max_velocity_norm_, MLUPS);
+                             size_xyz, ss.sum_density_, min_velocity_phys, max_velocity_phys, MLUPS);
 
     if (*print_log_header) {
       lout << header << std::endl;
