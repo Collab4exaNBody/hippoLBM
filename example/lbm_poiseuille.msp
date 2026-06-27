@@ -15,7 +15,7 @@ boundary_conditions:
      regions: [plan_xy_0, plan_xy_l]
 
 checker:
-  - profile_stats:
+  - plane_velocity_profile:
      dimension: Z
 
 global:

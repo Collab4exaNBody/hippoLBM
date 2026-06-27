@@ -131,37 +131,44 @@ namespace hippoLBM {
 using namespace onika::scg;
 
 template <int Q>
-class ProfileStats : public OperatorNode {
+class PlaneVelocityProfile : public OperatorNode {
  public:
-  ADD_SLOT(MPI_Comm, mpi, INPUT, MPI_COMM_WORLD);
-  ADD_SLOT(std::string, dimension, INPUT, REQUIRED, DocString{""});
-  ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED);
+  ADD_SLOT(MPI_Comm, mpi, INPUT, MPI_COMM_WORLD, DocString{"MPI communicator."});
+  ADD_SLOT(std::string, dimension, INPUT, REQUIRED,
+           DocString{"The dimension along which the profile is computed: \"X\", \"Y\" or \"Z\"."});
+  ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED, DocString{"The LBM domain containing the simulation data."});
   ADD_SLOT(LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED,
            DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
   ADD_SLOT(LBMGridRegion, grid_region, INPUT, REQUIRED,
            DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
   ADD_SLOT(LBMParameters, Params, INPUT, REQUIRED, DocString{"Contains global LBM simulation parameters"});
-  ADD_SLOT(std::string, dump_file, INPUT, "profile_%010d.csv", DocString{""});
+  ADD_SLOT(std::string, dump_file, INPUT, "profile_%010d.csv",
+           DocString{"The name of the CSV file, formatted with the current timestep."});
   ADD_SLOT(std::string, output_directory, INPUT, "hippoLBMOutputDir",
-           DocString{"The base directory for the Paraview output."});
+           DocString{"The base directory for the profile output."});
   ADD_SLOT(long, timestep, INPUT, 0, DocString{"The current timestep."});
   ADD_SLOT(bool, display_filename, true, DocString{"Print filename"});
 
   // scratch
-  ADD_SLOT(ProfileStatistics, scratch, PRIVATE, DocString{""});
+  ADD_SLOT(ProfileStatistics, scratch, PRIVATE,
+           DocString{"Per-point profile statistics (sum, fluid point count, min, max), reused across calls."});
 
   inline bool is_sink() const final { return true; }
 
   inline std::string documentation() const final {
     return R"EOF(
-    This operator 
+    This operator computes the velocity profile of the LBM simulation along a given dimension (X, Y or Z).
+    For each plane perpendicular to that dimension, it averages the velocity norm over every fluid point,
+    and also tracks the minimum and maximum velocity norm reached on that plane. These statistics are
+    reduced across all MPI ranks, then dumped to a CSV file with the columns "position avg min max".
 
-    YAML configuration example:
+    YAML example:
 
+      - plane_velocity_profile:
+         dimension: "Z"
+         dump_file: "profile_%010d.csv"
 
-
-
-        )EOF";
+    )EOF";
   }
 
   template <int DIM>
@@ -184,7 +191,7 @@ class ProfileStats : public OperatorNode {
                            points.max_.data()};
 
     ONIKA_CU_DEVICE_SYNCHRONIZE();
-    parallel_for(parallel_range, func, parallel_execution_context("profile_stats"));
+    parallel_for(parallel_range, func, parallel_execution_context("plane_velocity_profile"));
 
     int rank;
     MPI_Comm_rank(*mpi, &rank);
@@ -254,14 +261,15 @@ class ProfileStats : public OperatorNode {
     } else if (*dimension == "Z") {
       run<DIMZ>();
     } else {
-      lout << "[profile_stats] Please, select a valid dimension \"X\", \"Y\", or \"Z\"." << std::endl;
-      lout << "[profile_stats] is skipped" << std::endl;
+      lout << "[plane_velocity_profile] Please, select a valid dimension \"X\", \"Y\", or \"Z\"." << std::endl;
+      lout << "[plane_velocity_profile] is skipped" << std::endl;
     }
   }
 };
 
 // === register factories ===
-ONIKA_AUTORUN_INIT(profile_stats) {
-  OperatorNodeFactory::instance()->register_factory("profile_stats", make_variant_operator<ProfileStats>);
+ONIKA_AUTORUN_INIT(plane_velocity_profile) {
+  OperatorNodeFactory::instance()->register_factory("plane_velocity_profile",
+                                                      make_variant_operator<PlaneVelocityProfile>);
 }
 }  // namespace hippoLBM
