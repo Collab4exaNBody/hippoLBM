@@ -352,7 +352,11 @@ inline traversal_data get_traversal(const LBMGridRegion& region, Traversal Tr) {
   return const_traversal_table[idx](region);
 }
 
-/** @brief Convert a traversal name (e.g. "real", "ghost_edge", "plan_xy_l") to a Traversal value. */
+/** @brief Convert a traversal name to a Traversal value.
+ * @param name The traversal name (e.g. "real", "ghost_edge", "plan_xy_l").
+ * @return The Traversal value matching the given name.
+ * @throw std::out_of_range if name does not match any known traversal.
+ */
 inline Traversal traversal_from_string(const std::string& name) {
   if (name == "all") return Traversal::All;
   if (name == "real") return Traversal::Real;
@@ -369,21 +373,50 @@ inline Traversal traversal_from_string(const std::string& name) {
   throw std::out_of_range("Unknown traversal name: " + name);
 }
 
-/** @brief Get traversal data for several traversal names at once (e.g. {"real", "ghost", "plan_xy_l"}). */
-inline std::vector<traversal_data> get_traversal(LBMGridRegion& region, const std::vector<std::string>& names) {
+/** @brief Check that a traversal name is part of the allowed names.
+ * @param name The traversal name to check.
+ * @param allowed The list of allowed traversal names. If empty, every name is allowed.
+ * @throw std::out_of_range if name is not part of allowed.
+ */
+inline void check_traversal_allowed(const std::string& name, const std::vector<std::string>& allowed) {
+  if (allowed.empty()) return;  // all are possibles
+  for (const auto& a : allowed) {
+    if (a == name) return;
+  }
+  throw std::out_of_range("Traversal name not allowed: " + name);
+}
+
+/** @brief Get traversal data for several traversal names at once, for a mutable grid region.
+ * @param region The grid region to retrieve traversal data from.
+ * @param names The traversal names to retrieve (e.g. {"real", "ghost", "plan_xy_l"}).
+ * @param allowed Restricts the names accepted in `names`. If empty, every traversal name is allowed.
+ * @return The traversal data for each requested name, in the same order.
+ * @throw std::out_of_range if a name in `names` is unknown or not part of `allowed`.
+ */
+inline std::vector<traversal_data> get_traversal(LBMGridRegion& region, const std::vector<std::string>& names,
+                                                 const std::vector<std::string>& allowed = {}) {
   std::vector<traversal_data> result;
   result.reserve(names.size());
   for (const auto& name : names) {
+    check_traversal_allowed(name, allowed);
     result.push_back(get_traversal(region, traversal_from_string(name)));
   }
   return result;
 }
 
-/** @brief Get traversal data for several traversal names at once (e.g. {"real", "ghost", "plan_xy_l"}). */
-inline std::vector<traversal_data> get_traversal(const LBMGridRegion& region, const std::vector<std::string>& names) {
+/** @brief Get traversal data for several traversal names at once, for a constant grid region.
+ * @param region The grid region to retrieve traversal data from.
+ * @param names The traversal names to retrieve (e.g. {"real", "ghost", "plan_xy_l"}).
+ * @param allowed Restricts the names accepted in `names`. If empty, every traversal name is allowed.
+ * @return The traversal data for each requested name, in the same order.
+ * @throw std::out_of_range if a name in `names` is unknown or not part of `allowed`.
+ */
+inline std::vector<traversal_data> get_traversal(const LBMGridRegion& region, const std::vector<std::string>& names,
+                                                 const std::vector<std::string>& allowed = {}) {
   std::vector<traversal_data> result;
   result.reserve(names.size());
   for (const auto& name : names) {
+    check_traversal_allowed(name, allowed);
     result.push_back(get_traversal(region, traversal_from_string(name)));
   }
   return result;

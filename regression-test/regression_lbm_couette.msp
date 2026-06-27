@@ -10,8 +10,9 @@ set_lbm_parameters:
      nuth: 1e-2
 
 boundary_conditions:
-  - neumann_z_l:
+  - neumann:
      U: [0.001,0,0]
+     regions: [plan_xy_l]
 
 checker_op:
   - check_macro_quantities:
