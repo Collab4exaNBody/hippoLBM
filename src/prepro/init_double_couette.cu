@@ -117,7 +117,7 @@ class InitDoubleCouette : public OperatorNode {
       parallel_for(parallel_range, func, parallel_execution_context("init_double_couette_dim_z"));
       lout << "Prepro double couette ending ... dim Z " << std::endl;
     } else {
-      lout << "[init_double_couette] Please, select a valide dimension \"X\", \"Y\", or \"Z\"." << std::endl;
+      lout << "[init_double_couette] Please, select a valid dimension \"X\", \"Y\", or \"Z\"." << std::endl;
       std::exit(EXIT_FAILURE);
     }
   }

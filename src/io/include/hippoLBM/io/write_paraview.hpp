@@ -220,20 +220,20 @@ inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data,
 
   auto [traversal_ptr, traversal_size] = traversals.get_data<Traversal::All>();
 
-  // const int * const obst = data.obstacles();
+  const int* const obst = data.obstacles();
 
   NullFuncWriter nullop;
   write_file writer_obst = {nullop};
 
-  // double ratio_dx_dtLB = dx / params.dtLB_;
-  // UWriter u = {obst, ratio_dx_dtLB};
-  // WriteVec3d writer_vec3d = {u, local};
-  WriteVec3d writer_vec3d = {nullop, local};
+  double ratio_dx_dtLB = dx / params.dtLB_;
+  UWriter u = {obst, ratio_dx_dtLB};
+  WriteVec3d writer_vec3d = {u, local};
+  // WriteVec3d writer_vec3d = {nullop, local};
 
-  // double c_c_avg_rho_div_three = 1./3. * params.celerity_ * params.celerity_ * params.avg_rho_;
-  // PressionWriter pression = {obst, c_c_avg_rho_div_three};
-  // write_file writer_double = {pression};
-  write_file writer_double = {nullop};
+  double c_c_avg_rho_div_three = 1. / 3. * params.celerity_ * params.celerity_ * params.avg_rho_;
+  PressionWriter pression = {obst, c_c_avg_rho_div_three};
+  write_file writer_double = {pression};
+  // write_file writer_double = {nullop};
 
   assert(local.get_length(0) == global.get_length(0));
   assert(local.get_length(1) == global.get_length(1));

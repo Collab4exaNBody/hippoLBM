@@ -50,7 +50,7 @@ template <class FuncT, class ResultT>
 struct ReduceFuncT {
   const FuncT m_func_;     /**< Functor that defines how reduction is performed. */
   ResultT* m_reduced_val_; /**< Pointer to the result of the reduction. */
-  const int* const idxs_;  /**< Conatains lattice indexes */
+  const int* const idxs_;  /**< Contains lattice indexes */
 
   /**
    * @brief Operator to perform the reduction.

@@ -14,13 +14,12 @@ boundary_conditions:
      U: [0.0,0,0]
      regions: [plan_xy_0, plan_xy_l]
 
-
 checker_op:
   - check_macro_quantities:
      density: 2.70e+04
      tol: 1.e-8
      vmin: 0.00
-     vmax: 1.00e-02
+     vmax: 1.19e-04
 
 global:
    simulation_paraview_freq: -1
