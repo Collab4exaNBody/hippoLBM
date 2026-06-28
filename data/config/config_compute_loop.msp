@@ -12,10 +12,11 @@ start_iteration: nop
 end_iteration:
   body:
     - trigger_dump_paraview
-    - dump_paraview_if_triggered
     - trigger_print_log
+    - trigger_analysis
+    - dump_paraview_if_triggered
     - print_log_if_triggered
-
+    - print_analysis_if_triggered
 
 collision: bgk # default model
 

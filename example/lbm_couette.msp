@@ -7,15 +7,23 @@ do_domain:
 set_lbm_parameters:
   - lbm_parameters:
      Fext: [0,0,0]
-     nuth: 1e-4
+     nuth: 1e-2
 
 boundary_conditions:
   - neumann:
      U: [0.001,0,0]
      regions: [plan_xy_l]
+  - neumann:
+     U: [0,0,0]
+     regions: [plan_xy_0]
+
+analysis:
+  - plane_velocity_profile:
+     dimension: Z
 
 global:
    simulation_paraview_freq: 100
+   simulation_analysis_freq: 1000
    simulation_end_iteration: 3000
    simulation_print_log_freq: 10   
    output_directory: "CouetteTestDir"   

@@ -1,0 +1,16 @@
+##### ADD Analyss steps #########
+
+analysis:
+  - message: "Analysis steps are not defined."
+
+analysis: nop
+
+trigger_analysis:
+  rebind: { freq: simulation_analysis_freq , result: trigger_analysis }
+  body:
+    - nth_timestep: { first: false }	
+
+print_analysis_if_triggered:
+  condition: trigger_analysis
+  body:
+    - analysis
