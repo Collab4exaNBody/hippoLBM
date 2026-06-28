@@ -3,7 +3,6 @@ set_lbm_parameters: nop
 set_obstacles: nop
 set_distributions: nop
 
-
 setup_obstacles:
   - init_obstacles
   - set_obstacles
@@ -27,7 +26,9 @@ initialize:
   - update_obstacles
   - macro_variables
   - simulation_state
-  - end_iteration
+  - write_paraview_first_timestep
+  - log
+  - analysis
   - next_time_step
 
 
@@ -36,5 +37,8 @@ global:
    physical_time: 0.
    compute_loop_continue: true
    simulation_paraview_freq: -1
+   simulation_analysis_freq: -1
    simulation_print_log_freq: 1
    simulation_end_iteration: 100
+   display_paraview_first_timestep: true
+

@@ -12,6 +12,7 @@ includes:
   - config_initialize.msp
   - config_compute_loop.msp
   - config_io.msp
+  - config_analysis.msp
   - config_verification.msp
 
 simulation:

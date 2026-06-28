@@ -13,6 +13,9 @@ boundary_conditions:
   - neumann:
      U: [0.001,0,0]
      regions: [plan_xy_l]
+  - neumann:
+     U: [0,0,0]
+     regions: [plan_xy_0]     
 
 checker_op:
   - check_macro_quantities:
