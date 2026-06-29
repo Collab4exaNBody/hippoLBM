@@ -74,7 +74,7 @@ class LidDrivenCavityBCs : public OperatorNode {
     auto [pex, pey, pez] = data.exyz();
     const double* const pw = data.weights();
     // ULBM = UReal / Celerity
-    onika::math::Vec3d uLB = *U / Params->celerity_;  // Change to LBM World
+    onika::math::Vec3d uLB = convert_velocity<LBM_UNITS>(*U, *Params);  // Change to LBM World
 
     // define functors
     LidDrivenCavityBCsFunctor<Q> bcs = {uLB, data.distributions(), data.obstacles(), pex, pey, pez, pw};

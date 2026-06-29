@@ -1,13 +1,14 @@
 do_domain:
   - domain:
-     bounds:    [ [0,0,0],[0.1,0.1,0.1] ]
+     bounds:    [ [0 m,0 m,0 m],[0.01 m,0.01 m,0.01 m] ]
      grid_dims: [ 30 , 30 , 30 ]
      periodic:  [ false, true, false ]
 
 set_lbm_parameters:
   - lbm_parameters:
      Fext: [0,0,0]
-     nuth: 1e-1
+     nuth: 1e-5  # m2.s-1
+     celerity: 10
 
 pre_stream_bcs:
   - pre_bounce_back
@@ -15,7 +16,7 @@ pre_stream_bcs:
 post_stream_bcs:
   - post_bounce_back
   - lid_driven_cavity:  ## need to be called after bounce back
-     U: [0.1, 0.0, 0]
+     U: [1, 0.0, 0]
      regions: [plan_xy_l]
 
 collision: mrt # or bgk
@@ -24,8 +25,8 @@ checker_op:
   - check_macro_quantities:
      density: 27000
      tol: 1.e-8
-     vmin: 0.00
-     vmax: 0.10
+     vmin: 0.0  # m/s
+     vmax: 1.0  # m/s
 
 global:
    simulation_print_log_freq: -1
