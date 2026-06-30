@@ -30,39 +30,62 @@ bibliography: paper.bib
 
 `HippoLBM` is ...
 
+<!--
+La méthode Boltzmann sur réseau a été introduite il y a ... et permet de simuler le comportement d'un fluide ... L'un des avantages de cette méthode est qu'elle est nativement parallèle avec des calculs indépendants en chaque point de la grille LBM. De plus, due à l'utilisation de grille régulière (cartésienne), cette méthode a largement été portée sur GPU et permet de réaliser des scénarios à grande échelle avec des milliards de nœuds.
+
+Ce qui nous intéresse avec cette méthode, c'est la possibilité de la coupler avec d'autres méthodes via la méthode de l'immersed boundary pour effectuer des scénarios d'intérêt dans le domaine nucléaire, notamment dans le cas de scénarios APRP lorsqu'une brèche est créée dans une gaine, créant une dépression et propulsant des particules hors du crayon.
+
+Pour faciliter ce type de couplage, un framework permettant d'écrire chaque opération élémentaire (IO, numerical scheme, analysis) comme un opérateur et reliés les uns aux autres via des slots a été mis en place. Dans ce papier nous nous intéressons au code `HippoLBM` qui est issu d'une partie du code legacy effectuant de la LBMDEM dont les structures de données ont été adaptées pour le portage sur GPU et à une parallélisation hybride MPI + GPU.
+-->
+
+
+The Lattice Boltzmann Method was introduced ... years ago and is used to simulate the behavior of a fluid ... One of the advantages of this method is that it is natively parallel, with independent computations at each point of the LBM grid. Moreover, due to the use of a regular (Cartesian) grid, this method has been widely ported to GPU and enables large-scale scenarios with billions of nodes to be carried out.
+
+What makes this method particularly interesting is the possibility of coupling it with other methods via the Immersed Boundary Method, in order to carry out scenarios of interest in the nuclear field, notably LOCA (Loss-Of-Coolant Accident) scenarios, where a breach forms in a fuel cladding, creating a pressure drop and ejecting particles out of the fuel rod.
+
+To facilitate this type of coupling, a framework was developed that allows each elementary operation (IO, numerical scheme, analysis) to be written as an operator and linked to others via slots. In this paper, we focus on the `HippoLBM` code, which originates from part of a legacy code performing LBM-DEM, whose data structures have been adapted for GPU porting and hybrid MPI + GPU parallelization.
+
 # Statement of need
 <!--
 `HippoLBM` is CFD code writen in C++ 20 ...
-`HippoLBM` a pour objectif de proposer un outils performant sur CPU et GPU pour effectuer des couplages LBM+X en utilisant le formalisme Onika qui permet de créer des graphes d'exécution à partir d'une liste d'opérateur.
+`HippoLBM` a pour objectif de proposer un outil performant sur CPU et GPU pour effectuer des couplages LBM+X en utilisant le formalisme Onika qui permet de créer des graphes d'exécution à partir d'une liste d'opérateurs.
 
-Un opérateur peut être l'appel à un kernel de calcul comme l'étape de collision BGK ou MRT, l'initialisation d'un champs, des sorties paraview ou n'importe quel étape ou liste d'étape lors du calcul. Dans `HippoLBM` nous cherchons à proposer une granularité fine de ces opérateurs pour pouvoir construire des couplages avec d'autres codes utilisant eux aussi le formalisme Onika. 
+Un opérateur peut être l'appel à un kernel de calcul comme l'étape de collision BGK ou MRT, l'initialisation d'un champ, des sorties ParaView ou n'importe quelle étape ou liste d'étapes lors du calcul. Dans `HippoLBM`, nous cherchons à proposer une granularité fine de ces opérateurs pour pouvoir construire des couplages avec d'autres codes utilisant eux aussi le formalisme Onika. 
 
 Le premier cas d'utilisation a été réalisé en couplant `HippoLBM` avec le code `exaDEM` pour effectuer des simulations DEM/LBM.
 
-Concernant les fonctionnalités de performance, `HippoLBM` propose une parallélisation hybrid `MPI` + `X`, `X`=`OpenMP` ou `CUDA`, en utilisant les méthodes et stratégies classiques de parallélisation de la méthode LBM (décomposition spatial du domaine, optimisation GPU TODO). Néanmoins, certaines stratégies comme l'utilisation de méthod raffinement adaptatifs de maillage ou la fusion automatique de kernel n'ont pas été intégrées.
+Concernant les fonctionnalités de performance, `HippoLBM` propose une parallélisation hybride `MPI` + `X`, `X`=`OpenMP` ou `CUDA`, en utilisant les méthodes et stratégies classiques de parallélisation de la méthode LBM (décomposition spatiale du domaine, optimisation GPU TODO). Néanmoins, certaines stratégies comme l'utilisation de méthode de raffinement adaptatif de maillage ou la fusion automatique de kernel n'ont pas été intégrées.
 -->
 
-`HippoLBM` is a CFD code written in C++20 using the Lattice Boltzmann Method (LBM) that aims to provide a high-performance tool on both CPU and GPU for LBM+X coupling, using the onika formalism, which enables the construction of execution graphs from a list of operators.
-An operator can be a call to a compute kernel such as the BGK or MRT collision step, a field initialization, a ParaView output, or any step or sequence of steps within the computation. In `HippoLBM`, we seek to provide fine-grained operators in order to build couplings with other codes that also use the `Onika` formalism. The first use case was achieved by coupling HippoLBM with the exaDEM code to perform DEM/LBM simulations.
+`HippoLBM` is a CFD code written in C++20 using the Lattice Boltzmann Method (LBM) that aims to provide a high-performance tool on both CPU and GPU for LBM+X coupling, using the `Onika` formalism [@carrard2023exanbody], which enables the construction of execution graphs from a list of operators.
+In `HippoLBM`, an operator can be a call to a compute kernel such as the BGK or MRT collision step, a field initialization, a ParaView output, or any step or sequence of steps within the computation. In `HippoLBM`, we seek to provide fine-grained operators in order to build couplings with other codes that also use the `Onika` formalism. The first use case was achieved by coupling `HippoLBM` with the `exaDEM` code [@prat2025exadem] using the Discret Element Method (DEM) with R-shape particles to perform DEM/LBM simulations.
 
-Regarding performance features, `HippoLBM` provides hybrid MPI+X parallelization, where X is either OpenMP or CUDA, using standard LBM parallelization methods and strategies (spatial domain decomposition, GPU optimization TODO). However, certain strategies such as adaptive mesh refinement or automatic kernel fusion have not yet been integrated.
+Regarding performance features, `HippoLBM` provides hybrid MPI+X parallelization, where X is either OpenMP or CUDA, using standard LBM parallelization methods and strategies (spatial domain decomposition, GPU optimization TODO). However, certain strategies such as adaptive mesh refinement or automatic kernel fusion have not yet been integrated. `HippoLBM` has been tested over 192 GPUs A100 and could handle arround 60 billions of LB points.
 
 # State of the field                                                                                                                  
 
-`ProLB`, ...
+<!--
+Dans le domaine des codes utilisant la méthode Lattice de Boltzmann en 3D, plusieurs codes proposent des fonctionnalités physiques plus avancées qu'`HippoLBM` comme `ProLB` qui permet de simuler des fluides compressibles ou `LBMSaclay` permettant de réaliser des simulations multiphase.
+
+`HippoLBM` se différencie principalement de l'état de l'art plus dans sa conception que dans ses fonctionnalités physiques ou HPC qui pourront être enrichies par la suite, afin de s'intégrer dans des écosystèmes complexes et multi-physiques.
+-->
+
+In the field of codes using the 3D Lattice Boltzmann Method, several codes offer more advanced physical capabilities than `HippoLBM`, such as `ProLB`, which can simulate compressible fluids, or `LBMSaclay`, which enables multiphase simulations.
+
+`HippoLBM` differs from the state of the art mainly in its design rather than in its physical or HPC capabilities, which can be further enriched in the future in order to integrate into complex, multi-physics ecosystems.
+
 
 # Software design
 <!--
 `HippoLBM`'s design philosophy is to decompose the LBM simulations on a list of `onika` operators. 
-`HippoLBM` est composé en plusieurs plugins, actuellement tout les plugins présents forment le coeurs d'`HippoLBM`:
-plugin grid: Ce plugin contient la plupart des structures de données comme les champs, les données sur le domaine, les paramètres LBM et propose tous les operateurs  permettant de modififier/initialiser ces structures de données, notamment l'équilibrage de charge (block).
-plugin collision: Ce plugin permet d'appliquer les étapes élémentaires de la LBM comme l'application de l'opérateur de collision BGK ou MRT, la phase de streaming ou le calul des quantités macros comme la vitesse et la perssion.
-plugin bcs: Ce plugin contient les noyaux de calculs pour appliquer les conditions limites comme des conditions de neumann utilisé pour des cas tests académique comme un écoulement de Couette ou de Poiseuille, bounce back pour modéliser des solides, ou des conditions limites spécifiques pour mettre en place des cavités entraînées.
-plugin IO: Ce plugin est actuellement utlisé pour afficher des logs et effectuer des sorties paraview (post traitement). Il a aussi vocation à évoluer pour intégrer des analyses in-situ.
-plugin Prepo: Ce plugin propose de pré-initialiser les champs pour des régimes très précis comme par exemple un double couette.
-plugin Obstacle: Ce plugin permet de placer des objects solides inamovible comme des murs.
+`HippoLBM` est composé de plusieurs plugins, actuellement tous les plugins présents forment le cœur d'`HippoLBM`:
+plugin grid: Ce plugin contient la plupart des structures de données comme les champs, les données sur le domaine, les paramètres LBM et propose tous les opérateurs permettant de modifier/initialiser ces structures de données, notamment l'équilibrage de charge (block).
+plugin collision: Ce plugin permet d'appliquer les étapes élémentaires de la LBM comme l'application de l'opérateur de collision BGK ou MRT, la phase de streaming ou le calcul des quantités macros comme la vitesse et la pression.
+plugin bcs: Ce plugin contient les noyaux de calculs pour appliquer les conditions limites comme des conditions de Neumann utilisées pour des cas tests académiques comme un écoulement de Couette ou de Poiseuille, bounce back pour modéliser des solides, ou des conditions limites spécifiques pour mettre en place des cavités entraînées.
+plugin IO: Ce plugin est actuellement utilisé pour afficher des logs et effectuer des sorties ParaView (post-traitement). Il a aussi vocation à évoluer pour intégrer des analyses in-situ.
+plugin Prepo: Ce plugin propose de pré-initialiser les champs pour des régimes très précis comme par exemple un double Couette.
+plugin Obstacle: Ce plugin permet de placer des objets solides inamovibles comme des murs.
 -->
-
 
 
 `HippoLBM`'s design philosophy is to decompose LBM simulations into a list of `Onika` operators. To that end, it is organized into several plugins, all of which currently form the core of HippoLBM:
@@ -76,11 +99,11 @@ plugin Obstacle: Ce plugin permet de placer des objects solides inamovible comme
 
 # Research impact statement
 
-Talk about couplings ...
+The legacy (non-HPC) code was used to perform 2D LBM/DEM simulations on ... [@amarsid2017viscoinertial]. `HippoLBM` aims to explore large-scale 3D simulations in LBM and coupling. Through its interface with `Onika`, `HippoLBM` could be coupled to physics other than DEM using methods such as the Immersed Boundary Method, the Material Point Method (MPM), the Finite Element Method (FEM), or the Finite Difference Method (FDM).
 
 # AI usage disclosure
 
-No generative AI tools were used in the design and development of this software, but they have been used for refactoring and renaming classes.
+No generative AI tools were used in the design and development of this software; however, they were used for refactoring and renaming classes.
 Generative AI tools were used to generate Doxygen code and to translate texts for website documentation.
 
 # Acknowledgements
