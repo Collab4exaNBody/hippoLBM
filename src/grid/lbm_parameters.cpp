@@ -50,6 +50,7 @@ class LBMParametersOp : public OperatorNode {
   ADD_SLOT(double, celerity, INPUT, 1, DocString{"The speed of sound in the fluid."});
   ADD_SLOT(double, nuth, INPUT, 1e-4, DocString{"The dynamic viscosity of the fluid."});
   ADD_SLOT(double, avg_rho, INPUT, 1000.0, DocString{"The average density of the fluid."});
+  ADD_SLOT(double, tau, INPUT, OPTIONAL, DocString{"Define tau, otherwise 3*nu + 0.5."});
 
   ADD_SLOT(LBMParameters, Params, OUTPUT, DocString{"The computed LBM parameters based on the input values."});
   ADD_SLOT(double, dt, INPUT_OUTPUT, 0.0, DocString{"The time step for the LBM simulation."});
@@ -65,6 +66,7 @@ class LBMParametersOp : public OperatorNode {
        celerity: 1.0           # Speed of sound
        nuth: 1e-4              # Dynamic viscosity
        avg_rho: 1000.0         # Average density
+       tau: 0.7                # OPTIONAL, otherwise 3*nu + 0.5
     )EOF";
   }
 
@@ -86,7 +88,11 @@ class LBMParametersOp : public OperatorNode {
 
     params.nuth_ = *nuth;  // Physical Units
     params.nu_ = convert_viscosity<LBM_UNITS>(params.nuth_, params);
-    params.tau_ = 3. * params.nu_ + 0.5;
+    if (tau.has_value()) {
+      params.tau_ = *tau;
+    } else {
+      params.tau_ = 3. * params.nu_ + 0.5;
+    }
     params.avg_rho_ = *avg_rho;
     params.Fext_ = convert_force<LBM_UNITS>(*Fext, params);
     params.print();

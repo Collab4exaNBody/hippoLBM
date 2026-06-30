@@ -1,13 +1,13 @@
 do_domain:
   - domain:
-     bounds:    [ [0,0,0],[0.1,0.1,0.1] ]
+     bounds:    [ [0 m, 0 m, 0 m],[0.1 m, 0.1 m, 0.1 m] ]
      grid_dims: [ 100 , 100 , 100 ]
      periodic:  [ false, false, false ]
 
 set_lbm_parameters:
   - lbm_parameters:
      Fext: [0,0,0]
-     nuth: 1e-3
+     nuth: 1e-3  # m2.s-1
 
 pre_stream_bcs:
   - pre_bounce_back

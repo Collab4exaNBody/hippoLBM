@@ -1,13 +1,13 @@
 do_domain:
   - domain:
-     bounds:    [ [0,0,0],[0.1,0.1,0.1] ]
+     bounds:    [ [0, 0, 0],[0.1 m, 0.1 m, 0.1 m] ]
      grid_dims: [ 100 , 100 , 100 ]
      periodic:  [ true, true, false ]
 
 set_lbm_parameters:
   - lbm_parameters:
      Fext: [0,0,0]
-     nuth: 1e-2
+     nuth: 1e-2  # m2/s
 
 boundary_conditions:
   - neumann:

@@ -63,6 +63,9 @@ struct LBMParameters {
 template <UNITS To>
 inline double convert_velocity(double value, const LBMParameters& params);
 
+template <UNITS To>
+inline onika::math::Vec3d convert_velocity(const onika::math::Vec3d& value, const LBMParameters& params);
+
 template <>
 inline double convert_velocity<LBM_UNITS>(double value, const LBMParameters& params) {
   return value / params.celerity_;
@@ -70,6 +73,17 @@ inline double convert_velocity<LBM_UNITS>(double value, const LBMParameters& par
 
 template <>
 inline double convert_velocity<PHYSICAL_UNITS>(double value, const LBMParameters& params) {
+  return value * params.celerity_;
+}
+
+template <>
+inline onika::math::Vec3d convert_velocity<LBM_UNITS>(const onika::math::Vec3d& value, const LBMParameters& params) {
+  return value / params.celerity_;
+}
+
+template <>
+inline onika::math::Vec3d convert_velocity<PHYSICAL_UNITS>(const onika::math::Vec3d& value,
+                                                           const LBMParameters& params) {
   return value * params.celerity_;
 }
 
@@ -116,8 +130,8 @@ inline void LBMParameters::print() {
        << std::endl;
   lout << "= Viscosity nuth / nu:            " << nuth_ << " (physical) / " << nu_
        << " (LBM) [nu = nuth * dtLB / (dx²)]" << std::endl;
-  lout << "= Relaxation time tau:            " << tau_ << " [3nu + 0.5] (" << units_name(tau_units_) << ")"
-       << std::endl;
+  lout << "= Relaxation time tau:            " << tau_ << " [3nu + 0.5, or overright] (" << units_name(tau_units_)
+       << ")" << std::endl;
   lout << "= Average Rho avg_rho:            " << avg_rho_ << " (physical) / 1 (LBM, by convention)" << std::endl;
   lout << "=================================" << std::endl;
   lout << std::setprecision(6);  // restore the default precision
