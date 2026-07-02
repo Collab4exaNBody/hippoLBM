@@ -57,6 +57,30 @@ struct LBMParameters {
 
   LBMParameters() {}
 
+  // fill nuth before
+  void define_by_dt(const double dtLB, const double dx) {
+    dtLB_ = dtLB;
+    tau_ = 3 * nuth_ * dtLB_ / (dx * dx) + 0.5;
+    nu_ = (tau_ - 0.5) / 3.0;  // looks like <-> nu_ = nuth_ * dtLB_ / (dx * dx);
+
+    celerity_ = dx / dtLB_;
+  }
+
+  // fill nuth before
+  void define_by_tau(const double tau, const double dx) {
+    tau_ = tau;
+    dtLB_ = dx * dx * (tau_ - 0.5) / (3.0 * nuth_);
+    nu_ = nuth_ * dtLB_ / (dx * dx);
+    celerity_ = dx / dtLB_;
+  }
+
+  void define_by_c(const double c, const double dx) {
+    celerity_ = c;
+    dtLB_ = dx / celerity_;
+    nu_ = nuth_ * dtLB_ / (dx * dx);
+    tau_ = 3. * nu_ + 0.5;
+  }
+
   void print();
 };
 
@@ -136,5 +160,4 @@ inline void LBMParameters::print() {
   lout << "=================================" << std::endl;
   lout << std::setprecision(6);  // restore the default precision
 }
-
 }  // namespace hippoLBM

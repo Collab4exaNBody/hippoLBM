@@ -180,7 +180,8 @@ struct wall_bounce_back<19> {
         const int next_z = coord.z + ez_[iLB];
         if (g_.is_defined(next_x, next_y, next_z)) {
           const int idx_next = g_(next_x, next_y, next_z);
-          if (obst_[idx_next] != WALL_) f_(idx, iLB) = f_(idx_next, iopp_[iLB]);
+          if (obst_[idx_next] != WALL_)
+            f_(idx, iLB) = f_(idx_next, iopp_[iLB]);  // call this function before the stream step
         }
       }
     }

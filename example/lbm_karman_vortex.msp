@@ -1,0 +1,36 @@
+do_domain:
+  - domain:
+     bounds: [[0,0,0],[1.0,0.2,0.3]]
+     grid_dims: [ 800, 160, 240 ]
+     periodic: [true, true, false]
+
+set_lbm_parameters:
+  - lbm_parameters:
+     Fext: [1.3 ,0.000000e+00,0.000000e+00]
+     nuth: 1e-3
+     tau: 0.65
+
+set_obstacles:
+  - register_solid_ball:
+     id: 0
+     center: [0.1001, 0.1027, 0.15023]
+     radius: 0.03
+
+collision: bgk # default model
+
+boundary_conditions:
+  - neumann:
+     U: [0,0,0]
+     regions: [plan_xy_l]
+  - neumann:
+     U: [0,0,0]
+     regions: [plan_xy_0]
+
+pre_stream_bcs:
+  - wall_bounce_back
+
+global:
+   simulation_paraview_freq: 10000
+   simulation_end_iteration: 1000000
+   simulation_print_log_freq: 100   
+   output_directory: "KarmanVortexDir"

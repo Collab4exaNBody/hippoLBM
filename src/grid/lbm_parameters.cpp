@@ -50,7 +50,7 @@ class LBMParametersOp : public OperatorNode {
   ADD_SLOT(double, celerity, INPUT, 1, DocString{"The speed of sound in the fluid."});
   ADD_SLOT(double, nuth, INPUT, 1e-4, DocString{"The dynamic viscosity of the fluid."});
   ADD_SLOT(double, avg_rho, INPUT, 1000.0, DocString{"The average density of the fluid."});
-  ADD_SLOT(double, tau, INPUT, OPTIONAL, DocString{"Define tau, otherwise 3*nu + 0.5."});
+  ADD_SLOT(double, tau, INPUT, OPTIONAL, DocString{"Define tau, otherwise tau = 3*nu + 0.5."});
 
   ADD_SLOT(LBMParameters, Params, OUTPUT, DocString{"The computed LBM parameters based on the input values."});
   ADD_SLOT(double, dt, INPUT_OUTPUT, 0.0, DocString{"The time step for the LBM simulation."});
@@ -73,29 +73,27 @@ class LBMParametersOp : public OperatorNode {
   inline void execute() final {
     double Dx = domain->dx();
     LBMParameters params;
-    params.celerity_ = *celerity;
-
-    if (*dt > 0.0 && *dt < (params.dtLB_ = Dx / params.celerity_)) {
-      params.dtLB_ = *dt;
-      if (params.dtLB_ > Dx / params.celerity_) {
-        lout << "\033[31m[lbm_parameters, Error] The LBM time step is not set correctly for this LBM mesh size. Please "
-                "set a time step below: "
-             << Dx / params.celerity_ << " s" << std::endl;
-      }
-    } else {
-      params.dtLB_ = Dx / params.celerity_;
-    }
 
     params.nuth_ = *nuth;  // Physical Units
-    params.nu_ = convert_viscosity<LBM_UNITS>(params.nuth_, params);
-    if (tau.has_value()) {
-      params.tau_ = *tau;
-    } else {
-      params.tau_ = 3. * params.nu_ + 0.5;
-    }
     params.avg_rho_ = *avg_rho;
+
+    if (*dt > 0.0 && tau.has_value()) {
+      lout << "[lbm_parameters]: You can't define tau AND dt" << std::endl;
+    }
+
+    if (*dt > 0.0) {
+      lout << "LBM parameters are set according to the LBM timestep (" << *dt << ")." << std::endl;
+      params.define_by_dt(*dt, Dx);  // define tau, nu, and c
+    } else if (tau.has_value()) {
+      lout << "LBM parameters are set according to tau (" << *tau << ")." << std::endl;
+      params.define_by_tau(*tau, Dx);  // define nu, dtLB, and c
+    } else {                           // default, use celerity (c), dtLB is deduced from c
+      lout << "LBM parameters are set according to the celerity (" << *celerity << "), default." << std::endl;
+      params.define_by_c(*celerity, Dx);
+    }
     params.Fext_ = convert_force<LBM_UNITS>(*Fext, params);
     params.print();
+
     *dt = params.dtLB_;
     *Params = params;
   }

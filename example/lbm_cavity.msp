@@ -13,7 +13,6 @@ pre_stream_bcs:
   - pre_bounce_back
   - cavity_z_l:
      U: [0.0, 0.1, 0]
-#     U: [0.0, 0.1, 0]
 
 post_stream_bcs:
   - post_bounce_back
