@@ -54,7 +54,7 @@ struct LidDrivenCavityBCsFunctor<19> {
       const double rho = compute_rho(idx);
       const double u_squ = onika::math::dot(U_, U_);
 
-      stencil::for_each<typename LBMScheme<19>::Coefficients>([&]<typename coeff, int iLB> {
+      stencil::for_each<typename LBMScheme<19>::Coefficients>([&]<typename coeff>(int iLB) {
         double eu = coeff::ex * U_.x + coeff::ey * U_.y + coeff::ez * U_.z;
         F_(idx, iLB) = coeff::w * rho * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
       });

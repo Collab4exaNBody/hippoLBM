@@ -41,7 +41,7 @@ struct InitDoubleCouetteFunc {
     double eu;
     double u_squ = dot(uii, uii);
 
-    stencil::for_each<typename LBMScheme<Q>::Coefficients>([&]<typename coeff, int iLB> {
+    stencil::for_each<typename LBMScheme<Q>::Coefficients>([&]<typename coeff>(int iLB) {
       eu = uii.x * coeff::ex + uii.y * coeff::ey + uii.z * coeff::ez;
       f_(idx, iLB) = 1. * coeff::w * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
     });

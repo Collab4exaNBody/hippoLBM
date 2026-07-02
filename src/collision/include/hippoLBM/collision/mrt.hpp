@@ -184,7 +184,7 @@ struct mrt<19> {
       // step 1, fill f[iLB]
       mrt_core(f, idx, tau);
       // step 2, adjust with Fext
-      stencil::for_each<typename LBMScheme<19>::Coefficients>([&]<typename coeff, int iLB> {
+      stencil::for_each<typename LBMScheme<19>::Coefficients>([&]<typename coeff>(int iLB) {
         const double ef = coeff::ex * m_Fext_.x + coeff::ey * m_Fext_.y + coeff::ez * m_Fext_.z;
         double& fiLB = f(idx, iLB);
         fiLB += 3. * rho * coeff::w * ef;

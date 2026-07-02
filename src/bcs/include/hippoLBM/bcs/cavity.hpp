@@ -65,7 +65,7 @@ struct cavity<Dim, S, 19> {
     const double uzz = uz * (1 + 0.5 / (L - 1));
     int idx = 0;
     stencil::for_specific_dirs_impl<typename LBMScheme<Q>::Coefficients>(
-        [&]<typename coeff, int iLB> {
+        [&]<typename coeff>(int iLB) {
           coeff_[idx++] = 6. * coeff::w * (coeff::ex * uxx + coeff::ey * uyy + coeff::ez * uzz);
         },
         c_coeff.fid_);

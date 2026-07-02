@@ -53,7 +53,7 @@ struct macro_variables {
       double uy = 0.0;
       double uz = 0.0;
 
-      stencil::for_each<typename LBMScheme<Q>::Coefficients, 0, Q>([&]<typename coeff, int iLB> {
+      stencil::for_each<typename LBMScheme<Q>::Coefficients, 0, Q>([&]<typename coeff>(int iLB) {
         const double s = pf(idx, iLB);
         ux += s * coeff::ex;
         uy += s * coeff::ey;

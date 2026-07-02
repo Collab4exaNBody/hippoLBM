@@ -37,7 +37,7 @@ struct init_distributions {
    */
   ONIKA_HOST_DEVICE_FUNC inline void operator()(const int idx, const FieldView<Q>& f) const {
     stencil::for_each<typename LBMScheme<Q>::Coefficients>(
-        [&]<typename coeff, int iLB> { f(idx, iLB) = coeff_ * coeff::w; });
+        [&]<typename coeff>(int iLB) { f(idx, iLB) = coeff_ * coeff::w; });
   };
 
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int i, int j, int k, const FieldView<Q>& f) const {

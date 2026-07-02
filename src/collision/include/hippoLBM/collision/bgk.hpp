@@ -52,7 +52,7 @@ struct bgk {
     const double uz = m1_(idx, 2);
     const double u_squ = (ux * ux + uy * uy + uz * uz);
 
-    stencil::for_each<typename LBMScheme<Q>::Coefficients, 0, Q>([&]<typename coeff, int iLB> {
+    stencil::for_each<typename LBMScheme<Q>::Coefficients, 0, Q>([&]<typename coeff>(int iLB) {
       double& fiLB = f_(idx, iLB);
       double ef = coeff::ex * m_Fext_.x + coeff::ey * m_Fext_.y + coeff::ez * m_Fext_.z;
       double eu = coeff::ex * ux + coeff::ey * uy + coeff::ez * uz;

@@ -18,12 +18,12 @@ using make_filtered_sequence = typename FilteredSequence<Start, End, Step>::type
 
 template <typename Stencil, typename F, int... Is>
 ONIKA_HOST_DEVICE_FUNC void for_specific_dirs_impl(F&& f, std::integer_sequence<int, Is...>) {
-  (f.template operator()<typename Stencil::template dir<Is>, Is>(), ...);
+  (f.template operator()<typename Stencil::template dir<Is>>(Is), ...);
 }
 
 template <typename Stencil, int Start, int End, int Step, typename F, int... Is>
 ONIKA_HOST_DEVICE_FUNC void for_each_impl(F&& f, std::integer_sequence<int, Is...>) {
-  (f.template operator()<typename Stencil::template dir<Is>, Is>(), ...);
+  (f.template operator()<typename Stencil::template dir<Is>>(Is), ...);
 }
 
 template <typename LBMScheme, int Start = 0, int End = LBMScheme::Q, int Step = 1, typename F>
