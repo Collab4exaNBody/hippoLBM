@@ -73,11 +73,10 @@ class StreamingLBM : public OperatorNode {
 
     // get fields
     FieldView<Q> pf = data.distributions();
-    auto [pex, pey, pez] = data.exyz();
 
     // define functors
     streaming_step1<Q, Traversal::Real> step1 = {ptr, pf};
-    streaming_step2<Q, Traversal::Extend> step2 = {ptr, Grid, pf, pex, pey, pez};
+    streaming_step2<Q, Traversal::Extend> step2 = {ptr, Grid, pf};
 
     // capture the parallel execution context
     auto par_exec_ctx = [this](const char* exec_name) { return this->parallel_execution_context(exec_name); };
@@ -95,7 +94,7 @@ class StreamingLBM : public OperatorNode {
          Box3D inside = Grid.build_box<Area::Local, Inside>();
 
          parallel_for_id(ptr, size, step1, parallel_execution_context(), pf);
-         parallel_for_box(inside, step2, pf, pex, pey, pez);
+         parallel_for_box(inside, step2, pf);
 
          domain.m_ghost_manager_.wait_all();
          domain.m_ghost_manager_.do_unpack(pf, Grid.bx_);
@@ -103,7 +102,7 @@ class StreamingLBM : public OperatorNode {
          auto [ptr2, size2] = traversals.get_data<Rest>();
 
          parallel_for_id(ptr2, size2, step1, parallel_execution_context(), pf);
-         parallel_for_ghost_edge(Grid, step2, pf, pex, pey, pez);
+         parallel_for_ghost_edge(Grid, step2, pf);
        */
     } else {
       // run kernel
