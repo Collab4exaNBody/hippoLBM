@@ -27,9 +27,9 @@ under the License.
 #include <onika/scg/operator_slot.h>
 
 #include <hippoLBM/compute/parallel_for_core.hpp>
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/domain.hpp>
-#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
@@ -74,7 +74,6 @@ class SetDistributionsLBM : public OperatorNode {
     GridIJKtoIdx ijk_to_idx(Grid);
 
     FieldView pf = data.distributions();
-    const double* const pw = data.weights();
 
     // define kernel
     init_distributions<Q> func = {*value, ijk_to_idx};
@@ -95,17 +94,16 @@ class SetDistributionsLBM : public OperatorNode {
       auto [is_inside_subdomain, wall_box] = Grid.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_wall_box);
       if (!is_inside_subdomain) return;
 
-      parallel_for(wall_box, func, parallel_execution_context("wall_box"), pf, pw);
+      parallel_for(wall_box, func, parallel_execution_context("wall_box"), pf);
 
-    } else  // all domain
-    {
+    } else {  // all domain
       if (*do_update) {
         auto [ptr, size] = traversals.get_data<Traversal::Real>();
-        parallel_for_id(ptr, size, func, parallel_execution_context("wall_box"), pf, pw);
+        parallel_for_id(ptr, size, func, parallel_execution_context("wall_box"), pf);
         update_ghost(Domain, pf, par_exec_ctx);
       } else {
         auto [ptr, size] = traversals.get_data<Traversal::All>();
-        parallel_for_id(ptr, size, func, parallel_execution_context("wall_box"), pf, pw);
+        parallel_for_id(ptr, size, func, parallel_execution_context("wall_box"), pf);
       }
     }
   }
