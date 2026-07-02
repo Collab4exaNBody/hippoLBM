@@ -25,8 +25,8 @@ under the License.
 
 // hippoLBM
 #include <hippoLBM/core/box3d.hpp>
-#include <hippoLBM/core/point3d.hpp>
 #include <hippoLBM/core/enum.hpp>
+#include <hippoLBM/core/point3d.hpp>
 #include <hippoLBM/grid/field_view.hpp>
 #include <hippoLBM/grid/grid.hpp>
 
@@ -122,8 +122,12 @@ static inline onika::parallel::ParallelExecutionWrapper parallel_for(
   onika::parallel::ParallelForOptions opts;
   opts.omp_scheduling = onika::parallel::OMP_SCHED_STATIC;
 
-  wrapper_parallel_for_ijk runner = {a_func, a_args...};
-  return onika::parallel::parallel_for(parallel_range, runner, exec_ctx, opts);
+  if constexpr (sizeof...(Args) == 0) {
+    return onika::parallel::parallel_for(parallel_range, a_func, exec_ctx, opts);
+  } else {
+    wrapper_parallel_for_ijk<Func, Args...> runner = {a_func, std::forward<Args>(a_args)...};
+    return onika::parallel::parallel_for(parallel_range, runner, exec_ctx, opts);
+  }
 }
 
 template <typename Func, typename... Args>

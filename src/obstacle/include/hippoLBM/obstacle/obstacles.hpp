@@ -16,8 +16,9 @@ struct Obstacles {
     int m_index_ = -1;                                 // The index of the obstacle in its respective vector.
   };
 
-  vector_t<ObstacleTypeAndIndex> m_type_index_;               // Vector to store the type and index.
-  onika::FlatTuple<vector_t<Ball>, vector_t<Wall> > m_data_;  // Tuple storing vectors of different obstacle types.
+  vector_t<ObstacleTypeAndIndex> m_type_index_;  // Vector to store the type and index.
+  onika::FlatTuple<vector_t<Ball>, vector_t<Wall>, vector_t<Quadric> /*, vector_t<Stl_mesh>*/>
+      m_data_;  // Tuple storing vectors of different obstacle types.
 
   inline size_t size() const { return m_type_index_.size(); }
 
@@ -60,10 +61,13 @@ struct Obstacles {
     assert(idx >= 0 && idx < m_type_index_.size());
     OBSTACLE_TYPE t = m_type_index_[idx].m_type_;
     assert(t != OBSTACLE_TYPE::UNDEFINED);
-    if (t == OBSTACLE_TYPE::BALL)
+    if (t == OBSTACLE_TYPE::BALL) {
       return func(m_data_.get_nth<OBSTACLE_TYPE::BALL>()[m_type_index_[idx].m_index_]);
-    else if (t == OBSTACLE_TYPE::WALL)
+    } else if (t == OBSTACLE_TYPE::WALL) {
       return func(m_data_.get_nth<OBSTACLE_TYPE::WALL>()[m_type_index_[idx].m_index_]);
+    } else if (t == OBSTACLE_TYPE::QUADRICS) {
+      return func(m_data_.get_nth<OBSTACLE_TYPE::QUADRICS>()[m_type_index_[idx].m_index_]);
+    }
     /*
              else if (t == OBSTACLE_TYPE::STL_MESH) return func( m_data_.get_nth<OBSTACLE_TYPE::STL_MESH>()[
        m_type_index_[idx].m_index_ ] );
@@ -103,6 +107,8 @@ struct Obstacles {
     m_type_index_.clear();
     m_data_.get_nth<OBSTACLE_TYPE::BALL>().clear();
     m_data_.get_nth<OBSTACLE_TYPE::WALL>().clear();
+    m_data_.get_nth<OBSTACLE_TYPE::QUADRICS>().clear();
+
     /*
              m_data_.get_nth<OBSTACLE_TYPE::STL_MESH>().clear();
      */
@@ -122,9 +128,9 @@ struct Obstacles {
 struct ObstaclesGPUAccessor {
   size_t m_nb_obstacles_ = 0;
   Obstacles::ObstacleTypeAndIndex* const __restrict__ m_type_index_ = nullptr;
-  onika::FlatTuple<Ball* __restrict__, Wall* __restrict__ /*, Stl_mesh* __restrict__ */> m_data_ = {
-      nullptr, nullptr /*, nullptr,*/};
-  onika::FlatTuple<size_t, size_t /*, size_t ,*/> m_data_size_ = {0, 0 /*, 0,*/};
+  onika::FlatTuple<Ball* __restrict__, Wall* __restrict__, Quadric* __restrict__ /*, Stl_mesh* __restrict__ */>
+      m_data_ = {nullptr, nullptr /*, nullptr,*/};
+  onika::FlatTuple<size_t, size_t, size_t /*, size_t ,*/> m_data_size_ = {0, 0, 0 /*, 0,*/};
 
   ObstaclesGPUAccessor() = default;
   ObstaclesGPUAccessor(const ObstaclesGPUAccessor&) = default;
@@ -132,10 +138,10 @@ struct ObstaclesGPUAccessor {
   inline ObstaclesGPUAccessor(Obstacles& drvs)
       : m_nb_obstacles_(drvs.m_type_index_.size()),
         m_type_index_(drvs.m_type_index_.data()),
-        m_data_({drvs.m_data_.get_nth<0>().data(),
-                 drvs.m_data_.get_nth<1>().data() /*, drvs.m_data_.get_nth<2>().data() , */}),
-        m_data_size_({drvs.m_data_.get_nth<0>().size(),
-                      drvs.m_data_.get_nth<1>().size() /*, drvs.m_data_.get_nth<2>().size() */}) {}
+        m_data_({drvs.m_data_.get_nth<0>().data(), drvs.m_data_.get_nth<1>().data(),
+                 drvs.m_data_.get_nth<2>().data() /*, drvs.m_data_.get_nth<3>().data() , */}),
+        m_data_size_({drvs.m_data_.get_nth<0>().size(), drvs.m_data_.get_nth<1>().size(),
+                      drvs.m_data_.get_nth<2>().size() /*, drvs.m_data_.get_nth<3>().size() */}) {}
 
   template <class T>
   ONIKA_HOST_DEVICE_FUNC inline T& get_typed_obstacle(const int idx) const {
