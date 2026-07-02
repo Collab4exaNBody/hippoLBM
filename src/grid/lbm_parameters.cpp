@@ -50,7 +50,7 @@ class LBMParametersOp : public OperatorNode {
   ADD_SLOT(double, celerity, INPUT, 1, DocString{"The speed of sound in the fluid."});
   ADD_SLOT(double, nuth, INPUT, 1e-4, DocString{"The dynamic viscosity of the fluid."});
   ADD_SLOT(double, avg_rho, INPUT, 1000.0, DocString{"The average density of the fluid."});
-  ADD_SLOT(double, tau, INPUT, OPTIONAL, DocString{"Define tau [optional]"});
+  ADD_SLOT(double, tau, INPUT, OPTIONAL, DocString{"Define tau, otherwise tau = 3*nu + 0.5."});
 
   ADD_SLOT(LBMParameters, Params, OUTPUT, DocString{"The computed LBM parameters based on the input values."});
   ADD_SLOT(double, dt, INPUT_OUTPUT, 0.0, DocString{"The time step for the LBM simulation."});
@@ -66,6 +66,7 @@ class LBMParametersOp : public OperatorNode {
        celerity: 1.0           # Speed of sound
        nuth: 1e-4              # Dynamic viscosity
        avg_rho: 1000.0         # Average density
+       tau: 0.7                # OPTIONAL, otherwise 3*nu + 0.5
     )EOF";
   }
 
