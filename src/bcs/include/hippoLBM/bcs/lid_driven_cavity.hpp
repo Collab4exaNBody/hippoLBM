@@ -32,16 +32,12 @@ template <>
 struct LidDrivenCavityBCsFunctor<19> {
   static constexpr int Q = 19;  // number of discrete velocities
   onika::math::Vec3d U_;
-  const FieldView<Q> F_;                // The field view for the distribution functions.
-  int* const __restrict__ obst_;        // Pointer to the obstacle field.
-  const int* const __restrict__ ex_;    // Pointer to an array of integers for X-direction.
-  const int* const __restrict__ ey_;    // Pointer to an array of integers for Y-direction.
-  const int* const __restrict__ ez_;    // Pointer to an array of integers for Z-direction.
-  const double* const __restrict__ w_;  // Pointer to an array of doubles for the weights of the discrete velocity
-                                        // directions.
+  const FieldView<Q> F_;          // The field view for the distribution functions.
+  int* const __restrict__ obst_;  // Pointer to the obstacle field.
 
   ONIKA_HOST_DEVICE_FUNC inline double compute_rho(int idx) const {
     double rho = 0.0;
+#pragma unroll
     for (int iLB = 0; iLB < Q; iLB++) {
       rho += F_(idx, iLB);
     }
@@ -58,14 +54,10 @@ struct LidDrivenCavityBCsFunctor<19> {
       const double rho = compute_rho(idx);
       const double u_squ = onika::math::dot(U_, U_);
 
-      for (int iLB = 0; iLB < Q; iLB++) {
-        const int& exiLB = ex_[iLB];
-        const int& eyiLB = ey_[iLB];
-        const int& eziLB = ez_[iLB];
-        const double& wiLB = w_[iLB];
-        double eu = exiLB * U_.x + eyiLB * U_.y + eziLB * U_.z;
-        F_(idx, iLB) = wiLB * rho * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
-      }
+      stencil::for_each<typename LBMScheme<19>::Coefficients>([&]<typename coeff>(int iLB) {
+        double eu = coeff::ex * U_.x + coeff::ey * U_.y + coeff::ez * U_.z;
+        F_(idx, iLB) = coeff::w * rho * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
+      });
     }
   }
 };

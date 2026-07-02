@@ -33,9 +33,9 @@ under the License.
 
 // hippoLBM
 #include <hippoLBM/compute/parallel_for_core.hpp>
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/domain.hpp>
-#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/grid/lbm_parameters.hpp>
@@ -81,13 +81,12 @@ class MacroVariables : public OperatorNode {
     int* const pobst = data.obstacles();
     FieldView<Q> pf = data.distributions();
     double* const pm0 = data.densities();
-    auto [pex, pey, pez] = data.exyz();
 
     // get traversal
     auto [ptr, size] = traversals.get_data<Traversal::All>();
 
     // run kernel
-    parallel_for_id(ptr, size, func, parallel_execution_context(), pm1, pobst, pf, pm0, pex, pey, pez);
+    parallel_for_id(ptr, size, func, parallel_execution_context(), pm1, pobst, pf, pm0);
   }
 };
 

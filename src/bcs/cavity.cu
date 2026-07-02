@@ -29,9 +29,9 @@ under the License.
 
 // hippoLBM
 #include <hippoLBM/compute/parallel_for_core.hpp>
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/domain.hpp>
-#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
@@ -76,11 +76,9 @@ class Cavity : public OperatorNode {
     constexpr int idx = helper_dim_idx<Dim, S>();
     FieldView<5> pfi = bb.get_data(idx);
     int* const pobst = data.obstacles();
-    auto [pex, pey, pez] = data.exyz();
-    const double* const pw = data.weights();
 
     // initialize coefficients
-    bcs.compute_coeff(ux, uy, uz, pw, pex, pey, pez, lx, ly, lz);
+    bcs.compute_coeff(ux, uy, uz, lx, ly, lz);
 
     // run kernel
     auto params = make_tuple(pobst, pfi);

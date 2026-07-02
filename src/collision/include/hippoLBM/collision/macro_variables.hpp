@@ -46,20 +46,20 @@ struct macro_variables {
    * @param pez The z-components of the discrete velocity vectors.
    */
   ONIKA_HOST_DEVICE_FUNC inline void operator()(const int idx, const FieldView<3>& pm1, int* const pobst,
-                                                const FieldView<Q>& pf, double* const pm0, const int* pex,
-                                                const int* pey, const int* pez) const {
+                                                const FieldView<Q>& pf, double* const pm0) const {
     if (pobst[idx] >= FLUIDE_) {
       double rho = 0.0;
       double ux = 0.0;
       double uy = 0.0;
       double uz = 0.0;
-      for (int iLB = 0; iLB < Q; iLB++) {
+
+      stencil::for_each<typename LBMScheme<Q>::Coefficients, 0, Q>([&]<typename coeff>(int iLB) {
         const double s = pf(idx, iLB);
-        ux += s * pex[iLB];
-        uy += s * pey[iLB];
-        uz += s * pez[iLB];
+        ux += s * coeff::ex;
+        uy += s * coeff::ey;
+        uz += s * coeff::ez;
         rho += s;
-      }
+      });
 
       if (rho > 1.0e-14) {
         ux /= rho;

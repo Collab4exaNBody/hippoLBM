@@ -34,17 +34,12 @@ struct bgk {
   // 0 1 Real,
   // 0 1 2 Extend,
   // and 0 1 2 3 All
-  const onika::math::Vec3d m_Fext_;     // External force term, used in the computation of macroscopic variables.
-  const FieldView<3> m1_;               // The field view for the first-order moments (momentum).
-  int* const __restrict__ obst_;        // Pointer to the obstacle field.
-  const FieldView<Q> f_;                // The field view for the distribution functions.
-  double* const __restrict__ m0_;       // Pointer to the density field (zeroth-order moment).
-  const int* const __restrict__ ex_;    // Pointer to an array of integers for X-direction.
-  const int* const __restrict__ ey_;    // Pointer to an array of integers for Y-direction.
-  const int* const __restrict__ ez_;    // Pointer to an array of integers for Z-direction.
-  const double* const __restrict__ w_;  // Pointer to an array of doubles for the weights of the discrete velocity
-                                        // directions.
-  const double tau_;                    // Relaxation time for the BGK collision model.
+  const onika::math::Vec3d m_Fext_;  // External force term, used in the computation of macroscopic variables.
+  const FieldView<3> m1_;            // The field view for the first-order moments (momentum).
+  int* const __restrict__ obst_;     // Pointer to the obstacle field.
+  const FieldView<Q> f_;             // The field view for the distribution functions.
+  double* const __restrict__ m0_;    // Pointer to the density field (zeroth-order moment).
+  const double tau_;                 // Relaxation time for the BGK collision model.
 
   /**
    * @brief Operator for performing collision operations at a given index.
@@ -57,18 +52,13 @@ struct bgk {
     const double uz = m1_(idx, 2);
     const double u_squ = (ux * ux + uy * uy + uz * uz);
 
-    for (int iLB = 0; iLB < Q; iLB++) {
-      const int& exiLB = ex_[iLB];
-      const int& eyiLB = ey_[iLB];
-      const int& eziLB = ez_[iLB];
-      const double& wiLB = w_[iLB];
+    stencil::for_each<typename LBMScheme<Q>::Coefficients, 0, Q>([&]<typename coeff>(int iLB) {
       double& fiLB = f_(idx, iLB);
-      double ef = exiLB * m_Fext_.x + eyiLB * m_Fext_.y + eziLB * m_Fext_.z;
-      double eu = exiLB * ux + eyiLB * uy + eziLB * uz;
-      double feq = wiLB * rho * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
-      // double feq = wiLB * rho * (1. +  eu * (3. + 4.5 * eu) + - 1.5 * u_squ);
-      fiLB += update * ((feq - fiLB) / tau_ + 3. * rho * wiLB * ef);
-    }
+      double ef = coeff::ex * m_Fext_.x + coeff::ey * m_Fext_.y + coeff::ez * m_Fext_.z;
+      double eu = coeff::ex * ux + coeff::ey * uy + coeff::ez * uz;
+      double feq = coeff::w * rho * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
+      fiLB += update * ((feq - fiLB) / tau_ + 3. * rho * coeff::w * ef);
+    });
   }
 };
 }  // namespace hippoLBM

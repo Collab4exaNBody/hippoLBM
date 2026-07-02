@@ -33,9 +33,9 @@ under the License.
 
 // hippoLBM
 #include <hippoLBM/compute/parallel_for_core.hpp>
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/domain.hpp>
-#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/grid/lbm_parameters.hpp>
@@ -80,14 +80,12 @@ class CollisionMRT : public OperatorNode {
     int* const pobst = data.obstacles();
     FieldView<Q> pf = data.distributions();
     double* const pm0 = data.densities();
-    const double* const w = data.weights();
-    auto [pex, pey, pez] = data.exyz();
 
     // get traversal
     auto [ptr, size] = traversals.get_data<Traversal::Real>();
 
     // run kernel
-    parallel_for_id(ptr, size, func, parallel_execution_context(), pobst, pf, pm0, pex, pey, pez, w, params.tau_);
+    parallel_for_id(ptr, size, func, parallel_execution_context(), pobst, pf, pm0, params.tau_);
   }
 };
 

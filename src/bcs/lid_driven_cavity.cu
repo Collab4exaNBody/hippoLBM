@@ -71,13 +71,11 @@ class LidDrivenCavityBCs : public OperatorNode {
     auto& traversals = *grid_region;
 
     // get fields
-    auto [pex, pey, pez] = data.exyz();
-    const double* const pw = data.weights();
     // ULBM = UReal / Celerity
     onika::math::Vec3d uLB = convert_velocity<LBM_UNITS>(*U, *Params);  // Change to LBM World
 
     // define functors
-    LidDrivenCavityBCsFunctor<Q> bcs = {uLB, data.distributions(), data.obstacles(), pex, pey, pez, pw};
+    LidDrivenCavityBCsFunctor<Q> bcs = {uLB, data.distributions(), data.obstacles()};
 
     // define areas
     const std::vector<std::string> allowed_tr = {"plan_xy_0", "plan_xy_l", "plan_xz_0",

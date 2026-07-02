@@ -43,7 +43,7 @@ struct mrt<19> {
     const double s9 = 1 / tau, s13 = s9;
     // D'humiéres et al parametrization
     const double s1 = 1.19, s2 = 1.4, s4 = 1.2, s10 = s2, s16 = 1.98;
-    //const double weps = 3, wepsj = -475. / 63., wxx = 0;
+    // const double weps = 3, wepsj = -475. / 63., wxx = 0;
     const double weps = 0, wepsj = -475. / 63., wxx = 0;
     // LBGK parametrization
     // const double s1 = s9, s2 = s9, s4 = s9, s10 = s2, s16 = s9;
@@ -177,20 +177,18 @@ struct mrt<19> {
    * @brief Operator for performing collision operations at a given index.
    */
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const __restrict__ obst, const FieldView<19>& f,
-                                                double* const __restrict__ m0, const int* __restrict__ ex,
-                                                const int* __restrict__ ey, const int* __restrict__ ez,
-                                                const double* const __restrict__ w, const double tau) const {
+                                                double* const __restrict__ m0, const double tau) const {
     if (obst[idx] == FLUIDE_) {
       const double rho = m0[idx];
 
       // step 1, fill f[iLB]
       mrt_core(f, idx, tau);
       // step 2, adjust with Fext
-      for (int iLB = 0; iLB < 19; iLB++) {
-        const double ef = ex[iLB] * m_Fext_.x + ey[iLB] * m_Fext_.y + ez[iLB] * m_Fext_.z;
+      stencil::for_each<typename LBMScheme<19>::Coefficients>([&]<typename coeff>(int iLB) {
+        const double ef = coeff::ex * m_Fext_.x + coeff::ey * m_Fext_.y + coeff::ez * m_Fext_.z;
         double& fiLB = f(idx, iLB);
-        fiLB += 3. * rho * w[iLB] * ef;
-      }
+        fiLB += 3. * rho * coeff::w * ef;
+      });
     }
   }
 };

@@ -29,9 +29,9 @@ under the License.
 #include <onika/scg/operator_slot.h>
 
 // hippoLBM
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/domain.hpp>
-#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
@@ -62,10 +62,9 @@ class WallBounceBack : public OperatorNode {
     // get fields
     const int* const pobst = data.obstacles();
     FieldView<Q> pf = data.distributions();
-    auto [pex, pey, pez] = data.exyz();
 
     // define functors
-    wall_bounce_back<Q> func = {Grid, pobst, pf, pex, pey, pez};
+    wall_bounce_back<Q> func = {Grid, pobst, pf};
 
     // run kernel
     Box3D extend = Grid.build_box<Area::Local, Traversal::Extend>();

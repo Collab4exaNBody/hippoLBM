@@ -84,8 +84,6 @@ class InitDoubleCouette : public OperatorNode {
 
     // get fields
     FieldView<Q> pf = data.distributions();
-    auto [pex, pey, pez] = data.exyz();
-    const double* const pw = data.weights();
 
     // get traversal
     Box3D real = grid.build_box<Area::Local, Traversal::Real>();
@@ -95,14 +93,14 @@ class InitDoubleCouette : public OperatorNode {
       // define variables
       onika::math::Vec3d dU = Uc / (0.5 * (domain_size[DIMX] - 1));
       // define functors
-      InitDoubleCouetteFunc<Q, DIMX> func = {grid, pf, dU, Uc, pex, pey, pez, pw};
+      InitDoubleCouetteFunc<Q, DIMX> func = {grid, pf, dU, Uc};
       // run kernel
       parallel_for(parallel_range, func, parallel_execution_context("init_double_couette_dim_x"));
     } else if (*dimension == "Y") {
       // define variables
       onika::math::Vec3d dU = Uc / (0.5 * (domain_size[DIMY] - 1));
       // define functors
-      InitDoubleCouetteFunc<Q, DIMY> func = {grid, pf, dU, Uc, pex, pey, pez, pw};
+      InitDoubleCouetteFunc<Q, DIMY> func = {grid, pf, dU, Uc};
       // run kernel
       parallel_for(parallel_range, func, parallel_execution_context("init_double_couette_dim_y"));
     } else if (*dimension == "Z") {
@@ -112,7 +110,7 @@ class InitDoubleCouette : public OperatorNode {
       lout << "Uc: [" << Uc << "]" << std::endl;
       lout << "dU: [" << dU << "]" << std::endl;
       // define functors
-      InitDoubleCouetteFunc<Q, DIMZ> func = {grid, pf, dU, Uc, pex, pey, pez, pw};
+      InitDoubleCouetteFunc<Q, DIMZ> func = {grid, pf, dU, Uc};
       // run kernel
       parallel_for(parallel_range, func, parallel_execution_context("init_double_couette_dim_z"));
       lout << "Prepro double couette ending ... dim Z " << std::endl;

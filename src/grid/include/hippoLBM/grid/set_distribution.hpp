@@ -34,17 +34,14 @@ struct init_distributions {
    * @brief Operator to initialize distributions at a given index.
    * @param idx The index to initialize distributions.
    * @param f Pointer to the distribution function.
-   * @param w Pointer to the weight coefficients.
    */
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(const int idx, const FieldView<Q>& f, const double* const w) const {
-    for (int iLB = 0; iLB < Q; iLB++) {
-      f(idx, iLB) = coeff_ * w[iLB];
-    }
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(const int idx, const FieldView<Q>& f) const {
+    stencil::for_each<typename LBMScheme<Q>::Coefficients>(
+        [&]<typename coeff>(int iLB) { f(idx, iLB) = coeff_ * coeff::w; });
   };
 
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(int i, int j, int k, const FieldView<Q>& f,
-                                                const double* const w) const {
-    this->operator()(ijk_to_idx_(i, j, k), f, w);
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(int i, int j, int k, const FieldView<Q>& f) const {
+    this->operator()(ijk_to_idx_(i, j, k), f);
   }
 };
 }  // namespace hippoLBM

@@ -30,14 +30,14 @@ struct cavity {};
 template <int dim, Side dir, int Q>
 struct cavity_coeff {};
 
-template <>
-struct cavity_coeff<DIMZ, Side::Left, 19> {
-  int fid_[5] = {5, 14, 11, 18, 15};
-};
-template <>
-struct cavity_coeff<DIMZ, Side::Right, 19> {
-  int fid_[5] = {6, 13, 12, 17, 16};
-};
+#define SPECIFIC_CAVITY_COEFF(DIM, S, Q, ...)          \
+  template <>                                          \
+  struct cavity_coeff<DIM, S, Q> {                     \
+    std::integer_sequence<int, __VA_ARGS__> fid_ = {}; \
+  };
+
+SPECIFIC_CAVITY_COEFF(DIMZ, Side::Left, 19, 5, 14, 11, 18, 15)
+SPECIFIC_CAVITY_COEFF(DIMZ, Side::Right, 19, 6, 13, 12, 17, 16)
 
 /** @brief Cavity boundary condition */
 template <int Dim, Side S>
@@ -50,16 +50,11 @@ struct cavity<Dim, S, 19> {
    * @param ux The x-component of the velocity at the boundary.
    * @param uy The y-component of the velocity at the boundary.
    * @param uz The z-component of the velocity at the boundary.
-   * @param w The weights for the discrete velocities.
-   * @param ex The x-components of the discrete velocities directions.
-   * @param ey The y-components of the discrete velocities directions.
-   * @param ez The z-components of the discrete velocities directions.
    * @param lx The local grid size in the x-dimension.
    * @param ly The local grid size in the y-dimension.
    * @param lz The local grid size in the z-dimension.
    */
-  void compute_coeff(double ux, double uy, double uz, const double* const w, const int* ex, const int* ey,
-                     const int* ez, int lx, int ly, int lz) {
+  void compute_coeff(double ux, double uy, double uz, int lx, int ly, int lz) {
     const cavity_coeff<DIMZ, S, Q> c_coeff;
     double L = 0;
     if constexpr (Dim == DIMZ) L = lx;
@@ -68,10 +63,14 @@ struct cavity<Dim, S, 19> {
     const double uxx = ux * (1 + 0.5 / (L - 1));
     const double uyy = uy * (1 + 0.5 / (L - 1));
     const double uzz = uz * (1 + 0.5 / (L - 1));
-    for (int i = 0; i < Un; i++) {
-      const int fid = c_coeff.fid_[i];
-      coeff_[i] = 6. * w[fid] * (ex[fid] * uxx + ey[fid] * uyy + ez[fid] * uzz);
-    }
+    int idx = 0;
+    stencil::for_specific_dirs_impl<typename LBMScheme<Q>::Coefficients>(
+        [&]<typename coeff>(int iLB) {
+          coeff_[idx++] = 6. * coeff::w * (coeff::ex * uxx + coeff::ey * uyy + coeff::ez * uzz);
+        },
+        c_coeff.fid_);
+
+    assert(idx == Un && "The number of computed coefficients does not match the expected number of unknowns.");
   }
 
   /** @brief Apply the cavity boundary condition
