@@ -165,25 +165,21 @@ struct wall_bounce_back<19> {
   LBMGrid g_;
   const int* const obst_;
   const FieldView<19> f_;
-  const int* ex_;
-  const int* ey_;
-  const int* ez_;
   static constexpr int Q = 19;
-  const int iopp_[Q] = {0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15, 18, 17};
 
   ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t coord) const {
     const int idx = g_(coord.x, coord.y, coord.z);
     if (obst_[idx] == WALL_) {
-      for (int iLB = 1; iLB < Q; iLB++) {
-        const int next_x = coord.x + ex_[iLB];
-        const int next_y = coord.y + ey_[iLB];
-        const int next_z = coord.z + ez_[iLB];
+      stencil::for_each<typename LBMScheme<19>::Coefficients, 1, Q>([&]<typename coeff, int iLB> {
+        const int next_x = coord.x + coeff::ex;
+        const int next_y = coord.y + coeff::ey;
+        const int next_z = coord.z + coeff::ez;
         if (g_.is_defined(next_x, next_y, next_z)) {
           const int idx_next = g_(next_x, next_y, next_z);
           if (obst_[idx_next] != WALL_)
-            f_(idx, iLB) = f_(idx_next, iopp_[iLB]);  // call this function before the stream step
+            f_(idx, iLB) = f_(idx_next, coeff::iopp);  // call this function before the stream step
         }
-      }
+      });
     }
   }
 };

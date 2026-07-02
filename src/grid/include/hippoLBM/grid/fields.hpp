@@ -54,7 +54,7 @@ template <>
 struct LBMScheme<19> {
   template <typename T>
   using vector_t = onika::memory::CudaMMVector<T>;
-  // Ex Ey Ez 1/WDen IOPP
+  // Ex Ey Ez 1/W IOPP
   using Coefficients = Scheme<Direction<0, 0, 0, 3, 0>,      // 0  -> 0
                               Direction<1, 0, 0, 18, 2>,     // 1  -> 2
                               Direction<-1, 0, 0, 18, 1>,    // 2  -> 1
@@ -76,34 +76,6 @@ struct LBMScheme<19> {
                               Direction<0, -1, 1, 36, 17>>;  // 18 -> 17
   constexpr static int Q = Coefficients::Q;
   static_assert(Q == 19, "LBMScheme<19> should have 19 directions");
-  // temporary
-  template <std::size_t... Is>
-  static vector_t<double> build_w(std::index_sequence<Is...>) {
-    return {Coefficients::template dir<Is>::w...};
-  }
-  template <std::size_t... Is>
-  static vector_t<int> build_ex(std::index_sequence<Is...>) {
-    return {Coefficients::template dir<Is>::ex...};
-  }
-  template <std::size_t... Is>
-  static vector_t<int> build_ey(std::index_sequence<Is...>) {
-    return {Coefficients::template dir<Is>::ey...};
-  }
-  template <std::size_t... Is>
-  static vector_t<int> build_ez(std::index_sequence<Is...>) {
-    return {Coefficients::template dir<Is>::ez...};
-  }
-  template <std::size_t... Is>
-  static vector_t<int> build_iopp(std::index_sequence<Is...>) {
-    return {Coefficients::template iopp_of<Is>...};
-  }
-
-  using Seq = std::make_index_sequence<Q>;
-  const vector_t<double> w_ = build_w(Seq{});
-  const vector_t<int> ex_ = build_ex(Seq{});
-  const vector_t<int> ey_ = build_ey(Seq{});
-  const vector_t<int> ez_ = build_ez(Seq{});
-  const vector_t<int> iopp_ = build_iopp(Seq{});
 };
 
 template <int Q>
@@ -111,8 +83,6 @@ struct LBMFields {
   template <typename T>
   using vector_t = onika::memory::CudaMMVector<T>;
   uint64_t grid_size_;
-  LBMScheme<Q> scheme_;
-
   // fields
   vector_t<double> f_;   // fi
   vector_t<double> m0_;  // densities
@@ -127,30 +97,9 @@ struct LBMFields {
   // accessors
   uint64_t size() { return grid_size_; }
   FieldView<Q> distributions() { return FieldView<Q>{onika::cuda::vector_data(f_), grid_size_}; }
-
   double* densities() { return onika::cuda::vector_data(m0_); }
-
   FieldView<3> flux() { return FieldView<3>{onika::cuda::vector_data(m1_), grid_size_}; }
-
   int* obstacles() { return onika::cuda::vector_data(obst_); }
-
   const int* obstacles() const { return onika::cuda::vector_data(obst_); }
-
-  const double* weights() { return onika::cuda::vector_data(scheme_.w_); }
-
-  const int* iopp() { return onika::cuda::vector_data(scheme_.iopp_); }
-
-  std::tuple<const int*, const int*, const int*> exyz() {
-    const int* ex = onika::cuda::vector_data(scheme_.ex_);
-    const int* ey = onika::cuda::vector_data(scheme_.ey_);
-    const int* ez = onika::cuda::vector_data(scheme_.ez_);
-    return {ex, ey, ez};
-  }
-
-  const int* ex() { return onika::cuda::vector_data(scheme_.ex_); }
-
-  const int* ey() { return onika::cuda::vector_data(scheme_.ey_); }
-
-  const int* ez() { return onika::cuda::vector_data(scheme_.ez_); }
 };
 }  // namespace hippoLBM

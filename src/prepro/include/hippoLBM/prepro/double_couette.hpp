@@ -28,10 +28,6 @@ struct InitDoubleCouetteFunc {
   FieldView<Q> f_;
   const onika::math::Vec3d dU_lbm_;  // u_lbm.x / (.5 * (l_dir (x,y,z) - 1));
   const onika::math::Vec3d U_;       // U_real / c;
-  const int* ex_;
-  const int* ey_;
-  const int* ez_;
-  const double* const w_;
 
   ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t coord) const {
     const int idx = g_(coord.x, coord.y, coord.z);
@@ -44,10 +40,11 @@ struct InitDoubleCouetteFunc {
 
     double eu;
     double u_squ = dot(uii, uii);
-    for (int iLB = 0; iLB < Q; iLB++) {
-      eu = uii.x * double(ex_[iLB]) + uii.y * ey_[iLB] + uii.z * ez_[iLB];
-      f_(idx, iLB) = 1. * w_[iLB] * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
-    }
+
+    stencil::for_each<typename LBMScheme<Q>::Coefficients>([&]<typename coeff, int iLB> {
+      eu = uii.x * coeff::ex + uii.y * coeff::ey + uii.z * coeff::ez;
+      f_(idx, iLB) = 1. * coeff::w * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
+    });
   }
 };
 }  // namespace hippoLBM
