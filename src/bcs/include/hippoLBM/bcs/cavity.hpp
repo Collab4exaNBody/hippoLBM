@@ -32,11 +32,11 @@ struct cavity_coeff {};
 
 template <>
 struct cavity_coeff<DIMZ, Side::Left, 19> {
-  int fid_[5] = {5, 14, 11, 18, 15};
+  static constexpr std::integer_sequence<int, 5, 14, 11, 18, 15> fid_ = {};
 };
 template <>
 struct cavity_coeff<DIMZ, Side::Right, 19> {
-  int fid_[5] = {6, 13, 12, 17, 16};
+  static constexpr std::integer_sequence<int, 6, 13, 12, 17, 16> fid_ = {};
 };
 
 /** @brief Cavity boundary condition */
@@ -68,10 +68,20 @@ struct cavity<Dim, S, 19> {
     const double uxx = ux * (1 + 0.5 / (L - 1));
     const double uyy = uy * (1 + 0.5 / (L - 1));
     const double uzz = uz * (1 + 0.5 / (L - 1));
-    for (int i = 0; i < Un; i++) {
-      const int fid = c_coeff.fid_[i];
-      coeff_[i] = 6. * w[fid] * (ex[fid] * uxx + ey[fid] * uyy + ez[fid] * uzz);
-    }
+    int idx = 0;
+    stencil::for_specific_dirs_impl<typename LBMScheme<Q>::Coefficients>(
+        [&]<typename coeff, int iLB> {
+          coeff_[idx++] = 6. * coeff::w * (coeff::ex * uxx + coeff::ey * uyy + coeff::ez * uzz);
+        },
+        c_coeff.fid_);
+
+    assert(idx == Un && "The number of computed coefficients does not match the expected number of unknowns.");
+
+    /*
+  for (int i = 0; i < Un; i++) {
+  const int fid = c_coeff.fid_[i];
+  coeff_[i] = 6. * w[fid] * (ex[fid] * uxx + ey[fid] * uyy + ez[fid] * uzz);
+  }*/
   }
 
   /** @brief Apply the cavity boundary condition
