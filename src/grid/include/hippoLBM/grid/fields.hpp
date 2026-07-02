@@ -55,47 +55,47 @@ struct LBMScheme<19> {
   template <typename T>
   using vector_t = onika::memory::CudaMMVector<T>;
   // Ex Ey Ez 1/WDen IOPP
-  using SchemeCoeff = Scheme<Direction<0, 0, 0, 3, 0>,      // 0  -> 0
-                             Direction<1, 0, 0, 18, 2>,     // 1  -> 2
-                             Direction<-1, 0, 0, 18, 1>,    // 2  -> 1
-                             Direction<0, 1, 0, 18, 4>,     // 3  -> 4
-                             Direction<0, -1, 0, 18, 3>,    // 4  -> 3
-                             Direction<0, 0, 1, 18, 6>,     // 5  -> 6
-                             Direction<0, 0, -1, 18, 5>,    // 6  -> 5
-                             Direction<1, 1, 0, 36, 8>,     // 7  -> 8
-                             Direction<-1, -1, 0, 36, 7>,   // 8  -> 7
-                             Direction<1, -1, 0, 36, 10>,   // 9  -> 10
-                             Direction<-1, 1, 0, 36, 9>,    // 10 -> 9
-                             Direction<1, 0, 1, 36, 12>,    // 11 -> 12
-                             Direction<-1, 0, -1, 36, 11>,  // 12 -> 11
-                             Direction<1, 0, -1, 36, 14>,   // 13 -> 14
-                             Direction<-1, 0, 1, 36, 13>,   // 14 -> 13
-                             Direction<0, 1, 1, 36, 16>,    // 15 -> 16
-                             Direction<0, -1, -1, 36, 15>,  // 16 -> 15
-                             Direction<0, 1, -1, 36, 18>,   // 17 -> 18
-                             Direction<0, -1, 1, 36, 17>>;  // 18 -> 17
-  constexpr static int Q = SchemeCoeff::Q;
+  using Coefficients = Scheme<Direction<0, 0, 0, 3, 0>,      // 0  -> 0
+                              Direction<1, 0, 0, 18, 2>,     // 1  -> 2
+                              Direction<-1, 0, 0, 18, 1>,    // 2  -> 1
+                              Direction<0, 1, 0, 18, 4>,     // 3  -> 4
+                              Direction<0, -1, 0, 18, 3>,    // 4  -> 3
+                              Direction<0, 0, 1, 18, 6>,     // 5  -> 6
+                              Direction<0, 0, -1, 18, 5>,    // 6  -> 5
+                              Direction<1, 1, 0, 36, 8>,     // 7  -> 8
+                              Direction<-1, -1, 0, 36, 7>,   // 8  -> 7
+                              Direction<1, -1, 0, 36, 10>,   // 9  -> 10
+                              Direction<-1, 1, 0, 36, 9>,    // 10 -> 9
+                              Direction<1, 0, 1, 36, 12>,    // 11 -> 12
+                              Direction<-1, 0, -1, 36, 11>,  // 12 -> 11
+                              Direction<1, 0, -1, 36, 14>,   // 13 -> 14
+                              Direction<-1, 0, 1, 36, 13>,   // 14 -> 13
+                              Direction<0, 1, 1, 36, 16>,    // 15 -> 16
+                              Direction<0, -1, -1, 36, 15>,  // 16 -> 15
+                              Direction<0, 1, -1, 36, 18>,   // 17 -> 18
+                              Direction<0, -1, 1, 36, 17>>;  // 18 -> 17
+  constexpr static int Q = Coefficients::Q;
   static_assert(Q == 19, "LBMScheme<19> should have 19 directions");
   // temporary
   template <std::size_t... Is>
   static vector_t<double> build_w(std::index_sequence<Is...>) {
-    return {SchemeCoeff::template dir<Is>::w...};
+    return {Coefficients::template dir<Is>::w...};
   }
   template <std::size_t... Is>
   static vector_t<int> build_ex(std::index_sequence<Is...>) {
-    return {SchemeCoeff::template dir<Is>::ex...};
+    return {Coefficients::template dir<Is>::ex...};
   }
   template <std::size_t... Is>
   static vector_t<int> build_ey(std::index_sequence<Is...>) {
-    return {SchemeCoeff::template dir<Is>::ey...};
+    return {Coefficients::template dir<Is>::ey...};
   }
   template <std::size_t... Is>
   static vector_t<int> build_ez(std::index_sequence<Is...>) {
-    return {SchemeCoeff::template dir<Is>::ez...};
+    return {Coefficients::template dir<Is>::ez...};
   }
   template <std::size_t... Is>
   static vector_t<int> build_iopp(std::index_sequence<Is...>) {
-    return {SchemeCoeff::template iopp_of<Is>...};
+    return {Coefficients::template iopp_of<Is>...};
   }
 
   using Seq = std::make_index_sequence<Q>;

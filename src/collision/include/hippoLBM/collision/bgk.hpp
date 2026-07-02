@@ -52,27 +52,13 @@ struct bgk {
     const double uz = m1_(idx, 2);
     const double u_squ = (ux * ux + uy * uy + uz * uz);
 
-    stencil::stencil_for_each<typename LBMScheme<Q>::SchemeCoeff, 0, Q>([&]<typename dir, int iLB> {
+    stencil::for_each<typename LBMScheme<Q>::Coefficients, 0, Q>([&]<typename coeff, int iLB> {
       double& fiLB = f_(idx, iLB);
-      double ef = dir::ex * m_Fext_.x + dir::ey * m_Fext_.y + dir::ez * m_Fext_.z;
-      double eu = dir::ex * ux + dir::ey * uy + dir::ez * uz;
-      double feq = dir::w * rho * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
-      fiLB += update * ((feq - fiLB) / tau_ + 3. * rho * dir::w * ef);
+      double ef = coeff::ex * m_Fext_.x + coeff::ey * m_Fext_.y + coeff::ez * m_Fext_.z;
+      double eu = coeff::ex * ux + coeff::ey * uy + coeff::ez * uz;
+      double feq = coeff::w * rho * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
+      fiLB += update * ((feq - fiLB) / tau_ + 3. * rho * coeff::w * ef);
     });
-    /*
-        for (int iLB = 0; iLB < Q; iLB++) {
-          const int& exiLB = ex_[iLB];
-          const int& eyiLB = ey_[iLB];
-          const int& eziLB = ez_[iLB];
-          const double& wiLB = w_[iLB];
-          double& fiLB = f_(idx, iLB);
-          double ef = exiLB * m_Fext_.x + eyiLB * m_Fext_.y + eziLB * m_Fext_.z;
-          double eu = exiLB * ux + eyiLB * uy + eziLB * uz;
-          double feq = wiLB * rho * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
-          // double feq = wiLB * rho * (1. +  eu * (3. + 4.5 * eu) + - 1.5 * u_squ);
-          fiLB += update * ((feq - fiLB) / tau_ + 3. * rho * wiLB * ef);
-        }
-          */
   }
 };
 }  // namespace hippoLBM
