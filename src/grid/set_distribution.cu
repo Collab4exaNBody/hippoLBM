@@ -73,7 +73,7 @@ class SetDistributionsLBM : public OperatorNode {
     LBMGrid& Grid = Domain.m_grid_;
     GridIJKtoIdx ijk_to_idx(Grid);
 
-    FieldView pf = data.distributions();
+    FieldView<Q> pf = data.distributions();
 
     // define kernel
     init_distributions<Q> func = {*value, ijk_to_idx};

@@ -65,8 +65,8 @@ struct Obstacles {
       return func(m_data_.get_nth<OBSTACLE_TYPE::BALL>()[m_type_index_[idx].m_index_]);
     } else if (t == OBSTACLE_TYPE::WALL) {
       return func(m_data_.get_nth<OBSTACLE_TYPE::WALL>()[m_type_index_[idx].m_index_]);
-    } else if (t == OBSTACLE_TYPE::QUADRICS) {
-      return func(m_data_.get_nth<OBSTACLE_TYPE::QUADRICS>()[m_type_index_[idx].m_index_]);
+    } else if (t == OBSTACLE_TYPE::QUADRIC) {
+      return func(m_data_.get_nth<OBSTACLE_TYPE::QUADRIC>()[m_type_index_[idx].m_index_]);
     }
     /*
              else if (t == OBSTACLE_TYPE::STL_MESH) return func( m_data_.get_nth<OBSTACLE_TYPE::STL_MESH>()[
@@ -107,7 +107,7 @@ struct Obstacles {
     m_type_index_.clear();
     m_data_.get_nth<OBSTACLE_TYPE::BALL>().clear();
     m_data_.get_nth<OBSTACLE_TYPE::WALL>().clear();
-    m_data_.get_nth<OBSTACLE_TYPE::QUADRICS>().clear();
+    m_data_.get_nth<OBSTACLE_TYPE::QUADRIC>().clear();
 
     /*
              m_data_.get_nth<OBSTACLE_TYPE::STL_MESH>().clear();

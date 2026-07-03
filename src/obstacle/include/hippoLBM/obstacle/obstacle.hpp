@@ -62,6 +62,13 @@ class Ball {
     onika::math::Vec3d r = pos - m_center_;
     return dot(r, r) <= m_r2_;
   }
+
+  /** @brief Print information about the ball.
+   */
+  void print() {
+    lout << "Ball center: (" << m_center_.x << ", " << m_center_.y << ", " << m_center_.z << "), radius: " << m_radius_
+         << std::endl;
+  }
 };
 
 class Wall {
@@ -88,6 +95,13 @@ class Wall {
    *  @return True if the point is inside the wall, false otherwise.
    */
   ONIKA_HOST_DEVICE_FUNC bool solid(onika::math::Vec3d&& pos) { return intersect(bounds_, pos); }
+
+  /** @brief Print information about the wall.
+   */
+  void print() {
+    lout << "Wall bounds: [(" << bounds_.bmin.x << ", " << bounds_.bmin.y << ", " << bounds_.bmin.z << "), ("
+         << bounds_.bmax.x << ", " << bounds_.bmax.y << ", " << bounds_.bmax.z << ")]" << std::endl;
+  }
 };
 
 class Quadric {
@@ -120,10 +134,22 @@ class Quadric {
   ONIKA_HOST_DEVICE_FUNC bool solid(onika::math::Vec3d&& pos) {
     return onika::math::quadric_eval(quadric_, pos) <= 0.0;
   }
+  /** @brief Print information about the quadric.
+   */
+  void print() {
+    lout << "Quadric matrix: " << std::endl;
+    for (int i = 0; i < 4; ++i) {
+      for (int j = 0; j < 4; ++j) {
+        lout << quadric_(i, j) << " ";
+      }
+      lout << std::endl;
+    }
+  }
 };
 
 template <typename T>
 inline constexpr OBSTACLE_TYPE get_type();
+
 template <>
 constexpr OBSTACLE_TYPE get_type<Ball>() {
   return OBSTACLE_TYPE::BALL;
