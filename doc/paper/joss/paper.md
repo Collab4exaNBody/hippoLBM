@@ -56,14 +56,12 @@ Le premier cas d'utilisation a été réalisé en couplant `HippoLBM` avec le co
 Concernant les fonctionnalités de performance, `HippoLBM` propose une parallélisation hybride `MPI` + `X`, `X`=`OpenMP` ou `CUDA`, en utilisant les méthodes et stratégies classiques de parallélisation de la méthode LBM (décomposition spatiale du domaine, optimisation GPU TODO). Néanmoins, certaines stratégies comme l'utilisation de méthode de raffinement adaptatif de maillage ou la fusion automatique de kernel n'ont pas été intégrées.
 -->
 
-`HippoLBM` is a CFD code written in C++20 using the Lattice Boltzmann Method (LBM) that aims to provide a high-performance tool on both CPU and GPU for LBM+X coupling, using the `Onika` formalism [@carrard2023exanbody], which enables the construction of execution graphs from a list of operators.
-In `HippoLBM`, an operator can be a call to a compute kernel such as the BGK or MRT collision step, a field initialization, a ParaView output, or any step or sequence of steps within the computation. In `HippoLBM`, we seek to provide fine-grained operators in order to build couplings with other codes that also use the `Onika` formalism. The first use case was achieved by coupling `HippoLBM` with the `exaDEM` code [@prat2025exadem] using the Discret Element Method (DEM) with R-shape particles to perform DEM/LBM simulations.
-
+`HippoLBM` is a C++20 LBM code that aims to provide a high-performance tool for LBM+X coupling on both CPU and GPU, using the `Onika` formalism [@carrard2023exanbody] to build execution graphs from a list of operators.
+In `HippoLBM`, an operator can be a compute kernel call such as the BGK or MRT collision step, a field initialization, a ParaView output, or any other step or sequence of steps in the computation. We target fine operator granularity to enable couplings with other codes that also use the `Onika` formalism. The first use case was coupling `HippoLBM` with the `exaDEM` code [@prat2025exadem] for DEM/LBM simulations using R-shaped particles.
 
 ![a)Lid driven cavity simulation. b) Example using obstacles defined by quadrics. c) Von Kármán vortex street simulation. \label{fig:examples}](./groupir.png){width=70%} 
 
-Regarding performance features, `HippoLBM` provides hybrid MPI+X parallelization, where X is either OpenMP or CUDA, using standard LBM parallelization methods and strategies (spatial domain decomposition, GPU optimization [@tran2017performance]}
-). However, certain strategies such as adaptive mesh refinement or automatic kernel fusion [@mahmoud2024optimized] have not yet been integrated. `HippoLBM` has been tested over 192 GPUs A100 and could handle arround 69 billions of LB points, see \authoref{fig:perf}.
+Regarding performance, `HippoLBM` supports hybrid MPI+X parallelization, where X is either OpenMP or CUDA, and relies on standard LBM parallelization strategies (spatial domain decomposition, GPU optimization [@tran2017performance]). However, some strategies such as adaptive mesh refinement or automatic kernel fusion [@mahmoud2024optimized] are not yet implemented. `HippoLBM` has been tested on 192 NVIDIA A100 GPUs and can handle around 69 billion LB points (see \autoref{fig:perf}).
 
 
 ![Number of Million Lattice Updates per Second (MLUPS) in strong scaling for different domain sizes of a Couette Flow simulation. This benchmark was conducted on NVIDIA A100 GPUs with CUDA 12.4 on the CCRT Topaze supercomputer. \label{fig:perf}](./perf.png){width=60%} 
