@@ -26,9 +26,7 @@ date: 26 June 2026
 bibliography: paper.bib
 ---
 
-# Summary
-
-`HippoLBM` is ...
+# Introduction
 
 <!--
 La méthode Boltzmann sur réseau a été introduite il y a ... et permet de simuler le comportement d'un fluide ... L'un des avantages de cette méthode est qu'elle est nativement parallèle avec des calculs indépendants en chaque point de la grille LBM. De plus, due à l'utilisation de grille régulière (cartésienne), cette méthode a largement été portée sur GPU et permet de réaliser des scénarios à grande échelle avec des milliards de nœuds.
@@ -38,12 +36,11 @@ Ce qui nous intéresse avec cette méthode, c'est la possibilité de la coupler 
 Pour faciliter ce type de couplage, un framework permettant d'écrire chaque opération élémentaire (IO, numerical scheme, analysis) comme un opérateur et reliés les uns aux autres via des slots a été mis en place. Dans ce papier nous nous intéressons au code `HippoLBM` qui est issu d'une partie du code legacy effectuant de la LBMDEM dont les structures de données ont été adaptées pour le portage sur GPU et à une parallélisation hybride MPI + GPU.
 -->
 
+The Lattice Boltzmann Method (LBM) (LHASSAN ADD REF) is a longstanding numerical approach for fluid simulation that inherently exposes fine-grained parallelism: updates at each lattice node are locally independent. Its use of a regular Cartesian mesh facilitates efficient GPU implementations, enabling simulations at very large scale—ranging up to billions of lattice nodes.
 
-The Lattice Boltzmann Method was introduced ... years ago and is used to simulate the behavior of a fluid ... One of the advantages of this method is that it is natively parallel, with independent computations at each point of the LBM grid. Moreover, due to the use of a regular (Cartesian) grid, this method has been widely ported to GPU and enables large-scale scenarios with billions of nodes to be carried out.
+This method is particularly attractive because it can be coupled with other techniques using for example the Immersed Boundary Method (IBM), enabling the simulation of nuclear-relevant scenarios such as Loss-Of-Coolant Accidents (LOCA), in which a breach in the fuel cladding induces a pressure drop and ejects particles from the fuel rod (LHASSAN ADD REF).
 
-What makes this method particularly interesting is the possibility of coupling it with other methods via the Immersed Boundary Method, in order to carry out scenarios of interest in the nuclear field, notably LOCA (Loss-Of-Coolant Accident) scenarios, where a breach forms in a fuel cladding, creating a pressure drop and ejecting particles out of the fuel rod.
-
-To facilitate this type of coupling, a framework was developed that allows each elementary operation (IO, numerical scheme, analysis) to be written as an operator and linked to others via slots. In this paper, we focus on the `HippoLBM` code, which originates from part of a legacy code performing LBM-DEM, whose data structures have been adapted for GPU porting and hybrid MPI + GPU parallelization.
+To enable such couplings, we developed a framework that expresses each elementary operation (I/O, numerical schemes, analyses) as an operator and connects operators via slots. In this paper, we concentrate on the `HippoLBM` code, derived from legacy LBM/DEM software and refactored for GPU execution and hybrid MPI+GPU parallelization.
 
 # Statement of need
 <!--
@@ -60,7 +57,11 @@ Concernant les fonctionnalités de performance, `HippoLBM` propose une parallél
 `HippoLBM` is a CFD code written in C++20 using the Lattice Boltzmann Method (LBM) that aims to provide a high-performance tool on both CPU and GPU for LBM+X coupling, using the `Onika` formalism [@carrard2023exanbody], which enables the construction of execution graphs from a list of operators.
 In `HippoLBM`, an operator can be a call to a compute kernel such as the BGK or MRT collision step, a field initialization, a ParaView output, or any step or sequence of steps within the computation. In `HippoLBM`, we seek to provide fine-grained operators in order to build couplings with other codes that also use the `Onika` formalism. The first use case was achieved by coupling `HippoLBM` with the `exaDEM` code [@prat2025exadem] using the Discret Element Method (DEM) with R-shape particles to perform DEM/LBM simulations.
 
-Regarding performance features, `HippoLBM` provides hybrid MPI+X parallelization, where X is either OpenMP or CUDA, using standard LBM parallelization methods and strategies (spatial domain decomposition, GPU optimization TODO). However, certain strategies such as adaptive mesh refinement or automatic kernel fusion have not yet been integrated. `HippoLBM` has been tested over 192 GPUs A100 and could handle arround 60 billions of LB points.
+Regarding performance features, `HippoLBM` provides hybrid MPI+X parallelization, where X is either OpenMP or CUDA, using standard LBM parallelization methods and strategies (spatial domain decomposition, GPU optimization [@tran2017performance]}
+). However, certain strategies such as adaptive mesh refinement or automatic kernel fusion [@mahmoud2024optimized] have not yet been integrated. `HippoLBM` has been tested over 192 GPUs A100 and could handle arround 69 billions of LB points.
+
+![a)Lid driven Cavity. b) Example using obstacles defined by quadrics. c) Karman Vortex. \label{fig:examples}](./groupir.png){width=70%} 
+
 
 # State of the field                                                                                                                  
 
@@ -70,9 +71,10 @@ Dans le domaine des codes utilisant la méthode Lattice de Boltzmann en 3D, plus
 `HippoLBM` se différencie principalement de l'état de l'art plus dans sa conception que dans ses fonctionnalités physiques ou HPC qui pourront être enrichies par la suite, afin de s'intégrer dans des écosystèmes complexes et multi-physiques.
 -->
 
-In the field of codes using the 3D Lattice Boltzmann Method, several codes offer more advanced physical capabilities than `HippoLBM`, such as `ProLB`, which can simulate compressible fluids, or `LBMSaclay`, which enables multiphase simulations.
+In the field of codes using the 3D Lattice Boltzmann Method, several codes offer more advanced physical capabilities than `HippoLBM`, such as `ProLB` [@feng2021prolb], which can simulate compressible fluids, OpenLB [@heuveline2007openlb]  with XXX, or `LBMSaclay` [@cartalade2016lattice](check ref), which enables multiphase simulations. 
 
-`HippoLBM` differs from the state of the art mainly in its design rather than in its physical or HPC capabilities, which can be further enriched in the future in order to integrate into complex, multi-physics ecosystems.
+
+`HippoLBM` differs from the state of the art mainly in its design rather than in its physical or HPC capabilities, which can be further enriched in the future in order to integrate into complex, multi-physics ecosystems. Note that waLBerla [@bauer2021walberla] + , Palabos [@latt2021palabos] with LIGGGTHS proposes multiphysic couplings with HPC features.
 
 
 # Software design
@@ -95,7 +97,7 @@ plugin Obstacle: Ce plugin permet de placer des objets solides inamovibles comme
 - `bcs`: This plugin contains the compute kernels for applying boundary conditions (e.g., Neumann conditions for Couette or Poiseuille flows, bounce-back for solid boundaries, or lid-driven cavity setups).
 - `io`: This plugin is currently used to display logs and produce ParaView output files for post-processing. Future developments will extend it to support in-situ analysis.
 - `prepo`: This plugin provides pre-initialization of fields for specific flow regimes, such as double Couette flow.
-- `obstacle`: This plugin allows placing fixed solid objects, such as walls, within the simulation domain.
+- `obstacle`: This plugin allows placing fixed solid objects, such as walls or geometries defined by quadrics, see \autoref{fig:examples}.b, within the simulation domain. 
 
 # Research impact statement
 
