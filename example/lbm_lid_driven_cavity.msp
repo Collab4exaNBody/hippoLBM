@@ -1,28 +1,28 @@
 do_domain:
   - domain:
-     bounds:    [ [0 m, 0 m, 0 m],[0.01 m, 0.0005 m, 0.01 m] ]
-     grid_dims: [ 200 , 10 , 200 ]
+     bounds:    [ [0 m, 0 m, 0 m],[0.01 m, 0.00025, 0.01 m] ]
+     grid_dims: [ 400 , 10 , 400 ]
      periodic:  [ false, true, false ]
 
 set_lbm_parameters:
   - lbm_parameters:
      Fext: [0,0,0]
      nuth: 1e-5  # m2.s-1
-     celerity: 10
-
-pre_stream_bcs:
-  - pre_bounce_back
+     tau: 0.7
 
 post_stream_bcs:
-  - post_bounce_back
   - lid_driven_cavity:  ## need to be called after bounce back
      U: [1, 0.0, 0]  ## Re : 1000   
      regions: [plan_xy_l]
+  - lid_driven_cavity:  ## need to be called after bounce back
+     U: [0, 0.0, 0]  ## Re : 1000   
+     regions: [plan_xy_0, plan_yz_0, plan_yz_l]
 
-collision: mrt # or bgk
+
+collision: bgk # or bgk
 
 global:
    simulation_print_log_freq: 100
-   simulation_paraview_freq: 1000
-   simulation_end_iteration: 50000
+   simulation_paraview_freq: 10000
+   simulation_end_iteration: 100000
    output_directory: "LidDrivenCavityDir"
