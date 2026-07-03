@@ -78,14 +78,16 @@ class RegisterQuadric : public OperatorNode {
  
         setup_obstacles:
           - register_quadrics:
-                quadrics: [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,-1]]
+             id: 0
+             quadrics: sphere
+             transform:
+               - scale: [1.0, 1.0, 1.0]
+               - translate: [0.0, 0.0, 0.0]
         )EOF";
   }
 
   inline void execute() override final {
     onika::math::Mat4d quadric = *quadrics;
-    LBMGrid& Grid = domain->m_grid_;
-    auto& data = *fields;
 
     // transform the quadric if a transform is provided
     if (transform.has_value()) {
@@ -93,10 +95,6 @@ class RegisterQuadric : public OperatorNode {
       quadric = onika::math::transpose(M_inv) * quadric * M_inv;
     }
 
-    /*    SetObstacleQuadric func = {Grid, data.obstacles(), quadric};
-
-        Box3D parallel_range = Grid.build_box<Area::Local, Traversal::All>();
-        hippoLBM::parallel_for(parallel_range, func, parallel_execution_context("set_obstacle_quadric"));*/
     // register it
     hippoLBM::Quadric obj(quadric);
     obstacles->add(*id, obj);

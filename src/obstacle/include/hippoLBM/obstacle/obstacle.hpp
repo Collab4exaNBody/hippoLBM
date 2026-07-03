@@ -20,7 +20,7 @@ inline bool intersect(onika::math::AABB& aabb, onika::math::Vec3d& v) {
 enum OBSTACLE_TYPE {
   BALL = 0,     /**< Ball driver type. */
   WALL = 1,     /**< Wall driver type. */
-  QUADRICS = 2, /**< Quadric driver type. */
+  QUADRIC = 2,  /**< Quadric driver type. */
   STL_MESH = 3, /**< STL mesh driver type. */
   UNDEFINED = 4 /**< Undefined driver type. */
 };
@@ -66,8 +66,8 @@ class Ball {
   /** @brief Print information about the ball.
    */
   void print() {
-    lout << "Ball center: (" << m_center_.x << ", " << m_center_.y << ", " << m_center_.z << "), radius: " << m_radius_
-         << std::endl;
+    onika::lout << "Ball center: (" << m_center_.x << ", " << m_center_.y << ", " << m_center_.z
+                << "), radius: " << m_radius_ << std::endl;
   }
 };
 
@@ -99,8 +99,8 @@ class Wall {
   /** @brief Print information about the wall.
    */
   void print() {
-    lout << "Wall bounds: [(" << bounds_.bmin.x << ", " << bounds_.bmin.y << ", " << bounds_.bmin.z << "), ("
-         << bounds_.bmax.x << ", " << bounds_.bmax.y << ", " << bounds_.bmax.z << ")]" << std::endl;
+    onika::lout << "Wall bounds: [(" << bounds_.bmin.x << ", " << bounds_.bmin.y << ", " << bounds_.bmin.z << "), ("
+                << bounds_.bmax.x << ", " << bounds_.bmax.y << ", " << bounds_.bmax.z << ")]" << std::endl;
   }
 };
 
@@ -125,7 +125,7 @@ class Quadric {
   /** @brief Get the type of the obstacle.
    *  @return The type of the obstacle.
    */
-  constexpr OBSTACLE_TYPE type() { return OBSTACLE_TYPE::QUADRICS; }
+  constexpr OBSTACLE_TYPE type() { return OBSTACLE_TYPE::QUADRIC; }
 
   /** @brief Check if a point is inside the wall.
    *  @param pos The point to check.
@@ -137,12 +137,12 @@ class Quadric {
   /** @brief Print information about the quadric.
    */
   void print() {
-    lout << "Quadric matrix: " << std::endl;
+    onika::lout << "Quadric matrix: " << std::endl;
     for (int i = 0; i < 4; ++i) {
       for (int j = 0; j < 4; ++j) {
-        lout << quadric_(i, j) << " ";
+        onika::lout << quadric_.m[i][j] << " ";
       }
-      lout << std::endl;
+      onika::lout << std::endl;
     }
   }
 };
@@ -160,6 +160,6 @@ constexpr OBSTACLE_TYPE get_type<Wall>() {
 }
 template <>
 constexpr OBSTACLE_TYPE get_type<Quadric>() {
-  return OBSTACLE_TYPE::QUADRICS;
+  return OBSTACLE_TYPE::QUADRIC;
 }
 }  // namespace hippoLBM
