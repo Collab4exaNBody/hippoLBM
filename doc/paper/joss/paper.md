@@ -42,6 +42,8 @@ This method is particularly attractive because it can be coupled with other tech
 
 To enable such couplings, we developed a framework that expresses each elementary operation (I/O, numerical schemes, analyses) as an operator and connects operators via slots. In this paper, we concentrate on the `HippoLBM` code, derived from legacy LBM/DEM software and refactored for GPU execution and hybrid MPI+GPU parallelization.
 
+
+
 # Statement of need
 <!--
 `HippoLBM` is CFD code writen in C++ 20 ...
@@ -57,10 +59,15 @@ Concernant les fonctionnalités de performance, `HippoLBM` propose une parallél
 `HippoLBM` is a CFD code written in C++20 using the Lattice Boltzmann Method (LBM) that aims to provide a high-performance tool on both CPU and GPU for LBM+X coupling, using the `Onika` formalism [@carrard2023exanbody], which enables the construction of execution graphs from a list of operators.
 In `HippoLBM`, an operator can be a call to a compute kernel such as the BGK or MRT collision step, a field initialization, a ParaView output, or any step or sequence of steps within the computation. In `HippoLBM`, we seek to provide fine-grained operators in order to build couplings with other codes that also use the `Onika` formalism. The first use case was achieved by coupling `HippoLBM` with the `exaDEM` code [@prat2025exadem] using the Discret Element Method (DEM) with R-shape particles to perform DEM/LBM simulations.
 
-Regarding performance features, `HippoLBM` provides hybrid MPI+X parallelization, where X is either OpenMP or CUDA, using standard LBM parallelization methods and strategies (spatial domain decomposition, GPU optimization [@tran2017performance]}
-). However, certain strategies such as adaptive mesh refinement or automatic kernel fusion [@mahmoud2024optimized] have not yet been integrated. `HippoLBM` has been tested over 192 GPUs A100 and could handle arround 69 billions of LB points.
 
-![a)Lid driven Cavity. b) Example using obstacles defined by quadrics. c) Karman Vortex. \label{fig:examples}](./groupir.png){width=70%} 
+![a)Lid driven cavity simulation. b) Example using obstacles defined by quadrics. c) Von Kármán vortex street simulation. \label{fig:examples}](./groupir.png){width=70%} 
+
+Regarding performance features, `HippoLBM` provides hybrid MPI+X parallelization, where X is either OpenMP or CUDA, using standard LBM parallelization methods and strategies (spatial domain decomposition, GPU optimization [@tran2017performance]}
+). However, certain strategies such as adaptive mesh refinement or automatic kernel fusion [@mahmoud2024optimized] have not yet been integrated. `HippoLBM` has been tested over 192 GPUs A100 and could handle arround 69 billions of LB points, see \authoref{fig:perf}.
+
+
+![Number of Million Lattice Updates per Second (MLUPS) in strong scaling for different domain sizes of a Couette Flow simulation. This benchmark was conducted on NVIDIA A100 GPUs with CUDA 12.4 on the CCRT Topaze supercomputer. \label{fig:perf}](./perf.png){width=60%} 
+
 
 
 # State of the field                                                                                                                  
@@ -101,7 +108,7 @@ plugin Obstacle: Ce plugin permet de placer des objets solides inamovibles comme
 
 # Research impact statement
 
-The legacy (non-HPC) code was used to perform 2D LBM/DEM simulations on ... [@amarsid2017viscoinertial]. `HippoLBM` aims to explore large-scale 3D simulations in LBM and coupling. Through its interface with `Onika`, `HippoLBM` could be coupled to physics other than DEM using methods such as the Immersed Boundary Method, the Material Point Method (MPM), the Finite Element Method (FEM), or the Finite Difference Method (FDM).
+The legacy (non-HPC) code was used to perform 2D LBM/DEM simulations on ... [@amarsid2017viscoinertial]. `HippoLBM` aims to explore large-scale 3D simulations in LBM and coupling. Through its interface with `Onika`, `HippoLBM` could be coupled to physics other than DEM using methods such as the Material Point Method (MPM), the Finite Element Method (FEM), or the Finite Difference Method (FDM).
 
 # AI usage disclosure
 
