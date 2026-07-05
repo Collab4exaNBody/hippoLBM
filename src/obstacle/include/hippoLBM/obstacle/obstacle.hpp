@@ -10,7 +10,7 @@ namespace hippoLBM {
  *  @param v The point to check.
  *  @return True if the point intersects with the bounding box, false otherwise.
  */
-inline bool intersect(const onika::math::AABB& aabb, const onika::math::Vec3d& v) {
+ONIKA_HOST_DEVICE_FUNC inline bool intersect(const onika::math::AABB& aabb, const onika::math::Vec3d& v) {
   auto& min = aabb.bmin;
   auto& max = aabb.bmax;
   return min.x < v.x && v.x < max.x && min.y < v.y && v.y < max.y && min.z < v.z && v.z < max.z;
