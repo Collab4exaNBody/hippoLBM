@@ -10,7 +10,7 @@ namespace hippoLBM {
  *  @param v The point to check.
  *  @return True if the point intersects with the bounding box, false otherwise.
  */
-inline bool intersect(onika::math::AABB& aabb, onika::math::Vec3d& v) {
+inline bool intersect(const onika::math::AABB& aabb, const onika::math::Vec3d& v) {
   auto& min = aabb.bmin;
   auto& max = aabb.bmax;
   return min.x < v.x && v.x < max.x && min.y < v.y && v.y < max.y && min.z < v.z && v.z < max.z;
@@ -58,7 +58,7 @@ class Ball {
   ONIKA_HOST_DEVICE_FUNC inline double rcut2() { return m_r2_; }
   ONIKA_HOST_DEVICE_FUNC inline double rcut2() const { return m_r2_; }
 
-  ONIKA_HOST_DEVICE_FUNC bool solid(onika::math::Vec3d&& pos) {
+  ONIKA_HOST_DEVICE_FUNC bool solid(onika::math::Vec3d&& pos) const {
     onika::math::Vec3d r = pos - m_center_;
     return dot(r, r) <= m_r2_;
   }
@@ -94,7 +94,7 @@ class Wall {
    *  @param pos The point to check.
    *  @return True if the point is inside the wall, false otherwise.
    */
-  ONIKA_HOST_DEVICE_FUNC bool solid(onika::math::Vec3d&& pos) { return intersect(bounds_, pos); }
+  ONIKA_HOST_DEVICE_FUNC bool solid(onika::math::Vec3d&& pos) const { return intersect(bounds_, pos); }
 
   /** @brief Print information about the wall.
    */
@@ -131,7 +131,7 @@ class Quadric {
    *  @param pos The point to check.
    *  @return True if the point is inside the wall, false otherwise.
    */
-  ONIKA_HOST_DEVICE_FUNC bool solid(onika::math::Vec3d&& pos) {
+  ONIKA_HOST_DEVICE_FUNC bool solid(onika::math::Vec3d&& pos) const {
     return onika::math::quadric_eval(quadric_, pos) <= 0.0;
   }
   /** @brief Print information about the quadric.

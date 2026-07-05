@@ -20,6 +20,7 @@ under the License.
 #include <onika/scg/operator_factory.h>
 #include <onika/scg/operator_slot.h>
 
+#include <hippoLBM/compute/parallel_for_core.hpp>
 #include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/fields.hpp>
@@ -27,15 +28,29 @@ under the License.
 #include <hippoLBM/obstacle/obstacles.hpp>
 
 namespace hippoLBM {
-using namespace onika;
-using namespace scg;
 
-template <int Q>
-struct UpdateObstaclesFunc {
-  LBMGrid _grid_;       // The LBM grid containing the simulation data.
-  double _dx_;          // The grid spacing of the LBM simulation.
-  int* const _obst_;    // Pointer to the obstacle field in the LBM grid.
-  int _value_ = WALL_;  // The value to set for obstacle cells in the obstacle field.
+template <class Obj>
+struct SetObstacleFunc {
+  Obj obj_;                       // The obstacle object to be applied.
+  LBMGrid grid_;                  // Computes grid indices from (i,j,k) coordinates in the LBM domain.
+  int* const __restrict__ obst_;  // Pointer to the obstacle field.
+  int value_ = WALL_;             // The value to set for obstacle cells in the obstacle field.
+
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(int i, int j, int k) const {
+    if (obj_.solid(grid_.compute_position<hippoLBM::Area::Global>(i, j, k))) {
+      const int idx = grid_(i, j, k);
+      obst_[idx] = value_;  // Mark the cell as an obstacle (e.g., WALL_)
+    }
+  }
+};
+
+template <typename ParExecCtxFunc>
+struct ApplyUpdateObstaclesFunc {
+  LBMGrid grid_;                 // The LBM grid containing the simulation data.
+  double dx_;                    // The grid spacing of the LBM simulation.
+  int* const obst_;              // Pointer to the obstacle field in the LBM grid.
+  ParExecCtxFunc par_exec_ctx_;  // Function to obtain the parallel execution context.
+  int value_ = WALL_;            // The value to set for obstacle cells in the obstacle field.
 
   template <typename Obj>
   inline void operator()(Obj& obj) const {
@@ -43,22 +58,33 @@ struct UpdateObstaclesFunc {
     onika::math::AABB bounds = obj.covered();
     onika::math::Vec3d min = bounds.bmin;
     onika::math::Vec3d max = bounds.bmax;
-    Point3D _min = {int(min.x / _dx_), int(min.y / _dx_), int(min.z / _dx_)};
-    Point3D _max = {int(max.x / _dx_), int(max.y / _dx_), int(max.z / _dx_)};
+    Point3D _min = {int(min.x / dx_), int(min.y / dx_), int(min.z / dx_)};
+    Point3D _max = {int(max.x / dx_), int(max.y / dx_), int(max.z / dx_)};
     Box3D global_box = {_min, _max};
 
-    auto [is_inside_subdomain, local_box] = _grid_.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_box);
-    for (int z = local_box.start(2); z <= local_box.end(2); z++)
-      for (int y = local_box.start(1); y <= local_box.end(1); y++)
-        for (int x = local_box.start(0); x <= local_box.end(0); x++) {
-          if (obj.solid(_grid_.compute_position<Area::Global>(x, y, z))) {
-            const int idx = _grid_(x, y, z);
-            _obst_[idx] = _value_;
-          }
-        }
+    auto [is_inside_subdomain, local_box] = grid_.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_box);
+
+    if (is_inside_subdomain) {
+      SetObstacleFunc func = {obj, grid_, obst_, value_};
+      hippoLBM::parallel_for(local_box, func, par_exec_ctx_("update_obstacles"));
+    }
   }
 };
+}  // namespace hippoLBM
 
+namespace onika {
+namespace parallel {
+template <typename Obj>
+struct ParallelForFunctorTraits<hippoLBM::SetObstacleFunc<Obj>> {
+  static inline constexpr bool RequiresBlockSynchronousCall = false;
+  static inline constexpr bool CudaCompatible = true;
+};
+}  // namespace parallel
+}  // namespace onika
+
+namespace hippoLBM {
+using namespace onika;
+using namespace scg;
 template <int Q>
 class UpdateObstacles : public OperatorNode {
   ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED, DocString{"The LBM domain containing the simulation data."});
@@ -81,7 +107,11 @@ class UpdateObstacles : public OperatorNode {
     auto& obs = *obstacles;
     LBMFields<Q>& grid_data = *fields;
 
-    UpdateObstaclesFunc<Q> func = {domain->m_grid_, domain->dx(), grid_data.obstacles()};
+    // capture the parallel execution context
+    auto par_exec_ctx = [this](const char* exec_name) { return this->parallel_execution_context(exec_name); };
+
+    ApplyUpdateObstaclesFunc func = {domain->m_grid_, domain->dx(), grid_data.obstacles(), par_exec_ctx,
+                                     hippoLBM::WALL_};
 
     for (size_t i = 0; i < obs.size(); i++) {
       obs.apply(i, func);
