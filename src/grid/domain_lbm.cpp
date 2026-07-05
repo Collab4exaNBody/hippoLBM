@@ -44,17 +44,18 @@ class InitDomainLBM : public OperatorNode {
   ADD_SLOT(MPI_Comm, mpi, INPUT, MPI_COMM_WORLD);
   ADD_SLOT(LBMDomain<Q>, domain, OUTPUT, DocString{"The initialized LBM domain."});
   ADD_SLOT(BoolVector, periodic, INPUT_OUTPUT, REQUIRED, DocString{"Periodic boundary conditions for each dimension."});
-  ADD_SLOT(onika::math::IJK, grid_dims, INPUT, REQUIRED, DocString{"Grid dims"});
+  ADD_SLOT(onika::math::IJK, cell_dims, INPUT, REQUIRED,
+           DocString{"Number of cells in each dimension. Grid dims: cells_dims+1."});
   ADD_SLOT(onika::math::AABB, bounds, INPUT_OUTPUT, REQUIRED, DocString{"Domain's bounds"});
 
   inline std::string documentation() const final {
     return R"EOF(
-		This operator initializes the computational domain for the LBM simulation.
+		This operator initializes the computational domain for ²the LBM simulation.
 
 		YAML example:
 
 		domain:
-		   grid_dims: [100, 100, 100]
+		   cell_dims: [100, 100, 100]
 		   bounds:
 			 bmin: [0.0, 0.0, 0.0]
 			 bmax: [1.0, 1.0, 1.0]
@@ -64,7 +65,7 @@ class InitDomainLBM : public OperatorNode {
 
   inline void execute() final {
     GridConfig grid;
-    grid.dims_ = *grid_dims;
+    grid.dims_ = *cell_dims + 1;  // +1 because cell_dims represents the number of cells
     grid.bounds_ = *bounds;
     grid.periodic_ = convert<std::array<bool, 3>>(*periodic);
 
@@ -72,9 +73,9 @@ class InitDomainLBM : public OperatorNode {
     auto [inf, sup] = grid.bounds_;
 
     onika::math::Vec3d resolution_dims;
-    resolution_dims.x = (sup.x - inf.x) / double(grid_size.i);
-    resolution_dims.y = (sup.y - inf.y) / double(grid_size.j);
-    resolution_dims.z = (sup.z - inf.z) / double(grid_size.k);
+    resolution_dims.x = (sup.x - inf.x) / double(grid_size.i - 1);
+    resolution_dims.y = (sup.y - inf.y) / double(grid_size.j - 1);
+    resolution_dims.z = (sup.z - inf.z) / double(grid_size.k - 1);
 
     // check
     bool check_grid_size = false;
@@ -86,13 +87,13 @@ class InitDomainLBM : public OperatorNode {
 
     double reso = resolution_dims.x;
 
-    if (inf.x + grid_size.i * reso != sup.x) {
+    if (inf.x + (grid_size.i - 1) * reso != sup.x) {
       check_grid_size = true;
     }
-    if (inf.y + grid_size.j * reso != sup.y) {
+    if (inf.y + (grid_size.j - 1) * reso != sup.y) {
       check_grid_size = true;
     }
-    if (inf.z + grid_size.k * reso != sup.z) {
+    if (inf.z + (grid_size.k - 1) * reso != sup.z) {
       check_grid_size = true;
     }
     if (check_grid_size) {

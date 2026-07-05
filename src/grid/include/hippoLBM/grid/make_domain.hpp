@@ -56,11 +56,11 @@ struct GridConfig {
  */
 struct SubGridConfig {
   double dx_;                                           ///< Grid node size.
-  onika::math::IJK cart_coordinate_;                   ///< Cartesian coordinates of the subgrid in the process grid.
-  onika::math::IJK cart_dims_;                         ///< Dimensions of the Cartesian process grid.
-  MPI_Comm cart_comm_;                                 ///< MPI Cartesian communicator.
+  onika::math::IJK cart_coordinate_;                    ///< Cartesian coordinates of the subgrid in the process grid.
+  onika::math::IJK cart_dims_;                          ///< Dimensions of the Cartesian process grid.
+  MPI_Comm cart_comm_;                                  ///< MPI Cartesian communicator.
   onika::math::Vec3d offset_;                           ///< Offset of the subgrid relative to the global origin.
-  onika::math::GridBlock block_;                       ///< Local block of cells owned by this subgrid.
+  onika::math::GridBlock block_;                        ///< Local block of cells owned by this subgrid.
   std::array<bool, hippoLBMGridConfig::dim> periodic_;  ///< Periodicity flags along each axis.
 
   /** @brief Display the subgrid configuration. */
@@ -276,13 +276,13 @@ LBMDomain<Q> make_domain(const GridConfig grid, const SubGridConfig& subgrid) {
  */
 SubGridConfig load_balancing(const GridConfig& grid, MPI_Comm comm) {
   auto& [grid_size, bounds, periodic] = grid;
-  double GridDx = double(bounds.bmax.x - bounds.bmin.x) / double(grid_size.i);
+  double GridDx = double(bounds.bmax.x - bounds.bmin.x) / double(grid_size.i - 1);
 
   // Consistency check: ensure dx is the same in all directions
-  if (GridDx != double(bounds.bmax.y - bounds.bmin.y) / double(grid_size.j)) {
+  if (GridDx != double(bounds.bmax.y - bounds.bmin.y) / double(grid_size.j - 1)) {
     onika::lout << "Grid dimensions and bounds are inconsistent: dx must be equal in X and Y." << std::endl;
   }
-  if (GridDx != double(bounds.bmax.z - bounds.bmin.z) / double(grid_size.k)) {
+  if (GridDx != double(bounds.bmax.z - bounds.bmin.z) / double(grid_size.k - 1)) {
     onika::lout << "Grid dimensions and bounds are inconsistent: dx must be equal in Z." << std::endl;
   }
 

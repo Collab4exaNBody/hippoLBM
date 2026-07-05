@@ -56,7 +56,7 @@ class Ball {
   ONIKA_HOST_DEVICE_FUNC inline onika::math::Vec3d& center() { return m_center_; }
   ONIKA_HOST_DEVICE_FUNC inline const onika::math::Vec3d& center() const { return m_center_; }
   ONIKA_HOST_DEVICE_FUNC inline double rcut2() { return m_r2_; }
-  ONIKA_HOST_DEVICE_FUNC inline const double rcut2() const { return m_r2_; }
+  ONIKA_HOST_DEVICE_FUNC inline double rcut2() const { return m_r2_; }
 
   ONIKA_HOST_DEVICE_FUNC bool solid(onika::math::Vec3d&& pos) {
     onika::math::Vec3d r = pos - m_center_;
