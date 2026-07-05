@@ -1,7 +1,7 @@
 do_domain:
   - domain:
      bounds:    [ [0 m,0 m,0 m],[0.01 m,0.01 m,0.01 m] ]
-     grid_dims: [ 30 , 30 , 30 ]
+     cell_dims: [ 30 , 30 , 30 ]
      periodic:  [ false, true, false ]
 
 set_lbm_parameters:
@@ -23,7 +23,7 @@ collision: mrt # or bgk
 
 checker_op:
   - check_macro_quantities:
-     density: 27000
+     density: 29791
      tol: 1.e-8
      vmin: 0.0  # m/s
      vmax: 1.0  # m/s

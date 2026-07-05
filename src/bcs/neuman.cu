@@ -77,7 +77,8 @@ class NeumannOp : public OperatorNode {
     int* const pobst = data.obstacles();
 
     // get traversal
-    const std::vector<std::string> allowed_tr = {"plan_xy_0", "plan_xy_l"};
+    const std::vector<std::string> allowed_tr = {"plan_xy_0", "plan_xy_l", "plan_yz_0",
+                                                 "plan_yz_l", "plan_xz_0", "plan_xz_l"};
     const std::vector<std::string>& region_names = *regions;
     const std::vector<traversal_data> trs = get_traversal(traversals, region_names, allowed_tr);
 
@@ -89,7 +90,23 @@ class NeumannOp : public OperatorNode {
 
       if (traversal.size_ == 0) continue;  // No LBM point in this subdomain
 
-      if (traversal_names == "plan_xy_0") {
+      if (traversal_names == "plan_yz_0") {
+        neumann_x_0<Q> neumann = {};
+        parallel_for_id(traversal.ptr_, traversal.size_, neumann, parallel_execution_context(kernel_name.c_str()),
+                        pobst, pf, ux, uy, uz);
+      } else if (traversal_names == "plan_yz_l") {
+        neumann_x_l<Q> neumann = {};
+        parallel_for_id(traversal.ptr_, traversal.size_, neumann, parallel_execution_context(kernel_name.c_str()),
+                        pobst, pf, ux, uy, uz);
+      } else if (traversal_names == "plan_xz_0") {
+        neumann_y_0<Q> neumann = {};
+        parallel_for_id(traversal.ptr_, traversal.size_, neumann, parallel_execution_context(kernel_name.c_str()),
+                        pobst, pf, ux, uy, uz);
+      } else if (traversal_names == "plan_xz_l") {
+        neumann_y_l<Q> neumann = {};
+        parallel_for_id(traversal.ptr_, traversal.size_, neumann, parallel_execution_context(kernel_name.c_str()),
+                        pobst, pf, ux, uy, uz);
+      } else if (traversal_names == "plan_xy_0") {
         neumann_z_0<Q> neumann = {};
         parallel_for_id(traversal.ptr_, traversal.size_, neumann, parallel_execution_context(kernel_name.c_str()),
                         pobst, pf, ux, uy, uz);

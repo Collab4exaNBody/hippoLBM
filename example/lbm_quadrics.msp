@@ -1,0 +1,50 @@
+do_domain:
+  - domain:
+     bounds: [[0,0,0],[1.0,0.2,0.3]]
+     cell_dims: [ 400, 80, 120 ]
+     periodic: [true, true, false]
+
+set_lbm_parameters:
+  - lbm_parameters:
+     Fext: [1.3 ,0.000000e+00,0.000000e+00]
+     nuth: 1e-3
+     tau: 0.65
+
+set_obstacles:
+  - register_quadrics:
+     id: 0
+     quadrics: cyly
+     transform:
+        - scale: [ 0.05 , 1, 0.05 ]
+        - translate: [ 0.15 , 0.1, 0.1 ]
+  - register_quadrics:
+     id: 1
+     quadrics: sphere
+     transform:
+        - scale: [ 0.05 , 0.08, 0.05 ]
+        - translate: [ 0.35 , 0.1, 0.15 ]
+  - register_quadrics:
+     id: 2
+     quadrics: conez
+     transform:
+        - scale: [ 0.05 , 0.05, 0.05 ]
+        - translate: [ 0.55 , 0.1, 0.25 ]                       
+
+collision: bgk # default model
+
+boundary_conditions:
+  - neumann:
+     U: [0,0,0]
+     regions: [plan_xy_l]
+  - neumann:
+     U: [0,0,0]
+     regions: [plan_xy_0]
+
+pre_stream_bcs:
+  - wall_bounce_back
+
+global:
+   simulation_paraview_freq: 25000
+   simulation_end_iteration: 1000000
+   simulation_print_log_freq: 100   
+   output_directory: "QuadircsDir"

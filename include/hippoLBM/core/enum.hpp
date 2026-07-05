@@ -52,8 +52,8 @@ constexpr int DIMX = 0;     ///< X dimension index
 constexpr int DIMY = 1;     ///< Y dimension index
 constexpr int DIMZ = 2;     ///< Z dimension index
 constexpr int DIM_MAX = 3;  ///< Total number of spatial dimensions
-}  // namespace hippoLBM
 
-// TODO: consider to move this file to a more general location, since it is used by both grid and domain
-#define FLUIDE_ -1
-#define WALL_ -2
+// TODO: consider to move this file to a more general location
+constexpr int FLUIDE_ = -1;
+constexpr int WALL_ = -2;
+}  // namespace hippoLBM

@@ -1,7 +1,7 @@
 do_domain:
   - domain:
      bounds:    [ [0,0,0],[0.1,0.1,0.1] ]
-     grid_dims: [ 400, 400, 400 ]
+     cell_dims: [ 400, 400, 400 ]
      periodic:  [ false, true, false ]
      
 

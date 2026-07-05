@@ -25,8 +25,8 @@ under the License.
 
 // hippoLBM
 #include <hippoLBM/core/box3d.hpp>
-#include <hippoLBM/core/point3d.hpp>
 #include <hippoLBM/core/enum.hpp>
+#include <hippoLBM/core/point3d.hpp>
 #include <hippoLBM/grid/field_view.hpp>
 #include <hippoLBM/grid/grid.hpp>
 
