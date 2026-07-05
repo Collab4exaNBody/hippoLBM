@@ -122,12 +122,8 @@ static inline onika::parallel::ParallelExecutionWrapper parallel_for(
   onika::parallel::ParallelForOptions opts;
   opts.omp_scheduling = onika::parallel::OMP_SCHED_STATIC;
 
-  if constexpr (sizeof...(Args) == 0) {
-    return onika::parallel::parallel_for(parallel_range, a_func, exec_ctx, opts);
-  } else {
-    wrapper_parallel_for_ijk<Func, Args...> runner = {a_func, std::forward<Args>(a_args)...};
-    return onika::parallel::parallel_for(parallel_range, runner, exec_ctx, opts);
-  }
+  wrapper_parallel_for_ijk runner = {a_func, a_args...};
+  return onika::parallel::parallel_for(parallel_range, runner, exec_ctx, opts);
 }
 
 template <typename Func, typename... Args>
