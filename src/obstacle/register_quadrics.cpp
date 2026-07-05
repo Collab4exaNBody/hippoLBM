@@ -29,35 +29,6 @@ under the License.
 #include <hippoLBM/obstacle/obstacles.hpp>
 
 namespace hippoLBM {
-using namespace onika;
-using namespace scg;
-
-struct SetObstacleQuadric {
-  const LBMGrid grid_;            // Computes grid indices from (i,j,k) coordinates in the LBM domain.
-  int* const __restrict__ obst_;  // Pointer to the obstacle field.
-  onika::math::Mat4d Quadrics;
-
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t coord) const {
-    onika::math::Vec3d r = grid_.compute_position<hippoLBM::Area::Global>(coord.x, coord.y, coord.z);
-    if (quadric_eval(Quadrics, r) <= 0.0) {
-      const int idx = grid_(coord.x, coord.y, coord.z);
-      obst_[idx] = hippoLBM::WALL_;  // Mark the cell as an obstacle (e.g., WALL_)
-    }
-  }
-};
-}  // namespace hippoLBM
-
-namespace onika {
-namespace parallel {
-template <>
-struct ParallelForFunctorTraits<hippoLBM::SetObstacleQuadric> {
-  static inline constexpr bool RequiresBlockSynchronousCall = false;
-  static inline constexpr bool CudaCompatible = true;
-};
-}  // namespace parallel
-}  // namespace onika
-
-namespace hippoLBM {
 template <int Q>
 class RegisterQuadric : public OperatorNode {
   ADD_SLOT(Obstacles, obstacles, INPUT_OUTPUT, REQUIRED, DocString{"List of Obstacles"});
@@ -72,17 +43,29 @@ class RegisterQuadric : public OperatorNode {
  public:
   inline std::string documentation() const override final {
     return R"EOF(
-        This operator add a ball to the obstacles list.
- 
+        This operator add a quadric to the obstacles list.
+
         YAML example:
- 
+
         setup_obstacles:
           - register_quadrics:
-             id: 0
-             quadrics: sphere
-             transform:
-               - scale: [1.0, 1.0, 1.0]
-               - translate: [0.0, 0.0, 0.0]
+              id: 0
+              quadrics: cyly
+              transform:
+                - scale:     [ 0.05, 1,    0.05 ]
+                - translate: [ 0.15, 0.1,  0.1  ]
+          - register_quadrics:
+              id: 1
+              quadrics: sphere
+              transform:
+                - scale:     [ 0.05, 0.08, 0.05 ]
+                - translate: [ 0.35, 0.1,  0.15 ]
+          - register_quadrics:
+              id: 2
+              quadrics: conez
+              transform:
+                - scale:     [ 0.05, 0.05, 0.05 ]
+                - translate: [ 0.55, 0.1,  0.25 ]
         )EOF";
   }
 
