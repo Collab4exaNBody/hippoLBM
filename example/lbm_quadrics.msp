@@ -1,7 +1,7 @@
 do_domain:
   - domain:
      bounds: [[0,0,0],[1.0,0.2,0.3]]
-     grid_dims: [ 400, 80, 120 ]
+     cell_dims: [ 400, 80, 120 ]
      periodic: [true, true, false]
 
 set_lbm_parameters:

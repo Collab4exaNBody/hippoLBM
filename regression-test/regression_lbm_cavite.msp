@@ -1,7 +1,7 @@
 do_domain:
   - domain:
      bounds: [[0,0,0],[0.1,0.1,0.1]]
-     grid_dims: [ 30, 30, 30 ]
+     cell_dims: [ 30, 30, 30 ]
      periodic: [false, false, false]
 
 set_lbm_parameters:
@@ -19,7 +19,7 @@ post_stream_bcs:
 
 checker_op:
   - check_macro_quantities:
-     density: 27000
+     density: 29791
      tol: 0.1
      vmin: 1.00e-06
      vmax: 1.00e-01

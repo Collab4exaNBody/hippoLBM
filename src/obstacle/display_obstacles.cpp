@@ -27,7 +27,7 @@ using namespace onika;
 using namespace scg;
 
 class DisplayObstacles : public OperatorNode {
-  ADD_SLOT(Obstacles, obstacles, INTPUT, OPTIONAL, DocString{"List of Obstacles"});
+  ADD_SLOT(Obstacles, obstacles, INPUT, OPTIONAL, DocString{"List of Obstacles"});
 
  public:
   inline std::string documentation() const final {
@@ -49,10 +49,11 @@ class DisplayObstacles : public OperatorNode {
         obst.apply(i, [](auto& obstacle) { obstacle.print(); });
       }
     }
-  };
-
-  // === register factories ===
-  ONIKA_AUTORUN_INIT(display_obstacles) {
-    OperatorNodeFactory::instance()->register_factory("display_obstacles", make_simple_operator<DisplayObstacles>);
   }
+};
+
+// === register factories ===
+ONIKA_AUTORUN_INIT(display_obstacles) {
+  OperatorNodeFactory::instance()->register_factory("display_obstacles", make_simple_operator<DisplayObstacles>);
+}
 }  // namespace hippoLBM
