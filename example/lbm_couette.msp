@@ -7,7 +7,7 @@ do_domain:
 set_lbm_parameters:
   - lbm_parameters:
      Fext: [0,0,0]
-     nuth: 1e3  # m2/s
+     nuth: 1e-3  # m2/s
      tau: 0.7
 
 boundary_conditions:
@@ -26,7 +26,7 @@ analysis:
 
 global:
    simulation_paraview_freq: 100
-   simulation_end_iteration: 1000
-   simulation_analysis_freq: 20
+   simulation_end_iteration: 3000
+   simulation_analysis_freq: 300
    simulation_print_log_freq: 10   
    output_directory: "CouetteTestDir"   
