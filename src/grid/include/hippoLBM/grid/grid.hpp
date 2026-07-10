@@ -383,7 +383,7 @@ struct LBMGrid {
     static_assert(A == Area::Global || A == Area::AsIs);
 
     Point3D pt = this->operator()(id);
-    onika::math::Vec3d res = pt;
+    onika::math::Vec3d res = onika::math::Vec3d(pt);
     if constexpr (A == Area::Global) res += offset_;
     res *= dx_;
     return res;
