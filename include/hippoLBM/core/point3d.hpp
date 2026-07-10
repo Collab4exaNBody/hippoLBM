@@ -25,7 +25,7 @@ namespace hippoLBM {
 
 typedef std::array<int, 3> int3d;
 
-inline ONIKA_HOST_DEVICE_FUNC int3d operator+(int3d& a, int b) {
+ONIKA_HOST_DEVICE_FUNC inline int3d operator+(int3d& a, int b) {
   int3d res;
   for (int dim = 0; dim < 3; dim++) res[dim] = a[dim] + b;
   return res;
@@ -54,37 +54,41 @@ struct Point3D {
     onika::lout << std::endl;
   }
 
-  ONIKA_HOST_DEVICE_FUNC Point3D operator+(Point3D& p) {
+  ONIKA_HOST_DEVICE_FUNC inline Point3D operator+(Point3D& p) {
     Point3D res = {position_[0] + p[0], position_[1] + p[1], position_[2] + p[2]};
     return res;
   }
 
-  ONIKA_HOST_DEVICE_FUNC Point3D operator+(const Point3D& p) {
+  ONIKA_HOST_DEVICE_FUNC inline Point3D operator+(const Point3D& p) {
     Point3D res = {position_[0] + p[0], position_[1] + p[1], position_[2] + p[2]};
     return res;
   }
 
-  ONIKA_HOST_DEVICE_FUNC Point3D operator-(Point3D& p) {
+  ONIKA_HOST_DEVICE_FUNC inline Point3D operator-(Point3D& p) {
     Point3D res = {position_[0] - p[0], position_[1] - p[1], position_[2] - p[2]};
     return res;
   }
 
-  ONIKA_HOST_DEVICE_FUNC Point3D operator-(const Point3D& p) {
+  ONIKA_HOST_DEVICE_FUNC inline Point3D operator-(const Point3D& p) {
     Point3D res = {position_[0] - p[0], position_[1] - p[1], position_[2] - p[2]};
     return res;
   }
 
-  ONIKA_HOST_DEVICE_FUNC Point3D& operator+=(const Point3D& p) {
+  ONIKA_HOST_DEVICE_FUNC inline Point3D& operator+=(const Point3D& p) {
     for (int d = 0; d < 3; d++) position_[d] += p[d];
     return *this;
   }
-  ONIKA_HOST_DEVICE_FUNC Point3D& operator-=(const Point3D& p) {
+  ONIKA_HOST_DEVICE_FUNC inline Point3D& operator-=(const Point3D& p) {
     for (int d = 0; d < 3; d++) position_[d] -= p[d];
     return *this;
   }
+
+  ONIKA_HOST_DEVICE_FUNC inline operator onika::math::Vec3d() const {
+    return {double(position_[0]), double(position_[1]), double(position_[2])};
+  }
 };
 
-inline ONIKA_HOST_DEVICE_FUNC Point3D min(Point3D& a, Point3D& b) {
+ONIKA_HOST_DEVICE_FUNC inline Point3D min(Point3D& a, Point3D& b) {
   Point3D res;
   for (int dim = 0; dim < 3; dim++) {
     res[dim] = std::min(a[dim], b[dim]);
@@ -92,7 +96,7 @@ inline ONIKA_HOST_DEVICE_FUNC Point3D min(Point3D& a, Point3D& b) {
   return res;
 }
 
-inline ONIKA_HOST_DEVICE_FUNC Point3D max(Point3D& a, Point3D& b) {
+ONIKA_HOST_DEVICE_FUNC inline Point3D max(Point3D& a, Point3D& b) {
   Point3D res;
   for (int dim = 0; dim < 3; dim++) {
     res[dim] = std::max(a[dim], b[dim]);
