@@ -32,9 +32,9 @@ under the License.
 // hippoLBM
 #include <hippoLBM/bcs/bounce_back_manager.hpp>
 #include <hippoLBM/compute/parallel_for_core.hpp>
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/domain.hpp>
-#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>

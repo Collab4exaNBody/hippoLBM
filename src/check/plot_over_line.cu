@@ -56,20 +56,19 @@ struct PlotLine {
   inline bool resize(Point3D start, Point3D end) {
     // check that the start and end points are aligned along a single dimension
     int count = 0;
-    int size;
+    int size = 0;
     for (int d = 0; d < 3; d++) {
       if (start[d] != end[d]) {
         count++;
-        size = end[d] - start[d];
-        if (size <= 0) {
+        int diff = end[d] - start[d];
+        if (diff <= 0) {
           throw std::runtime_error("PlotLine::resize: end point must be greater than start point");
-          return false;
         }
+        size = diff + 1;  // Box3D bounds are inclusive, so the line spans diff+1 points
       }
     }
     if (count != 1) {
       throw std::runtime_error("PlotLine::resize: start and end points must be aligned along a single dimension");
-      return false;
     }
     velocity_.resize(size);
     std::fill(velocity_.begin(), velocity_.end(), onika::math::Vec3d{0.0, 0.0, 0.0});
@@ -125,8 +124,20 @@ class PlotLineVelocityOp : public OperatorNode {
 
   inline std::string documentation() const final {
     return R"EOF(
+    Extracts the velocity profile along an axis-aligned line and writes it to a CSV file (rx, ry, rz, ux, uy, uz).
+    The line is specified either in physical coordinates (`line`) or in LBM grid indices (`line_lbm`).
 
     YAML example:
+
+    plot_line_velocity:
+      line:
+        min: [[ 0.0, 0.05, 0.0 ],[ 0.0, 0.05, 1.0 ]]
+
+    plot_line_velocity:
+      line_lbm: [[0, 5, 0 ], [ 0, 5, 30 ]]
+
+    global:
+      simulation_analysis_freq: 100  
 
     )EOF";
   }
@@ -138,6 +149,7 @@ class PlotLineVelocityOp : public OperatorNode {
 
     if (line_lbm.has_value() && line.has_value()) {
       lout << "You can't define both slots: line and line_lbm" << std::endl;
+      return;
     } else if (line_lbm.has_value()) {
       global_line = *line_lbm;  //
     } else if (line.has_value()) {
@@ -145,6 +157,7 @@ class PlotLineVelocityOp : public OperatorNode {
       global_line = Box3D{grid.project_to_grid<Area::Global>(inf), grid.project_to_grid<Area::Global>(sup)};
     } else {
       lout << "Error [plot_line_velocity], you need to specify slot line or line_lbm" << std::endl;
+      return;
     }
 
     points.resize(global_line.lower(), global_line.upper());
@@ -152,8 +165,12 @@ class PlotLineVelocityOp : public OperatorNode {
     auto [is_inside_subdomain, local_line] = grid.restrict_box_to_grid<Area::Local, Traversal::Real>(global_line);
 
     if (is_inside_subdomain) {
+      // Same shape as global_line, translated to local coordinates (not clipped to this
+      // rank's subdomain), so line_.get() yields indices relative to the *global* line
+      // start, matching the layout of points.velocity_ across all ranks.
+      Box3D local_full_line = grid.convert<Area::Local>(global_line);
       onika::parallel::ParallelExecutionSpace<3> parallel_range = set(local_line);
-      ExtractVelocityFunctor func = {local_line, grid.bx_, domain->dx() / Params->dtLB_, fields->flux(), points};
+      ExtractVelocityFunctor func = {local_full_line, grid.bx_, domain->dx() / Params->dtLB_, fields->flux(), points};
       parallel_for(parallel_range, func, parallel_execution_context("plot_line"));
     }  // else do nothing, the line is outside the local subdomain
 
