@@ -53,7 +53,7 @@ struct streaming_step2 {
 
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx) const {
     if (check_level<Tr>(levels_[idx])) {
-      auto [x, y, z] = g_(idx);
+      const auto [x, y, z] = g_(idx);
       stencil::for_each<typename LBMScheme<Q>::Coefficients, 1, Q, 2>([&]<typename coeff>(int iLB) {
         const int next_x = x + coeff::ex;
         const int next_y = y + coeff::ey;

@@ -3,8 +3,8 @@
 #include <onika/math/basic_types_def.h>
 
 #include <hippoLBM/core/box3d.hpp>
-#include <hippoLBM/core/point3d.hpp>
 #include <hippoLBM/core/enum.hpp>
+#include <hippoLBM/core/point3d.hpp>
 #include <hippoLBM/grid/grid.hpp>
 
 namespace hippoLBM {
@@ -18,6 +18,6 @@ struct GridIJKtoIdx  // local
   ONIKA_HOST_DEVICE_FUNC int operator()(Point3D& p) const { return bx_(p[0], p[1], p[2]); }
   ONIKA_HOST_DEVICE_FUNC int operator()(Point3D&& p) const { return bx_(p[0], p[1], p[2]); }
   ONIKA_HOST_DEVICE_FUNC int operator()(int x, int y, int z) const { return bx_(x, y, z); }
-  ONIKA_HOST_DEVICE_FUNC inline std::tuple<int, int, int> operator()(int idx) const { return bx_(idx); }
+  ONIKA_HOST_DEVICE_FUNC inline Point3D operator()(int idx) const { return bx_(idx); }
 };
 }  // namespace hippoLBM

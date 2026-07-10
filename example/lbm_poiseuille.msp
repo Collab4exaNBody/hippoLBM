@@ -14,6 +14,10 @@ boundary_conditions:
      U: [0.0,0,0]
      regions: [plan_xy_0, plan_xy_l]
 
+analysis:
+  - plot_line_velocity:
+     line: [[0.05,0.05,0],[0.05,0.05,0.1]]
+
 checker:
   - plane_velocity_profile:
      dimension: Z
@@ -22,4 +26,5 @@ global:
    simulation_paraview_freq: 100
    simulation_end_iteration: 3000
    simulation_print_log_freq: 10   
+   simulation_analysis_freq: 300
    output_directory: "PoiseuilleTestDir"
