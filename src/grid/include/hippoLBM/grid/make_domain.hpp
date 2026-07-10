@@ -197,6 +197,7 @@ LBMDomain<Q> make_domain(const GridConfig grid, const SubGridConfig& subgrid) {
   g.set_offset({offset[0], offset[1], offset[2]});
   g.set_ghost_layer(ghost_layer);
   g.set_dx(subgrid.dx_);
+  g.set_origin(grid.bounds_.bmin);  // orgin of the domain, not the subdomain
 
   // ----------------------------
   // Setup ghost communication manager

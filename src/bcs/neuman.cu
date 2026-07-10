@@ -34,6 +34,7 @@ under the License.
 #include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/grid_region.hpp>
+#include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
 
 // impl
@@ -54,6 +55,7 @@ class NeumannOp : public OperatorNode {
            DocString{"Prescribed velocity at the boundary, enforcing the Neumann condition."});
   ADD_SLOT(std::vector<std::string>, regions, INPUT, REQUIRED,
            DocString{"Lists of grid regions to apply BCS. Ex: [plan_xy_0]"});
+  ADD_SLOT(LBMParameters, Params, INPUT, REQUIRED, DocString{"The computed LBM parameters based on the input values."});
 
  public:
   inline std::string documentation() const final {
@@ -69,8 +71,7 @@ class NeumannOp : public OperatorNode {
     auto& traversals = *grid_region;
 
     // define functors
-
-    auto [ux, uy, uz] = *U;
+    auto [ux, uy, uz] = convert_velocity<LBM_UNITS>(*U, *Params);
 
     // get fields
     FieldView<Q> pf = data.distributions();

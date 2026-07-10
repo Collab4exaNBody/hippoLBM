@@ -21,8 +21,10 @@ under the License.
 
 namespace hippoLBM {
 enum Area {
-  Local, /**< Refers to a local region or domain */
-  Global /**< Refers to the entire system or global domain */
+  Local,    /**< Refers to a local region or domain */
+  Global,   /**< Refers to the entire system or global domain */
+  AsIs,     /**< Refers to the same region or domain (either Local or Global) */
+  Undefined /**< Refers as Undefined for tracking bad initialize data */
 };
 
 enum Side {

@@ -144,7 +144,7 @@ class PlaneVelocityProfile : public OperatorNode {
   ADD_SLOT(std::string, dimension, INPUT, REQUIRED,
            DocString{"The dimension along which the profile is computed: \"X\", \"Y\" or \"Z\"."});
   ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED, DocString{"The LBM domain containing the simulation data."});
-  ADD_SLOT(LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED,
+  ADD_SLOT(LBMFields<Q>, fields, INPUT, REQUIRED,
            DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
   ADD_SLOT(LBMGridRegion, grid_region, INPUT, REQUIRED,
            DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});

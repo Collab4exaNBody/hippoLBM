@@ -1,6 +1,6 @@
 #pragma once
 
-#include <onika/math/basic_types_def.h>
+#include <onika/math/basic_types.h>
 
 #include <hippoLBM/core/box3d.hpp>
 #include <hippoLBM/core/enum.hpp>
@@ -14,15 +14,17 @@ namespace hippoLBM {
 struct LBMGrid {
   static constexpr int DIM = 3;  ///< Number of spatial dimensions
 
-  Box3D bx_;             ///< Box covering the actual computational grid
-  Box3D ext_;            ///< Box covering the extended grid (includes ghost layers)
-  Point3D offset_;       ///< Offset of the real grid (useful for global indexing)
-  int ghost_layer_ = 2;  ///< Number of ghost layers (default 2 for DEM + LBM)
-  double dx_;            ///< Distance between two grid points (spatial resolution)
+  Box3D bx_;                   ///< Box covering the actual computational grid
+  Box3D ext_;                  ///< Box covering the extended grid (includes ghost layers)
+  Point3D offset_;             ///< Offset of the real grid (useful for global indexing)
+  int ghost_layer_ = 2;        ///< Number of ghost layers (default 2 for DEM + LBM)
+  double dx_;                  ///< Distance between two grid points (spatial resolution)
+  onika::math::Vec3d origin_;  ///< Origin of the domain (not the subdomain)
 
   LBMGrid() {};
 
-  LBMGrid(Box3D& b, Point3D& o, const int g, double d) : bx_(b), offset_(o), ghost_layer_(g), dx_(d) {
+  LBMGrid(Box3D& b, Point3D& o, const int g, double d, onika::math::Vec3d& origin)
+      : bx_(b), offset_(o), ghost_layer_(g), dx_(d), origin_(origin) {
     // add a print function here ?
   }
 
@@ -33,6 +35,7 @@ struct LBMGrid {
   inline void set_offset(Point3D&& o) { offset_ = o; }
   inline void set_ghost_layer(const int g) { ghost_layer_ = g; }
   inline void set_dx(const double d) { dx_ = d; }
+  inline void set_origin(const onika::math::Vec3d& origin) { origin_ = origin; }
 
   /**
    * @brief Computes the starting index of a given dimension for a subdomain traversal.
@@ -222,12 +225,8 @@ struct LBMGrid {
   /**
    * @brief Checks whether a point lies inside the global grid region.
    *
-   * The global coordinates are first converted to local coordinates
-   * using the domain offset_, then checked against the local box.
-   *
    * @param p Point in global coordinates.
    * @return true if the point belongs to the global region, false otherwise.
-   *
    * @note
    * - Internally, this computes `local = p + offset_` and calls `is_local(local)`.
    */
@@ -237,29 +236,24 @@ struct LBMGrid {
   }
 
   /**
-   * @brief Converts a point between local and global coordinate systems.
-   *
-   * This function converts a 3D point (x,y,z) either from local to global
-   * coordinates or from global to local coordinates depending on the
-   * template parameter `Area`.
+   * @brief Converts a point between local and global coordinate systems
    *
    * @tparam A     Conversion mode: `Area::Local` or `Area::Global`.
    * @tparam Check If true, performs an assertion to ensure the point lies
    *               inside the valid grid region before conversion.
-   *
    * @param x Coordinate along the X axis.
    * @param y Coordinate along the Y axis.
    * @param z Coordinate along the Z axis.
-   *
    * @return A Point3D in the target coordinate system.
-   *
-   * @warning The `Check` option may incur a runtime cost due to the assertion.
-   * Use it mainly for debugging and validation.
    */
   template <Area A, bool Check = false>
   ONIKA_HOST_DEVICE_FUNC inline Point3D convert(int x, int y, int z) const {
+    static_assert(A == Area::Local || A == Area::Global || A == Area::AsIs);
+
     Point3D res = {x, y, z};
-    static_assert(A == Area::Local || A == Area::Global);
+    if constexpr (A == Area::AsIs) {
+      return res;
+    }
     if constexpr (A == Area::Local) {
       /** Convert global → local **/
       res = res - offset_;
@@ -273,6 +267,48 @@ struct LBMGrid {
       /** Convert local → global **/
       res = res + offset_;
     }
+    return res;
+  }
+
+  /*** convert a point to A area. */
+  template <Area A, bool Check = false>
+  ONIKA_HOST_DEVICE_FUNC inline Point3D convert(Point3D p) const {
+    return convert<A, Check>(p[0], p[1], p[2]);
+  }
+
+  template <Area A, bool Check = false>
+  ONIKA_HOST_DEVICE_FUNC inline Point3D convert(std::tuple<int, int, int>&& p) const {
+    return convert<A, Check>(std::get<0>(p), std::get<1>(p), std::get<2>(p));
+  }
+
+  /*** @brief convert a point to A area. */
+  template <Area A>
+  ONIKA_HOST_DEVICE_FUNC inline int convert(int in, int dim) const {
+    static_assert(A != Area::Undefined);
+    if constexpr (A == Area::AsIs) {
+      return in;
+    }
+
+    int res = in;
+
+    if constexpr (A == Area::Local) {
+      /** Shift the point **/
+      res = res - offset_[dim];
+    }
+
+    if constexpr (A == Area::Global) {
+      /** Shift the point **/
+      res = res + offset_[dim];
+    }
+    return res;
+  }
+
+  /*** convert a box to A area. */
+  template <Area A, bool Check = false>
+  ONIKA_HOST_DEVICE_FUNC inline Box3D convert(Box3D box) const {
+    Box3D res;
+    res.inf_ = convert<A, Check>(box.inf_);
+    res.sup_ = convert<A, Check>(box.sup_);
     return res;
   }
 
@@ -295,39 +331,40 @@ struct LBMGrid {
    */
   template <Area A, bool Check = false>
   ONIKA_HOST_DEVICE_FUNC inline Point3D project_to_grid(const onika::math::Vec3d&& r) const {
-    Point3D p = {int(r.x / dx_), int(r.y / dx_), int(r.z / dx_)};
-    return convert<A, Check>(p[0], p[1], p[2]);
+    onika::math::Vec3d proj = (r - origin_) / dx_;
+    Point3D p = Point3D{int(std::floor(proj.x)), int(std::floor(proj.y)), int(std::floor(proj.z))};
+    if constexpr (A == Area::Global) {  // Already in the global area
+      return p;
+    } else {
+      return convert<Area::Local, Check>(p[0], p[1], p[2]);
+    }
   }
 
-  /*** convert a point to A area. */
   template <Area A, bool Check = false>
-  ONIKA_HOST_DEVICE_FUNC inline Point3D convert(Point3D p) const {
-    return convert<A, Check>(p[0], p[1], p[2]);
-  }
-
-  /*** @brief convert a point to A area. */
-  template <Area A>
-  ONIKA_HOST_DEVICE_FUNC inline int convert(int in, int dim) const {
-    int res = in;
-    static_assert(A == Area::Local || A == Area::Global);
-    if constexpr (A == Area::Local) {
-      /** Shift the point **/
-      res = res - offset_[dim];
-    }
-
+  ONIKA_HOST_DEVICE_FUNC inline Point3D project_to_grid(const onika::math::Vec3d& r) const {
+    onika::math::Vec3d proj = (r - origin_) / dx_;
+    Point3D p = Point3D{int(std::floor(proj.x)), int(std::floor(proj.y)), int(std::floor(proj.z))};
     if constexpr (A == Area::Global) {
-      /** Shift the point **/
-      res = res + offset_[dim];
+      return p;
+    } else {
+      return convert<Area::Local, Check>(p[0], p[1], p[2]);
     }
-    return res;
   }
 
   template <Area A>
   ONIKA_HOST_DEVICE_FUNC onika::math::Vec3d compute_position(int x, int y, int z) const {
-    static_assert(A == Area::Global);
-    onika::math::Vec3d res = {(double)(x + offset_[0]), (double)(y + offset_[1]), (double)(z + offset_[2])};
+    static_assert(A == Area::Global || A == Area::AsIs);
+    onika::math::Vec3d res = {double(x), double(y), double(z)};
+    if constexpr (A == Area::Global) res += offset_;
     res = {res.x * dx_, res.y * dx_, res.z * dx_};  // add operator *=
     return res;
+  }
+
+  template <Area A>
+  ONIKA_HOST_DEVICE_FUNC onika::math::Vec3d compute_position(Point3D&& pt) const {
+    static_assert(A == Area::Global || A == Area::AsIs);
+
+    return compute_position<A>(pt[0], pt[1], pt[2]);
   }
 
   /**
@@ -343,10 +380,12 @@ struct LBMGrid {
    */
   template <Area A>
   ONIKA_HOST_DEVICE_FUNC onika::math::Vec3d compute_position(int id) const {
-    static_assert(A == Area::Global);
-    auto [x, y, z] = this->operator()(id);
-    onika::math::Vec3d res = {(double)(x + offset_[0]), (double)(y + offset_[1]), (double)(z + offset_[2])};
-    res = {res.x * dx_, res.y * dx_, res.z * dx_};  // add operator *=
+    static_assert(A == Area::Global || A == Area::AsIs);
+
+    Point3D pt = this->operator()(id);
+    onika::math::Vec3d res = onika::math::Vec3d(pt);
+    if constexpr (A == Area::Global) res += offset_;
+    res *= dx_;
     return res;
   }
 
@@ -364,12 +403,14 @@ struct LBMGrid {
    *         - bool: true if there is any intersection with the subdomain.
    *         - Box3D: the adjusted box clipped to the grid subdomain.
    */
-  template <Area A, Traversal Tr>
+  template <Area A, Traversal Tr, Area InputBoxArea = A>
   ONIKA_HOST_DEVICE_FUNC std::tuple<bool, Box3D> restrict_box_to_grid(const Box3D& input_box) const {
     // Convert input box to local/global coordinates
     Box3D adjusted_box;
-    adjusted_box.inf_ = convert<A, false>(input_box.inf_);
-    adjusted_box.sup_ = convert<A, false>(input_box.sup_);
+
+    adjusted_box.inf_ = convert<InputBoxArea, false>(input_box.inf_);
+    adjusted_box.sup_ = convert<InputBoxArea, false>(input_box.sup_);
+
     Box3D subdomain = build_box<A, Tr>();
 
     // Check if there is any intersection
@@ -389,7 +430,7 @@ struct LBMGrid {
   ONIKA_HOST_DEVICE_FUNC int operator()(Point3D& p) const { return bx_(p[0], p[1], p[2]); }
   ONIKA_HOST_DEVICE_FUNC int operator()(Point3D&& p) const { return bx_(p[0], p[1], p[2]); }
   ONIKA_HOST_DEVICE_FUNC int operator()(int x, int y, int z) const { return bx_(x, y, z); }
-  ONIKA_HOST_DEVICE_FUNC inline std::tuple<int, int, int> operator()(int idx) const { return bx_(idx); }
+  ONIKA_HOST_DEVICE_FUNC inline Point3D operator()(int idx) const { return bx_(idx); }
 };
 
 /**
@@ -406,6 +447,6 @@ struct GridIKJtoIdx {
   ONIKA_HOST_DEVICE_FUNC int operator()(Point3D& p) const { return bx_(p[0], p[1], p[2]); }
   ONIKA_HOST_DEVICE_FUNC int operator()(Point3D&& p) const { return bx_(p[0], p[1], p[2]); }
   ONIKA_HOST_DEVICE_FUNC int operator()(int x, int y, int z) const { return bx_(x, y, z); }
-  ONIKA_HOST_DEVICE_FUNC inline std::tuple<int, int, int> operator()(int idx) const { return bx_(idx); }
+  ONIKA_HOST_DEVICE_FUNC inline Point3D operator()(int idx) const { return bx_(idx); }
 };
 }  // namespace hippoLBM

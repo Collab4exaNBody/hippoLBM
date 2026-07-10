@@ -131,7 +131,7 @@ struct Box3D {
     return idx;
   }
 
-  ONIKA_HOST_DEVICE_FUNC inline std::tuple<int, int, int> operator()(int idx) const {
+  ONIKA_HOST_DEVICE_FUNC inline Point3D operator()(int idx) const {
     int size_y = this->get_length(1);
     int size_x = this->get_length(0);
     int size_xy = size_y * size_x;
@@ -141,6 +141,11 @@ struct Box3D {
     int x = idx % size_x;
     return {x, y, z};
   }
+
+  ONIKA_HOST_DEVICE_FUNC inline int get(const int x, const int y, const int z) const {
+    return this->operator()(x - inf_[0], y - inf_[1], z - inf_[2]);
+  }
+  ONIKA_HOST_DEVICE_FUNC inline Point3D get(int idx) const { return this->operator()(idx) + inf_; }
 
   /**
    * @brief compute the length of the box along a specified dimension.
@@ -208,4 +213,32 @@ ONIKA_HOST_DEVICE_FUNC inline onika::parallel::ParallelExecutionSpace<3> set(Box
   return onika::parallel::ParallelExecutionSpace<3>{{bx.start(0), bx.start(1), bx.start(2)},
                                                     {bx.end(0) + 1, bx.end(1) + 1, bx.end(2) + 1}};
 }
+inline std::ostream& operator<<(std::ostream& os, const Box3D& b) {
+  return os << "[" << b.inf_ << " -> " << b.sup_ << "]";
+}
+
 }  // namespace hippoLBM
+
+// YAML
+namespace YAML {
+using hippoLBM::Box3D;
+using hippoLBM::Point3D;
+
+template <>
+struct convert<Box3D> {
+  static inline Node encode(const Box3D& b) {
+    Node node;
+    node.push_back(b.lower());
+    node.push_back(b.upper());
+    return node;
+  }
+  static inline bool decode(const Node& node, Box3D& b) {
+    if (!node.IsSequence() || node.size() != 2) {
+      return false;
+    }
+    b.inf_ = node[0].as<Point3D>();
+    b.sup_ = node[1].as<Point3D>();
+    return true;
+  }
+};
+}  // namespace YAML
