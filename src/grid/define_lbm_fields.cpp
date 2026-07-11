@@ -30,9 +30,9 @@ under the License.
 #include <onika/scg/operator_slot.h>
 
 // hippoLBM
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/domain.hpp>
-#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
 
 namespace hippoLBM {
@@ -59,8 +59,8 @@ class DefineLBMFields : public OperatorNode {
     constexpr Area L = Area::Local;
     constexpr Traversal Tr = Traversal::All;
     LBMFields<Q>& grid_data = *fields;
-    LBMGrid& Grid = domain->m_grid_;
-    Box3D& Box = domain->m_box_;
+    LBMGrid& Grid = domain->grid();
+    Box3D& Box = domain->box();
 
     // compute sizes
     constexpr int Un = 5;

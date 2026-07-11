@@ -68,7 +68,7 @@ class StreamingLBM : public OperatorNode {
   inline void execute() final {
     auto& data = *fields;
     auto& traversals = *grid_region;
-    LBMGrid& Grid = domain->m_grid_;
+    LBMGrid& Grid = domain->grid();
     auto [ptr, size] = traversals.get_levels();
 
     // get fields
@@ -86,9 +86,9 @@ class StreamingLBM : public OperatorNode {
          constexpr Traversal Inside = Traversal::Inside;
          constexpr Traversal Rest = Traversal::Ghost_Edge;
 
-         domain.m_ghost_manager_.resize_request();
-         domain.m_ghost_manager_.do_recv();
-         domain.m_ghost_manager_.do_pack_send(pf, Grid.bx_);
+         domain.ghost_manager_.resize_request();
+         domain.ghost_manager_.do_recv();
+         domain.ghost_manager_.do_pack_send(pf, Grid.bx_);
 
          auto [ptr, size] = traversals.get_data<Inside>();
          Box3D inside = Grid.build_box<Area::Local, Inside>();
@@ -96,8 +96,8 @@ class StreamingLBM : public OperatorNode {
          parallel_for_id(ptr, size, step1, parallel_execution_context(), pf);
          parallel_for_box(inside, step2, pf);
 
-         domain.m_ghost_manager_.wait_all();
-         domain.m_ghost_manager_.do_unpack(pf, Grid.bx_);
+         domain.ghost_manager_.wait_all();
+         domain.ghost_manager_.do_unpack(pf, Grid.bx_);
 
          auto [ptr2, size2] = traversals.get_data<Rest>();
 

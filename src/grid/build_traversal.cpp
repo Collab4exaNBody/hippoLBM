@@ -29,9 +29,9 @@ under the License.
 #include <onika/scg/operator_slot.h>
 
 // hippoLBM
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/domain.hpp>
-#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
 
@@ -58,7 +58,7 @@ class BuildTraversalLBM : public OperatorNode {
 
   inline void execute() final {
     LBMGridRegion traversal;
-    traversal.build_traversal(domain->m_grid_, domain->MPI_coord_, domain->MPI_grid_size_);
+    traversal.build_traversal(domain->grid(), domain->MPI_coord_, domain->MPI_grid_size_);
     *grid_region = traversal;
   }
 };

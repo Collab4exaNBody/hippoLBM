@@ -34,12 +34,12 @@ struct bgk {
   // 0 1 Real,
   // 0 1 2 Extend,
   // and 0 1 2 3 All
-  const onika::math::Vec3d m_Fext_;  // External force term, used in the computation of macroscopic variables.
-  const FieldView<3> m1_;            // The field view for the first-order moments (momentum).
-  int* const __restrict__ obst_;     // Pointer to the obstacle field.
-  const FieldView<Q> f_;             // The field view for the distribution functions.
-  double* const __restrict__ m0_;    // Pointer to the density field (zeroth-order moment).
-  const double tau_;                 // Relaxation time for the BGK collision model.
+  const onika::math::Vec3d Fext_;  // External force term, used in the computation of macroscopic variables.
+  const FieldView<3> m1_;          // The field view for the first-order moments (momentum).
+  int* const __restrict__ obst_;   // Pointer to the obstacle field.
+  const FieldView<Q> f_;           // The field view for the distribution functions.
+  double* const __restrict__ m0_;  // Pointer to the density field (zeroth-order moment).
+  const double tau_;               // Relaxation time for the BGK collision model.
 
   /**
    * @brief Operator for performing collision operations at a given index.
@@ -54,7 +54,7 @@ struct bgk {
 
     stencil::for_each<typename LBMScheme<Q>::Coefficients, 0, Q>([&]<typename coeff>(int iLB) {
       double& fiLB = f_(idx, iLB);
-      double ef = coeff::ex * m_Fext_.x + coeff::ey * m_Fext_.y + coeff::ez * m_Fext_.z;
+      double ef = coeff::ex * Fext_.x + coeff::ey * Fext_.y + coeff::ez * Fext_.z;
       double eu = coeff::ex * ux + coeff::ey * uy + coeff::ez * uz;
       double feq = coeff::w * rho * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
       fiLB += update * ((feq - fiLB) / tau_ + 3. * rho * coeff::w * ef);

@@ -32,9 +32,9 @@ under the License.
 
 // hippoLBM
 #include <hippoLBM/compute/parallel_for_core.hpp>
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/domain.hpp>
-#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/init_obst.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
@@ -56,7 +56,7 @@ class InitObstLBM : public OperatorNode {
     init_obst func = {onika::cuda::vector_data(data.obst_)};
     constexpr Area A = Area::Local;
     constexpr Traversal Tr = Traversal::All;
-    parallel_for_id<A, Tr>(domain->m_grid_, func, parallel_execution_context());
+    parallel_for_id<A, Tr>(domain->grid(), func, parallel_execution_context());
   }
 };
 

@@ -57,7 +57,7 @@ class WallBounceBack : public OperatorNode {
 
   inline void execute() final {
     auto& data = *fields;
-    LBMGrid& Grid = domain->m_grid_;
+    LBMGrid& Grid = domain->grid();
 
     // get fields
     const int* const pobst = data.obstacles();
