@@ -104,6 +104,8 @@ plugin Obstacle: Ce plugin permet de placer des objets solides inamovibles comme
 - `prepo`: This plugin provides pre-initialization of fields for specific flow regimes, such as double Couette flow.
 - `obstacle`: This plugin allows placing fixed solid objects, such as walls or geometries defined by quadrics, see \autoref{fig:examples}.b, within the simulation domain. 
 
+![a) Overview of the HippoLBM plugins built on top of the Onika runtime. b) Example of an operator sequence, colored by plugin, executed within the time loop. \label{fig:design}](./LBMDesign.png){width=100%}
+
 # Research impact statement
 
 The legacy (non-HPC) code was used to perform 2D LBM/DEM simulations on ... [@amarsid2017viscoinertial]. `HippoLBM` aims to explore large-scale 3D simulations in LBM and coupling. Through its interface with `Onika`, `HippoLBM` could be coupled to physics other than DEM using methods such as the Material Point Method (MPM), the Finite Element Method (FEM), or the Finite Difference Method (FDM).
@@ -111,7 +113,7 @@ The legacy (non-HPC) code was used to perform 2D LBM/DEM simulations on ... [@am
 # AI usage disclosure
 
 No generative AI tools were used in the design and development of this software; however, they were used for refactoring and renaming classes.
-Generative AI tools were used to generate Doxygen code and to translate texts for website documentation.
+Generative AI tools were used to generate post processing python script, doxygen code, and to translate texts for website documentation.
 
 # Acknowledgements
 
