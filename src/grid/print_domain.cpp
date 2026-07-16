@@ -60,7 +60,7 @@ class PrintDomainLBM : public OperatorNode {
     constexpr Area G = Area::Global;
     constexpr Traversal R = Traversal::Real;
 
-    LBMGrid& g = domain->m_grid_;
+    LBMGrid& g = domain->grid();
     const onika::math::AABB& bounds = domain->bounds_;
     const int3d& domain_size = domain->domain_size_;
 

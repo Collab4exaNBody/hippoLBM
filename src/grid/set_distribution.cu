@@ -70,7 +70,7 @@ class SetDistributionsLBM : public OperatorNode {
     auto& data = *fields;
     auto& traversals = *grid_region;
     LBMDomain<Q>& Domain = *domain;
-    LBMGrid& Grid = Domain.m_grid_;
+    LBMGrid& Grid = Domain.grid();
     GridIJKtoIdx ijk_to_idx(Grid);
 
     FieldView<Q> pf = data.distributions();

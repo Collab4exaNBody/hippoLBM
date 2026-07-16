@@ -29,22 +29,22 @@ template <typename Object, typename Func, typename... Args>
 inline void apply(Object& obj, Func& func, Args... args) {}
 
 class Ball {
-  onika::math::Vec3d m_center_;  // The center of the ball.
-  double m_radius_;              // The radius of the ball.
-  double m_r2_;                  // The squared radius of the ball, used for efficient distance calculations.
+  onika::math::Vec3d center_;  // The center of the ball.
+  double radius_;              // The radius of the ball.
+  double r2_;                  // The squared radius of the ball, used for efficient distance calculations.
 
  public:
   /** @brief Construct a ball obstacle.
    *  @param c The center of the ball.
    *  @param rad The radius of the ball.
    */
-  Ball(onika::math::Vec3d c, double rad) : m_center_(c), m_radius_(rad) { m_r2_ = rad * rad; }
+  Ball(onika::math::Vec3d c, double rad) : center_(c), radius_(rad) { r2_ = rad * rad; }
 
   /** @brief Get the axis-aligned bounding box covering the ball.
    *  @return The axis-aligned bounding box.
    */
   onika::math::AABB covered() {
-    onika::math::AABB res = {m_center_ - m_radius_, m_center_ + m_radius_};
+    onika::math::AABB res = {center_ - radius_, center_ + radius_};
     return res;
   }
 
@@ -53,21 +53,21 @@ class Ball {
    */
   constexpr OBSTACLE_TYPE type() { return OBSTACLE_TYPE::BALL; }
 
-  ONIKA_HOST_DEVICE_FUNC inline onika::math::Vec3d& center() { return m_center_; }
-  ONIKA_HOST_DEVICE_FUNC inline const onika::math::Vec3d& center() const { return m_center_; }
-  ONIKA_HOST_DEVICE_FUNC inline double rcut2() { return m_r2_; }
-  ONIKA_HOST_DEVICE_FUNC inline double rcut2() const { return m_r2_; }
+  ONIKA_HOST_DEVICE_FUNC inline onika::math::Vec3d& center() { return center_; }
+  ONIKA_HOST_DEVICE_FUNC inline const onika::math::Vec3d& center() const { return center_; }
+  ONIKA_HOST_DEVICE_FUNC inline double rcut2() { return r2_; }
+  ONIKA_HOST_DEVICE_FUNC inline double rcut2() const { return r2_; }
 
   ONIKA_HOST_DEVICE_FUNC bool solid(onika::math::Vec3d&& pos) const {
-    onika::math::Vec3d r = pos - m_center_;
-    return dot(r, r) <= m_r2_;
+    onika::math::Vec3d r = pos - center_;
+    return dot(r, r) <= r2_;
   }
 
   /** @brief Print information about the ball.
    */
   void print() {
-    onika::lout << "Ball center: (" << m_center_.x << ", " << m_center_.y << ", " << m_center_.z
-                << "), radius: " << m_radius_ << std::endl;
+    onika::lout << "Ball center: (" << center_.x << ", " << center_.y << ", " << center_.z << "), radius: " << radius_
+                << std::endl;
   }
 };
 

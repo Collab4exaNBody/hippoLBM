@@ -139,7 +139,7 @@ struct ParaviewBuffers {
 template <typename LBMDomain, typename EPF>
 inline void write_pvtr(std::string basedir, std::string basename, size_t number_of_files, LBMDomain& domain,
                        const EPF& external_paraview_fields = ExternalParaviewFieldsNullOp{}) {
-  const LBMGrid& grid = domain.m_grid_;
+  const LBMGrid& grid = domain.grid();
   auto [lx, ly, lz] = domain.domain_size_;
   // I could be smarter here
   int box_size = sizeof(Box3D);
@@ -203,7 +203,7 @@ template <typename LBMDomain, typename LBMFieds, typename EPF>
 inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data, const LBMGridRegion& traversals,
                       const LBMParameters& params,
                       const EPF& external_paraview_fields = ExternalParaviewFieldsNullOp{}) {
-  const LBMGrid& grid = domain.m_grid_;
+  const LBMGrid& grid = domain.grid();
   auto [lx, ly, lz] = domain.domain_size_;
   const double dx = grid.dx_;
   name = name + ".vtr";

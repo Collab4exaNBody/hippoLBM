@@ -89,7 +89,7 @@ class PreBounceBack : public OperatorNode {
   inline void execute() final {
     auto& data = *fields;
     auto& traversals = *grid_region;
-    LBMGrid& Grid = domain->m_grid_;
+    LBMGrid& Grid = domain->grid();
 
     // fill grid size;
     constexpr Area L = Area::Local;

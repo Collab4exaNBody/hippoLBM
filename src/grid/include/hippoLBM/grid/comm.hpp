@@ -33,16 +33,16 @@ using vector_t = onika::memory::CudaMMVector<T>;
  */
 template <int Components>
 struct LBMComm {
-  int m_dest_;  ///< The destination process ID.
-  int m_tag_;   ///< The MPI communication tag.
-  Box3D m_box_;
-  vector_t<double> m_data_;  ///< The communication buffer.
+  int dest_;  ///< The destination process ID.
+  int tag_;   ///< The MPI communication tag.
+  Box3D box_;
+  vector_t<double> data_;  ///< The communication buffer.
 
   // used for debuging
   void debug_print_comm() {
-    onika::lout << "Dest: " << m_dest_ << " Tag: " << m_tag_ << " Data Size: " << m_data_.size() << std::endl;
+    onika::lout << "Dest: " << dest_ << " Tag: " << tag_ << " Data Size: " << data_.size() << std::endl;
     onika::lout << "Box: " << std::endl;
-    m_box_.print();
+    box_.print();
   }
 
   /**
@@ -52,7 +52,7 @@ struct LBMComm {
    * @param tag The MPI communication tag.
    * @param b The communication box.
    */
-  LBMComm(const int dest, const int tag, const Box3D& b) : m_dest_(dest), m_tag_(tag), m_box_(b), m_data_() {
+  LBMComm(const int dest, const int tag, const Box3D& b) : dest_(dest), tag_(tag), box_(b), data_() {
     int size = b.number_of_points();
     allocate(size);
   }
@@ -64,37 +64,37 @@ struct LBMComm {
    * @brief Get the size of the data buffer.
    * @return The size of the data buffer.
    */
-  int get_size() { return onika::cuda::vector_size(m_data_); }
+  int get_size() { return onika::cuda::vector_size(data_); }
 
   /**
    * @brief Get the destination process ID.
    * @return The destination process ID.
    */
-  int get_dest() { return m_dest_; }
+  int get_dest() { return dest_; }
 
   /**
    * @brief Get the MPI communication tag.
    * @return The MPI communication tag.
    */
-  int get_tag() { return m_tag_; }
+  int get_tag() { return tag_; }
 
   /**
    * @brief Get the communication box.
    * @return Reference to the communication box.
    */
-  Box3D& get_box() { return m_box_; }
+  Box3D& get_box() { return box_; }
 
   /**
    * @brief Get a pointer to the data buffer.
    * @return Pointer to the data buffer.
    */
-  double* get_data() { return onika::cuda::vector_data(m_data_); }
+  double* get_data() { return onika::cuda::vector_data(data_); }
 
   /**
    * @brief Allocate memory for the data buffer.
    * @param size The size of the data buffer.
    */
-  void allocate(int size) { m_data_.resize(size * Components); }
+  void allocate(int size) { data_.resize(size * Components); }
 };
 
 /**

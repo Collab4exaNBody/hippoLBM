@@ -21,31 +21,31 @@ namespace hippoLBM {
 template <int Components>
 struct LBMGhostManager {
   using ParExecSpace3d = onika::parallel::ParallelExecutionSpace<3>;
-  std::vector<LBMGhostComm<Components>> m_data_;  ///< Vector of ghost communications.
-  std::vector<MPI_Request> m_request_;            ///< Vector of MPI requests.
-  int m_count_request_ = 0;                       ///< count number of request
+  std::vector<LBMGhostComm<Components>> data_;  ///< Vector of ghost communications.
+  std::vector<MPI_Request> request_;            ///< Vector of MPI requests.
+  int count_request_ = 0;                       ///< count number of request
 
   void debug_print_comm() {
-    onika::lout << "Debug Print Comms, number of comms" << m_data_.size() << " Components: " << Components << std::endl;
-    for (auto it : m_data_) it.debug_print_comm();
+    onika::lout << "Debug Print Comms, number of comms" << data_.size() << " Components: " << Components << std::endl;
+    for (auto it : data_) it.debug_print_comm();
   }
 
   /**
    * @brief Get the number of ghost communications.
    * @return The number of ghost communications.
    */
-  uint64_t get_size() { return m_data_.size(); }
+  uint64_t get_size() { return data_.size(); }
 
   /**
    * @brief Add a send and receive communication pair to the manager.
    * @param s The send communication.
    * @param r The receive communication.
    */
-  void add_comm(LBMComm<Components>& s, LBMComm<Components>& r) { m_data_.push_back(LBMGhostComm(s, r)); }
+  void add_comm(LBMComm<Components>& s, LBMComm<Components>& r) { data_.push_back(LBMGhostComm(s, r)); }
 
   /** @brief Reset the ghost manager. */
   void reset() {
-    m_data_.resize(0);
+    data_.resize(0);
     resize_request();
   }
 
@@ -54,15 +54,15 @@ struct LBMGhostManager {
    */
   void resize_request() {
     const uint64_t nb_request = this->get_size() * 2;
-    m_request_.resize(nb_request);
+    request_.resize(nb_request);
   }
 
   /**
    * @brief Wait for all MPI requests to complete.
    */
   void wait_all() {
-    MPI_Waitall(m_count_request_ /* m_request_.size() */, m_request_.data(), MPI_STATUSES_IGNORE);
-    m_count_request_ = 0;
+    MPI_Waitall(count_request_ /* request_.size() */, request_.data(), MPI_STATUSES_IGNORE);
+    count_request_ = 0;
   }
 
   /**
@@ -71,11 +71,11 @@ struct LBMGhostManager {
   void do_recv() {
     int mpi_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
-    m_count_request_ = 0;
+    count_request_ = 0;
 #ifdef PRINT_DEBUG_MPI
-    std::cout << "Number of messages " << this->m_data_.size() << std::endl;
+    std::cout << "Number of messages " << this->data_.size() << std::endl;
 #endif
-    for (auto& it : this->m_data_) {
+    for (auto& it : this->data_) {
       auto& recv = it.recv_;
       uint64_t nb_bytes = recv.get_size() * sizeof(double);
 #ifdef PRINT_DEBUG_MPI
@@ -87,7 +87,7 @@ struct LBMGhostManager {
       if (do_recv)  // NOT (periodic case && himself)
       {
         MPI_Irecv(recv.get_data(), nb_bytes, MPI_CHAR, recv.get_dest(), recv.get_tag(), MPI_COMM_WORLD,
-                  &(this->m_request_[m_count_request_++]));
+                  &(this->request_[count_request_++]));
       }
     }
   }
@@ -99,7 +99,7 @@ struct LBMGhostManager {
    */
   template <typename ParExecCtxFunc>
   void do_unpack(FieldView<Components>& mesh, Box3D& mesh_box, ParExecCtxFunc& par_exec_ctx) {
-    for (auto& it : this->m_data_) {
+    for (auto& it : this->data_) {
       auto& recv = it.recv_;
       // Wrap data
       FieldView<Components> wrecv = {recv.get_data(), uint64_t(recv.get_size() / Components)};
@@ -123,7 +123,7 @@ struct LBMGhostManager {
     int mpi_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 
-    for (auto& it : this->m_data_) {
+    for (auto& it : this->data_) {
       auto& send = it.send_;
       // Wrap data
       FieldView<Components> wsend = {send.get_data(), uint64_t(send.get_size() / Components)};
@@ -136,7 +136,7 @@ struct LBMGhostManager {
     }
     ONIKA_CU_DEVICE_SYNCHRONIZE();
 
-    for (auto& it : this->m_data_) {
+    for (auto& it : this->data_) {
       auto& send = it.send_;
       auto& recv = it.recv_;
       uint64_t nb_bytes = send.get_size() * sizeof(double);
@@ -146,7 +146,7 @@ struct LBMGhostManager {
         ONIKA_CU_MEMCPY(recv.get_data(), send.get_data(), nb_bytes);  // cudaMemcpyDefault, 0 /** default stream */);
       } else {
         MPI_Isend(send.get_data(), nb_bytes, MPI_CHAR, send.get_dest(), send.get_tag(), MPI_COMM_WORLD,
-                  &(this->m_request_[m_count_request_++]));
+                  &(this->request_[count_request_++]));
       }
     }
   }
@@ -158,7 +158,7 @@ struct LBMGhostManager {
  */
 template <int Components>
 void write_comm(LBMGhostManager<Components>& ghost_manager) {
-  auto& comms = ghost_manager.m_data_;
+  auto& comms = ghost_manager.data_;
   const size_t number_of_comms = comms.size();
   int mpi_rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
