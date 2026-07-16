@@ -108,7 +108,7 @@ plugin Obstacle: Ce plugin permet de placer des objets solides inamovibles comme
 
 # Research impact statement
 
-The legacy (non-HPC) code was used to perform 2D LBM/DEM simulations on ... [@amarsid2017viscoinertial]. `HippoLBM` aims to explore large-scale 3D simulations in LBM and coupling. Through its interface with `Onika`, `HippoLBM` could be coupled to physics other than DEM using methods such as the Material Point Method (MPM), the Finite Element Method (FEM), or the Finite Difference Method (FDM).
+The legacy (non-HPC) code was used to perform 2D LBM/DEM simulations on ... [@amarsid2017viscoinertial]. `HippoLBM` aims to explore large-scale 3D simulations in LBM and coupling. Through its interface with `Onika`, `HippoLBM` could be coupled to physics other than DEM using methods such as the Material Point Method (MPM) [@xiao2026volume], the Finite Element Method (FEM), or the Finite Difference Method (FDM).
 
 # AI usage disclosure
 
