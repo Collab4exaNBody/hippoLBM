@@ -20,6 +20,12 @@ set_obstacles:
   - register_solid_wall:
      id: 1
      bounds: [[0.048,0,0],[0.052,0.1,0.04]]
+  - register_solid_wall:
+     id: 2
+     bounds: [[0.048,0.06, 0],[0.052,0.1,0.1]]
+  - register_solid_wall:
+     id: 3
+     bounds: [[0.048,0,0],[0.052,0.04, 0.1]]
 
 set_distributions:
   - set_distribution:
