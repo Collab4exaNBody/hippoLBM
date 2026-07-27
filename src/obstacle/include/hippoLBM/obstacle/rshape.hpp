@@ -1,21 +1,35 @@
+/*
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+*/
 #pragma once
 
 #include <onika/math/basic_types.h>
 #include <onika/math/matrix4d.h>
 #include <onika/memory/allocator.h>
-#include <onika/parallel/block_parallel_for.h>
 
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <fstream>
-#include <hippoLBM/core/enum.hpp>
-#include <hippoLBM/grid/grid.hpp>
 #include <span>
 #include <string>
 
 namespace hippoLBM {
-
 ONIKA_HOST_DEVICE_FUNC inline onika::math::AABB compute_aabb(std::span<const onika::math::Vec3d> vertices,
                                                              double minkowski = 0.0) {
   assert(vertices.size() >= 3);
@@ -169,58 +183,5 @@ struct RShape {
     onika::lout << "RShape: " << faces_ << " faces, " << vertices_.size() << " vertices, minkowski: " << minkowski_
                 << std::endl;
   }
-
-  inline void apply_to_grid(const LBMGrid& grid, int* const obst, onika::parallel::ParallelExecutionContext* exec_ctx,
-                            int value = WALL_);
 };
-
-struct ApplyRShapeToGridFunctor {
-  const onika::math::Vec3d* const __restrict__ vertices_;
-  const uint32_t* const __restrict__ offset_;
-  const uint32_t* const __restrict__ size_;
-  double minkowski_;
-  LBMGrid grid_;
-  int* const __restrict__ obst_;
-  int value_;
-
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t&& coord) const {
-    const size_t f = coord.x;
-    std::span<const onika::math::Vec3d> vertices(vertices_ + offset_[f], size_[f]);
-    onika::math::AABB bounds = compute_aabb(vertices, minkowski_);
-    Point3D pmin = {int(bounds.bmin.x / grid_.dx_), int(bounds.bmin.y / grid_.dx_), int(bounds.bmin.z / grid_.dx_)};
-    Point3D pmax = {int(bounds.bmax.x / grid_.dx_), int(bounds.bmax.y / grid_.dx_), int(bounds.bmax.z / grid_.dx_)};
-    Box3D global_box = {pmin, pmax};
-
-    auto [is_inside_subdomain, local_box] = grid_.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_box);
-    if (!is_inside_subdomain) return;
-
-    for (int k = local_box.start(2) + ONIKA_CU_THREAD_COORD.z; k <= local_box.end(2); k += ONIKA_CU_BLOCK_DIMS.z) {
-      for (int j = local_box.start(1) + ONIKA_CU_THREAD_COORD.y; j <= local_box.end(1); j += ONIKA_CU_BLOCK_DIMS.y) {
-        for (int i = local_box.start(0) + ONIKA_CU_THREAD_COORD.x; i <= local_box.end(0); i += ONIKA_CU_BLOCK_DIMS.x) {
-          onika::math::Vec3d p = grid_.compute_position<Area::Global>(i, j, k);
-          if (intersect_point_face(p, vertices, minkowski_)) {
-            obst_[grid_(i, j, k)] = value_;
-          }
-        }
-      }
-    }
-  }
-};
-
-inline void RShape::apply_to_grid(const LBMGrid& grid, int* const obst,
-                                  onika::parallel::ParallelExecutionContext* exec_ctx, int value) {
-  if (faces_ == 0) return;
-  ApplyRShapeToGridFunctor func = {vertices_.data(), offset_.data(), size_.data(), minkowski_, grid, obst, value};
-  onika::parallel::ParallelExecutionSpace<3> space = {{0, 0, 0}, {ssize_t(faces_), 1, 1}};
-  onika::parallel::block_parallel_for(space, func, exec_ctx);
-}
 }  // namespace hippoLBM
-
-namespace onika {
-namespace parallel {
-template <>
-struct BlockParallelForFunctorTraits<hippoLBM::ApplyRShapeToGridFunctor> {
-  static inline constexpr bool CudaCompatible = true;
-};
-}  // namespace parallel
-}  // namespace onika
