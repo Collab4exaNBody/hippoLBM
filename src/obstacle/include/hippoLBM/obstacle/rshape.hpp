@@ -2,16 +2,22 @@
 
 #include <onika/math/basic_types.h>
 #include <onika/math/matrix4d.h>
+#include <onika/memory/allocator.h>
+#include <onika/parallel/block_parallel_for.h>
 
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
+#include <fstream>
 #include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/grid.hpp>
 #include <span>
+#include <string>
 
 namespace hippoLBM {
 
-inline onika::math::AABB compute_aabb(std::span<onika::math::Vec3d> vertices, double minkowski = 0.0) {
+ONIKA_HOST_DEVICE_FUNC inline onika::math::AABB compute_aabb(std::span<const onika::math::Vec3d> vertices,
+                                                             double minkowski = 0.0) {
   assert(vertices.size() >= 3);
   onika::math::AABB res;
   res.bmin = vertices[0];
@@ -24,8 +30,7 @@ inline onika::math::AABB compute_aabb(std::span<onika::math::Vec3d> vertices, do
     res.bmax.y = std::max(res.bmax.y, v.y);
     res.bmax.z = std::max(res.bmax.z, v.z);
   }
-  // Inflate by the Minkowski radius: the shape is the Minkowski sum of the
-  // polygon with a ball of that radius, so its true bounds extend by it.
+
   res.bmin.x -= minkowski;
   res.bmin.y -= minkowski;
   res.bmin.z -= minkowski;
@@ -35,12 +40,9 @@ inline onika::math::AABB compute_aabb(std::span<onika::math::Vec3d> vertices, do
   return res;
 }
 
-// Checks whether `p` lies within `minkowski` distance of the planar,
-// convex face described by `vertices` (ordered, consistent winding). Covers
-// the three regions of the (rounded) face: the flat interior, the rounded
-// edges, and the rounded corners (vertices).
-inline bool intersect_point_face(const onika::math::Vec3d& p, std::span<onika::math::Vec3d> vertices,
-                                 double minkowski) {
+ONIKA_HOST_DEVICE_FUNC inline bool intersect_point_face(const onika::math::Vec3d& p,
+                                                        std::span<const onika::math::Vec3d> vertices,
+                                                        double minkowski) {
   assert(vertices.size() >= 3);
 
   onika::math::Vec3d normal = onika::math::cross(vertices[1] - vertices[0], vertices[2] - vertices[0]);
@@ -48,9 +50,6 @@ inline bool intersect_point_face(const onika::math::Vec3d& p, std::span<onika::m
 
   double dist = onika::math::dot(p - vertices[0], normal);
 
-  // Project the point onto the face plane, then check it falls inside the
-  // polygon: for a convex polygon with consistent winding, the projection is
-  // inside iff it stays on the same side of every edge (same sign as normal).
   onika::math::Vec3d proj = p - dist * normal;
   const size_t n = vertices.size();
   bool inside = true;
@@ -65,17 +64,10 @@ inline bool intersect_point_face(const onika::math::Vec3d& p, std::span<onika::m
     }
   }
 
-  // Inside the polygon: the closest point of the face is the projection
-  // itself, so the distance to test is simply the (perpendicular) plane
-  // distance.
   if (inside) {
     return std::abs(dist) <= minkowski;
   }
 
-  // Outside the polygon: the closest point of the face lies on its boundary.
-  // Clamping the projection of `p` onto each edge's *segment* (not the
-  // infinite line) covers both the edges and, when the closest point falls
-  // on an endpoint, the vertices.
   const double mink2 = minkowski * minkowski;
   for (size_t i = 0; i < n; i++) {
     const onika::math::Vec3d& a = vertices[i];
@@ -95,9 +87,9 @@ inline bool intersect_point_face(const onika::math::Vec3d& p, std::span<onika::m
 struct RShape {
   double minkowski_;
   uint32_t faces_;
-  std::vector<onika::math::Vec3d> vertices_;
-  std::vector<uint32_t> offset_;
-  std::vector<uint32_t> size_;
+  onika::memory::CudaMMVector<onika::math::Vec3d> vertices_;
+  onika::memory::CudaMMVector<uint32_t> offset_;
+  onika::memory::CudaMMVector<uint32_t> size_;
 
   void add_face(std::span<onika::math::Vec3d> vertices) {
     uint32_t offset = faces_ == 0 ? 0 : offset_.back() + size_.back();
@@ -107,38 +99,128 @@ struct RShape {
     faces_++;
   }
 
+  void read_stl(const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary);
+    assert(file.is_open());
+
+    file.seekg(0, std::ios::end);
+    const std::streamoff file_size = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    bool is_binary = false;
+    uint32_t num_triangles = 0;
+    if (file_size >= 84) {
+      char header[80];
+      file.read(header, sizeof(header));
+      file.read(reinterpret_cast<char*>(&num_triangles), sizeof(num_triangles));
+      const std::streamoff expected_size = 84 + std::streamoff(num_triangles) * 50;
+      is_binary = (expected_size == file_size);
+    }
+
+    if (is_binary) {
+      // Stream is already positioned right after the 80-byte header and the
+      // triangle count (4 bytes), i.e. at the first triangle record.
+      for (uint32_t t = 0; t < num_triangles; t++) {
+        float normal[3];
+        file.read(reinterpret_cast<char*>(normal), sizeof(normal));
+        onika::math::Vec3d tri[3];
+        for (auto& v : tri) {
+          float p[3];
+          file.read(reinterpret_cast<char*>(p), sizeof(p));
+          v = {double(p[0]), double(p[1]), double(p[2])};
+        }
+        uint16_t attribute_byte_count = 0;
+        file.read(reinterpret_cast<char*>(&attribute_byte_count), sizeof(attribute_byte_count));
+        add_face(std::span<onika::math::Vec3d>(tri, 3));
+      }
+      return;
+    }
+
+    file.close();
+    std::ifstream ascii(filename);
+    assert(ascii.is_open());
+    std::string token;
+    onika::math::Vec3d tri[3];
+    int count = 0;
+    while (ascii >> token) {
+      if (token == "vertex") {
+        double x, y, z;
+        ascii >> x >> y >> z;
+        tri[count++] = {x, y, z};
+        if (count == 3) {
+          add_face(std::span<onika::math::Vec3d>(tri, 3));
+          count = 0;
+        }
+      }
+    }
+  }
+
   inline std::span<onika::math::Vec3d> face(uint32_t idx) {
     return std::span<onika::math::Vec3d>(vertices_.data() + offset_[idx], size_[idx]);
   }
 
+  ONIKA_HOST_DEVICE_FUNC inline std::span<const onika::math::Vec3d> face(uint32_t idx) const {
+    return std::span<const onika::math::Vec3d>(vertices_.data() + offset_[idx], size_[idx]);
+  }
+
   inline onika::math::AABB face_aabb(uint32_t idx) { return compute_aabb(face(idx), minkowski_); }
 
-  // Marks every local LBM grid node covered by this shape (i.e. within
-  // `minkowski_` of one of its faces) as `value` (WALL_ by default) in the
-  // `obst` field. For each face, only the nodes inside its (Minkowski
-  // inflated) bounding box, restricted to the local subdomain, are tested.
-  inline void apply_to_grid(LBMGrid& grid, int* const obst, int value = WALL_) {
-    for (uint32_t f = 0; f < faces_; f++) {
-      std::span<onika::math::Vec3d> vertices = face(f);
-      onika::math::AABB bounds = compute_aabb(vertices, minkowski_);
-      Point3D pmin = {int(bounds.bmin.x / grid.dx_), int(bounds.bmin.y / grid.dx_), int(bounds.bmin.z / grid.dx_)};
-      Point3D pmax = {int(bounds.bmax.x / grid.dx_), int(bounds.bmax.y / grid.dx_), int(bounds.bmax.z / grid.dx_)};
-      Box3D global_box = {pmin, pmax};
+  void print() {
+    onika::lout << "RShape: " << faces_ << " faces, " << vertices_.size() << " vertices, minkowski: " << minkowski_
+                << std::endl;
+  }
 
-      auto [is_inside_subdomain, local_box] = grid.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_box);
-      if (!is_inside_subdomain) continue;
+  inline void apply_to_grid(const LBMGrid& grid, int* const obst, onika::parallel::ParallelExecutionContext* exec_ctx,
+                            int value = WALL_);
+};
 
-      for (int k = local_box.start(2); k <= local_box.end(2); k++) {
-        for (int j = local_box.start(1); j <= local_box.end(1); j++) {
-          for (int i = local_box.start(0); i <= local_box.end(0); i++) {
-            onika::math::Vec3d p = grid.compute_position<Area::Global>(i, j, k);
-            if (intersect_point_face(p, vertices, minkowski_)) {
-              obst[grid(i, j, k)] = value;
-            }
+struct ApplyRShapeToGridFunctor {
+  const onika::math::Vec3d* const __restrict__ vertices_;
+  const uint32_t* const __restrict__ offset_;
+  const uint32_t* const __restrict__ size_;
+  double minkowski_;
+  LBMGrid grid_;
+  int* const __restrict__ obst_;
+  int value_;
+
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t&& coord) const {
+    const size_t f = coord.x;
+    std::span<const onika::math::Vec3d> vertices(vertices_ + offset_[f], size_[f]);
+    onika::math::AABB bounds = compute_aabb(vertices, minkowski_);
+    Point3D pmin = {int(bounds.bmin.x / grid_.dx_), int(bounds.bmin.y / grid_.dx_), int(bounds.bmin.z / grid_.dx_)};
+    Point3D pmax = {int(bounds.bmax.x / grid_.dx_), int(bounds.bmax.y / grid_.dx_), int(bounds.bmax.z / grid_.dx_)};
+    Box3D global_box = {pmin, pmax};
+
+    auto [is_inside_subdomain, local_box] = grid_.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_box);
+    if (!is_inside_subdomain) return;
+
+    for (int k = local_box.start(2) + ONIKA_CU_THREAD_COORD.z; k <= local_box.end(2); k += ONIKA_CU_BLOCK_DIMS.z) {
+      for (int j = local_box.start(1) + ONIKA_CU_THREAD_COORD.y; j <= local_box.end(1); j += ONIKA_CU_BLOCK_DIMS.y) {
+        for (int i = local_box.start(0) + ONIKA_CU_THREAD_COORD.x; i <= local_box.end(0); i += ONIKA_CU_BLOCK_DIMS.x) {
+          onika::math::Vec3d p = grid_.compute_position<Area::Global>(i, j, k);
+          if (intersect_point_face(p, vertices, minkowski_)) {
+            obst_[grid_(i, j, k)] = value_;
           }
         }
       }
     }
   }
 };
+
+inline void RShape::apply_to_grid(const LBMGrid& grid, int* const obst,
+                                  onika::parallel::ParallelExecutionContext* exec_ctx, int value) {
+  if (faces_ == 0) return;
+  ApplyRShapeToGridFunctor func = {vertices_.data(), offset_.data(), size_.data(), minkowski_, grid, obst, value};
+  onika::parallel::ParallelExecutionSpace<3> space = {{0, 0, 0}, {ssize_t(faces_), 1, 1}};
+  onika::parallel::block_parallel_for(space, func, exec_ctx);
+}
 }  // namespace hippoLBM
+
+namespace onika {
+namespace parallel {
+template <>
+struct BlockParallelForFunctorTraits<hippoLBM::ApplyRShapeToGridFunctor> {
+  static inline constexpr bool CudaCompatible = true;
+};
+}  // namespace parallel
+}  // namespace onika

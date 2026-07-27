@@ -69,6 +69,10 @@ struct ApplyUpdateObstaclesFunc {
       hippoLBM::parallel_for(local_box, func, par_exec_ctx_("update_obstacles"));
     }
   }
+
+  inline void operator()(RShape& obj) const {
+    obj.apply_to_grid(grid_, obst_, par_exec_ctx_("update_obstacles_rshape"), value_);
+  }
 };
 }  // namespace hippoLBM
 

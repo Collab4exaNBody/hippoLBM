@@ -3,6 +3,8 @@
 #include <onika/math/basic_types.h>
 #include <onika/math/matrix4d.h>
 
+#include <hippoLBM/obstacle/rshape.hpp>
+
 namespace hippoLBM {
 
 /** @brief Check if a point intersects with an axis-aligned bounding box.
@@ -18,10 +20,10 @@ ONIKA_HOST_DEVICE_FUNC inline bool intersect(const onika::math::AABB& aabb, cons
 
 /** @brief Enumerate the different types of obstacles. */
 enum OBSTACLE_TYPE {
-  BALL = 0,     /**< Ball driver type. */
-  WALL = 1,     /**< Wall driver type. */
-  QUADRIC = 2,  /**< Quadric driver type. */
-  STL_MESH = 3, /**< STL mesh driver type. */
+  BALL = 0,    /**< Ball driver type. */
+  WALL = 1,    /**< Wall driver type. */
+  QUADRIC = 2, /**< Quadric driver type. */
+  RSHAPE = 3,  /**< Rounded-polytope (RShape) driver type, e.g. loaded from an STL mesh. */
   UNDEFINED = 4 /**< Undefined driver type. */
 };
 
@@ -161,5 +163,9 @@ constexpr OBSTACLE_TYPE get_type<Wall>() {
 template <>
 constexpr OBSTACLE_TYPE get_type<Quadric>() {
   return OBSTACLE_TYPE::QUADRIC;
+}
+template <>
+constexpr OBSTACLE_TYPE get_type<RShape>() {
+  return OBSTACLE_TYPE::RSHAPE;
 }
 }  // namespace hippoLBM
