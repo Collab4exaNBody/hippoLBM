@@ -28,21 +28,75 @@ bibliography: paper.bib
 
 # Introduction
 
-<!--
-La méthode Boltzmann sur réseau a été introduite il y a ... et permet de simuler le comportement d'un fluide ... L'un des avantages de cette méthode est qu'elle est nativement parallèle avec des calculs indépendants en chaque point de la grille LBM. De plus, due à l'utilisation de grille régulière (cartésienne), cette méthode a largement été portée sur GPU et permet de réaliser des scénarios à grande échelle avec des milliards de nœuds.
+The Lattice Boltzmann Method (LBM) [@krueger2017lattice] is a numerical method for computational fluid dynamics (CFD) based on a mesoscopic description of fluid dynamics. Unlike classical methods for solving the Navier-Stokes equations, which directly describe the evolution of macroscopic quantities such as velocity and pressure, LBM governs the spatio-temporal evolution of distribution functions representing the statistical behavior of the particles making up the fluid.
 
-Ce qui nous intéresse avec cette méthode, c'est la possibilité de la coupler avec d'autres méthodes via la méthode de l'immersed boundary pour effectuer des scénarios d'intérêt dans le domaine nucléaire, notamment dans le cas de scénarios APRP lorsqu'une brèche est créée dans une gaine, créant une dépression et propulsant des particules hors du crayon.
+This approach originates from the kinetic theory of gases. Instead of directly solving the macroscopic equations of fluid motion, LBM describes the evolution of distribution functions associated with fictitious particles moving along a discrete set of directions defined on a regular lattice.
 
-Pour faciliter ce type de couplage, un framework permettant d'écrire chaque opération élémentaire (IO, numerical scheme, analysis) comme un opérateur et reliés les uns aux autres via des slots a été mis en place. Dans ce papier nous nous intéressons au code `HippoLBM` qui est issu d'une partie du code legacy effectuant de la LBMDEM dont les structures de données ont été adaptées pour le portage sur GPU et à une parallélisation hybride MPI + GPU.
--->
+One of the main advantages of LBM lies in its local and explicit formulation. Computations are performed only between neighboring lattice nodes, which enables efficient parallelization on modern computing architectures such as multicore CPUs and GPU accelerators. This feature makes the method particularly well suited to high-resolution three-dimensional simulations, and it inherently exposes fine-grained parallelism since updates at each lattice node are locally independent. Its use of a regular Cartesian mesh further facilitates efficient GPU implementations, enabling simulations at very large scale, ranging up to billions of lattice nodes.
 
-The Lattice Boltzmann Method (LBM) (LHASSAN ADD REF) is a longstanding numerical approach for fluid simulation that inherently exposes fine-grained parallelism: updates at each lattice node are locally independent. Its use of a regular Cartesian mesh facilitates efficient GPU implementations, enabling simulations at very large scale—ranging up to billions of lattice nodes.
+LBM also offers great flexibility for representing complex geometries and boundary conditions that are difficult to handle with classical methods. Various collision models have been developed to improve numerical stability and extend the range of applications of the method, including Multiple Relaxation Time (MRT) models, entropic models, and cumulant-based approaches [@krueger2017lattice].
 
-This method is particularly attractive because it can be coupled with other techniques using for example the Immersed Boundary Method (IBM), enabling the simulation of nuclear-relevant scenarios such as Loss-Of-Coolant Accidents (LOCA), in which a breach in the fuel cladding induces a pressure drop and ejects particles from the fuel rod (LHASSAN ADD REF).
+Despite its many advantages, LBM has some limitations. Its classical formalism relies on a low-compressibility assumption and is therefore mainly suited to flows characterized by low Mach numbers. In addition, difficulties can arise in situations with strong pressure gradients or highly turbulent regimes. These limitations are nonetheless the subject of extensive ongoing work aimed at improving numerical stability and broadening the range of application of the method.
+
+This method is particularly attractive because it can be coupled with other techniques, such as the Immersed Boundary Method (IBM), enabling the simulation of complex fluid-particle interactions relevant to nuclear engineering scenarios.
 
 To enable such couplings, we developed a framework that expresses each elementary operation (I/O, numerical schemes, analyses) as an operator and connects operators via slots. In this paper, we concentrate on the `HippoLBM` code, derived from legacy LBM/DEM software and refactored for GPU execution and hybrid MPI+GPU parallelization.
 
+# Principle of the LBM
 
+In LBM, velocity space is discretized into a finite set of directions $\mathbf{e}_i$. The continuous distribution function is replaced by a set of discrete functions $f_i(\mathbf{r},t)$ associated with the different lattice directions:
+
+$$
+f_i(\mathbf{r},t) = f(\mathbf{r},\mathbf{e}_i,t),
+$$
+
+with $i=0,\dots,q-1$, where $q$ is the number of discrete directions of the lattice.
+
+The time evolution of the distribution functions relies on two successive steps: collision and streaming. In the BGK (*Bhatnagar-Gross-Krook*) model, the collision operator is modeled as a simple relaxation toward an equilibrium distribution:
+
+$$
+f_i^*(\mathbf{r},t) = f_i(\mathbf{r},t) - \frac{\Delta t}{\tau}\left(f_i(\mathbf{r},t)-f_i^{eq}(\mathbf{r},t)\right),
+$$
+
+where $\tau$ is the relaxation time and $f_i^*$ is the distribution function after the collision step.
+
+The equilibrium distribution function $f_i^{eq}$ is obtained from a truncated expansion of the Maxwell-Boltzmann distribution to second order in Mach number, and is written as:
+
+$$
+f_i^{eq}(\mathbf{r},t) = w_i \rho(\mathbf{r},t)\left[1 + \frac{\mathbf{e}_i\cdot\mathbf{u}(\mathbf{r},t)}{c_s^2} + \frac{\left(\mathbf{e}_i\cdot\mathbf{u}(\mathbf{r},t)\right)^2}{2c_s^4} - \frac{\mathbf{u}(\mathbf{r},t)\cdot\mathbf{u}(\mathbf{r},t)}{2c_s^2}\right],
+$$
+
+where $w_i$ is the weight associated with discrete direction $\mathbf{e}_i$, $\rho$ is the fluid density, $\mathbf{u}$ is the macroscopic velocity, and $c_s$ is the lattice speed of sound. This approximation is valid in the low Mach number limit ($Ma \ll 1$).
+
+After the collision step, the distribution functions are streamed to neighboring lattice nodes along the discrete directions $\mathbf{e}_i$:
+
+$$
+f_i(\mathbf{r}+\mathbf{e}_i\Delta t,t+\Delta t) = f_i^*(\mathbf{r},t).
+$$
+
+The macroscopic fluid quantities are obtained by computing the moments of the distribution functions:
+
+$$
+\rho(\mathbf{r},t) = \sum_i f_i(\mathbf{r},t),
+$$
+
+and
+
+$$
+\rho\mathbf{u}(\mathbf{r},t) = \sum_i f_i(\mathbf{r},t)\mathbf{e}_i .
+$$
+
+The relaxation parameter $\tau$ plays a fundamental role in LBM, as it controls the dissipative properties of the fluid. In the BGK model, the relaxation time is directly related to the kinematic viscosity $\nu$ of the fluid through the relation:
+
+$$
+\nu = c_s^2\left(\tau-\frac{\Delta t}{2}\right),
+$$
+
+where $c_s$ is the lattice speed of sound and $\Delta t$ is the time step. This relation shows that the fluid viscosity is directly determined by the time required for the distribution functions to relax toward their equilibrium state. An increase in $\tau$ leads to an increase in kinematic viscosity, corresponding to a more dissipative fluid. Conversely, a value of $\tau$ close to $\Delta t/2$ corresponds to a low-viscosity fluid.
+
+In classical LBM simulations, numerical stability generally requires $\tau$ to be strictly greater than $\Delta t/2$. The choice of this parameter is therefore a trade-off between the physical viscosity of the fluid and the numerical stability of the computation.
+
+Through a Chapman-Enskog asymptotic expansion, it can be shown that LBM recovers the macroscopic mass and momentum conservation equations in the low Mach number limit. This expansion relies on a separation of spatial and temporal scales, establishing the link between the mesoscopic description of the distribution functions and the macroscopic equations of fluid mechanics [@chapman1916mathematical; @krueger2017lattice].
 
 # Statement of need
 <!--
@@ -76,7 +130,7 @@ Dans le domaine des codes utilisant la méthode Lattice de Boltzmann en 3D, plus
 `HippoLBM` se différencie principalement de l'état de l'art plus dans sa conception que dans ses fonctionnalités physiques ou HPC qui pourront être enrichies par la suite, afin de s'intégrer dans des écosystèmes complexes et multi-physiques.
 -->
 
-In the field of codes using the 3D Lattice Boltzmann Method, several codes offer more advanced physical capabilities than `HippoLBM`, such as `ProLB` [@feng2021prolb], which can simulate compressible fluids, OpenLB [@heuveline2007openlb]  with XXX, or `LBMSaclay` [@cartalade2016lattice](check ref), which enables multiphase simulations. 
+In the field of codes using the 3D Lattice Boltzmann Method, several codes offer more advanced physical capabilities than `HippoLBM`, such as `ProLB` [@feng2021prolb], which can simulate compressible fluids, `OpenLB` [@heuveline2007openlb], which provides a broad, general-purpose set of physical models (e.g., thermal, particulate, and free-surface flows), or `LBMSaclay` [@cartalade2016lattice], which enables multiphase simulations.
 
 
 `HippoLBM` differs from the state of the art mainly in its design rather than in its physical or HPC capabilities, which can be further enriched in the future in order to integrate into complex, multi-physics ecosystems. Note that waLBerla [@bauer2021walberla] + , Palabos [@latt2021palabos] with LIGGGTHS proposes multiphysic couplings with HPC features.
