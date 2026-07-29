@@ -26,61 +26,7 @@ under the License.
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
 #include <hippoLBM/obstacle/obstacles.hpp>
-
-namespace hippoLBM {
-
-template <class Obj>
-struct SetObstacleFunc {
-  Obj obj_;                       // The obstacle object to be applied.
-  LBMGrid grid_;                  // Computes grid indices from (i,j,k) coordinates in the LBM domain.
-  int* const __restrict__ obst_;  // Pointer to the obstacle field.
-  int value_ = WALL_;             // The value to set for obstacle cells in the obstacle field.
-
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(int i, int j, int k) const {
-    if (obj_.solid(grid_.compute_position<hippoLBM::Area::Global>(i, j, k))) {
-      const int idx = grid_(i, j, k);
-      obst_[idx] = value_;  // Mark the cell as an obstacle (e.g., WALL_)
-    }
-  }
-};
-
-template <typename ParExecCtxFunc>
-struct ApplyUpdateObstaclesFunc {
-  LBMGrid grid_;                 // The LBM grid containing the simulation data.
-  double dx_;                    // The grid spacing of the LBM simulation.
-  int* const obst_;              // Pointer to the obstacle field in the LBM grid.
-  ParExecCtxFunc par_exec_ctx_;  // Function to obtain the parallel execution context.
-  int value_ = WALL_;            // The value to set for obstacle cells in the obstacle field.
-
-  template <typename Obj>
-  inline void operator()(Obj& obj) const {
-    // convert bounds in box
-    onika::math::AABB bounds = obj.covered();
-    onika::math::Vec3d min = bounds.bmin;
-    onika::math::Vec3d max = bounds.bmax;
-    Point3D _min = {int(min.x / dx_), int(min.y / dx_), int(min.z / dx_)};
-    Point3D _max = {int(max.x / dx_), int(max.y / dx_), int(max.z / dx_)};
-    Box3D global_box = {_min, _max};
-
-    auto [is_inside_subdomain, local_box] = grid_.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_box);
-
-    if (is_inside_subdomain) {
-      SetObstacleFunc func = {obj, grid_, obst_, value_};
-      hippoLBM::parallel_for(local_box, func, par_exec_ctx_("update_obstacles"));
-    }
-  }
-};
-}  // namespace hippoLBM
-
-namespace onika {
-namespace parallel {
-template <typename Obj>
-struct ParallelForFunctorTraits<hippoLBM::SetObstacleFunc<Obj>> {
-  static inline constexpr bool RequiresBlockSynchronousCall = false;
-  static inline constexpr bool CudaCompatible = true;
-};
-}  // namespace parallel
-}  // namespace onika
+#include <hippoLBM/obstacle/update_obstacles.hpp>
 
 namespace hippoLBM {
 using namespace onika;
