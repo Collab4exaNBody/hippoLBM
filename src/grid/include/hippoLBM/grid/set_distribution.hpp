@@ -19,29 +19,31 @@ under the License.
 
 #pragma once
 
+#include <onika/math/basic_types.h>
+#include <onika/math/matrix4d.h>
+
 #include <hippoLBM/grid/field_view.hpp>
 #include <hippoLBM/grid/grid_helper.hpp>
 
 namespace hippoLBM {
-/**
- * @brief Initializes the distributions in a lattice Boltzmann model.
- */
-template <int Q>
-struct init_distributions {
-  double coeff_;
-  GridIJKtoIdx ijk_to_idx_;
-  /**
-   * @brief Operator to initialize distributions at a given index.
-   * @param idx The index to initialize distributions.
-   * @param f Pointer to the distribution function.
-   */
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(const int idx, const FieldView<Q>& f) const {
-    stencil::for_each<typename LBMScheme<Q>::Coefficients>(
-        [&]<typename coeff>(int iLB) { f(idx, iLB) = coeff_ * coeff::w; });
-  };
 
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(int i, int j, int k, const FieldView<Q>& f) const {
-    this->operator()(ijk_to_idx_(i, j, k), f);
+template <int Q>
+struct SetDistributionFunc {
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(int i, int j, int k, const FieldView<Q>& f, const double value,
+                                                const LBMGrid& grid) const {
+    const int idx = grid(i, j, k);
+    stencil::for_each<typename LBMScheme<Q>::Coefficients>(
+        [&]<typename coeff>(int iLB) { f(idx, iLB) = value * coeff::w; });
+  }
+
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(int i, int j, int k, const FieldView<Q>& f, const double value,
+                                                const LBMGrid& grid, const onika::math::Mat4d& quadric) const {
+    onika::math::Vec3d pos = grid.compute_position<Area::Global>(i, j, k);
+    if (onika::math::quadric_eval(quadric, pos) <= 0.0) {
+      const int idx = grid(i, j, k);
+      stencil::for_each<typename LBMScheme<Q>::Coefficients>(
+          [&]<typename coeff>(int iLB) { f(idx, iLB) = value * coeff::w; });
+    }
   }
 };
 }  // namespace hippoLBM
@@ -49,7 +51,7 @@ struct init_distributions {
 namespace onika {
 namespace parallel {
 template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::init_distributions<Q>> {
+struct ParallelForFunctorTraits<hippoLBM::SetDistributionFunc<Q>> {
   static inline constexpr bool RequiresBlockSynchronousCall = false;
   static inline constexpr bool CudaCompatible = true;
 };
