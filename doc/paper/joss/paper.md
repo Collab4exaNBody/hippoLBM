@@ -19,7 +19,7 @@ authors:
   - name: Guillaume Bareigts
     orcid: 0000-0002-9444-9858
     affiliation: 1       
-  - name:Bruno Collard
+  - name: Bruno Collard
     orcid: 0000-0002-9444-9858
     affiliation: 1     
 affiliations:
