@@ -134,7 +134,7 @@ In the field of codes using the 3D Lattice Boltzmann Method, several codes offer
 
 # Research impact statement
 
-The legacy (non-HPC) code was used to perform 2D LBM/DEM simulations on ... [@amarsid2017viscoinertial]. `HippoLBM` aims to explore large-scale 3D simulations in LBM and coupling. Through its interface with `Onika`, `HippoLBM` could be coupled to physics other than DEM using methods such as the Material Point Method (MPM) [@xiao2026volume], the Finite Element Method (FEM), or the Finite Difference Method (FDM).
+`HippoLBM` was developed as part of a simulation platform dedicated to the study of granular flows immersed in a viscous fluid [@amarsid2017viscoinertial]. It relies on a coupling between the Lattice Boltzmann Method (LBM) and the Discrete Element Method (DEM). Designed for high-performance computing (HPC), `HippoLBM` aims to perform large-scale three-dimensional simulations. This coupling constitutes a promising tool for the community working on particulate suspensions, enabling resolved simulations of dense systems in which hydrodynamic interactions and particle contacts play a determining role. Through its interface with `Onika`, `HippoLBM` can also be coupled to physical models other than DEM, such as the Material Point Method (MPM) [@xiao2026volume], the Finite Element Method (FEM), or the Finite Difference Method (FDM).
 
 # AI usage disclosure
 
