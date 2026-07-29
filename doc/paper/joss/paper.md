@@ -92,7 +92,7 @@ where $c_s$ is the lattice speed of sound and $\Delta t$ is the time step. This 
 `HippoLBM` is a C++20 LBM code that aims to provide a high-performance tool for LBM+X coupling on both CPU and GPU, using the `Onika` formalism [@carrard2023exanbody] to build execution graphs from a list of operators.
 In `HippoLBM`, an operator can be a compute kernel call such as the BGK or MRT collision step, a field initialization, a ParaView output, or any other step or sequence of steps in the computation. We target fine operator granularity to enable couplings with other codes that also use the `Onika` formalism. The first use case was coupling `HippoLBM` with the `exaDEM` code [@prat2025exadem] for DEM/LBM simulations using R-shaped particles.
 
-![a)Lid driven cavity simulation. b) Example using obstacles defined by quadrics. c) Von Kármán vortex street simulation. \label{fig:examples}](./groupir.png){width=70%} 
+![a) Lid driven cavity simulation. b) Example using obstacles defined by quadrics. c) Von Kármán vortex street simulation. \label{fig:examples}](./groupir.png){width=70%} 
 
 Regarding performance, `HippoLBM` supports hybrid MPI+X parallelization, where X is either OpenMP or CUDA, and relies on standard LBM parallelization strategies (spatial domain decomposition, GPU optimization [@tran2017performance]). However, some strategies such as adaptive mesh refinement or automatic kernel fusion [@mahmoud2024optimized] are not yet implemented. `HippoLBM` has been tested on 192 NVIDIA A100 GPUs and can handle around 69 billion LB points (see \autoref{fig:perf}).
 
@@ -104,10 +104,10 @@ Regarding performance, `HippoLBM` supports hybrid MPI+X parallelization, where X
 # State of the field                                                                                                                  
 
 
-In the field of codes using the 3D Lattice Boltzmann Method, several codes offer more advanced physical capabilities than `HippoLBM`, such as open source codes `OpenLB` [@heuveline2007openlb], which provides a broad, general-purpose set of physical models (e.g., thermal, particulate, and free-surface flows), or `LBMSaclay` [@cartalade2016lattice], which enables multiphase simulations. Not open source codes `ProLB` [@feng2021prolb] that can simulate compressible fluids or `PowerFLOW`®, 
+In the field of codes using the 3D Lattice Boltzmann Method, several codes offer more advanced physical capabilities than `HippoLBM`, such as open source codes `OpenLB` [@heuveline2007openlb], which provides a broad, general-purpose set of physical models (e.g., thermal, particulate, and free-surface flows), or `LBMSaclay` [@cartalade2016lattice], which enables multiphase simulations. Non-open-source codes such as `ProLB` [@feng2021prolb], which can simulate compressible fluids, or `PowerFLOW`®.
 
 
-`HippoLBM` differs from the state of the art mainly in its design rather than in its physical or HPC capabilities, which can be further enriched in the future in order to integrate into complex, multi-physics ecosystems. Note that waLBerla [@bauer2021walberla] and Palabos [@latt2021palabos] with LIGGGTHS proposes multiphysic couplings with HPC features.
+`HippoLBM` differs from the state of the art mainly in its design rather than in its physical or HPC capabilities, which can be further enriched in the future in order to integrate into complex, multi-physics ecosystems. Note that waLBerla [@bauer2021walberla] and Palabos [@latt2021palabos] with LIGGGHTS propose multiphysics couplings with HPC features.
 
 
 # Software design
@@ -119,7 +119,7 @@ In the field of codes using the 3D Lattice Boltzmann Method, several codes offer
 - `collision`: This plugin applies the elementary steps of LBM, such as the BGK or MRT collision operator, the streaming phase, and the computation of macroscopic quantities (e.g., velocity and pressure).
 - `bcs`: This plugin contains the compute kernels for applying boundary conditions (e.g., Neumann conditions for Couette or Poiseuille flows, bounce-back for solid boundaries, or lid-driven cavity setups).
 - `io`: This plugin is currently used to display logs and produce ParaView output files for post-processing. Future developments will extend it to support in-situ analysis.
-- `prepo`: This plugin provides pre-initialization of fields for specific flow regimes, such as double Couette flow.
+- `prepro`: This plugin provides pre-initialization of fields for specific flow regimes, such as double Couette flow.
 - `obstacle`: This plugin allows placing fixed solid objects, such as walls or geometries defined by quadrics, see \autoref{fig:examples}.b, within the simulation domain. 
 
 ![a) Overview of the HippoLBM plugins built on top of the Onika runtime. b) Example of an operator sequence, colored by plugin, executed within the time loop. \label{fig:design}](./LBMDesign.png){width=100%}
@@ -135,6 +135,6 @@ Generative AI tools were used to generate post processing python script, doxygen
 
 # Acknowledgements
 
-This work was performed using HPC resources from CCRT funded by the CEA/DEs simulation program. `HippoLBM` is part of the `PLEIADES` platform which has been developped in collaboration with the French nuclear industry - mainly CEA, EDF, and Framatome - for simulation of fuel elements.
+This work was performed using HPC resources from CCRT funded by the CEA/DEs simulation program. `HippoLBM` is part of the `PLEIADES` platform which has been developed in collaboration with the French nuclear industry - mainly CEA, EDF, and Framatome - for simulation of fuel elements.
 
 # References
