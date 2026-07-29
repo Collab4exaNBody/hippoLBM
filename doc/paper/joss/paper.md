@@ -14,11 +14,14 @@ authors:
     orcid: 0009-0009-5120-1308
     affiliation: 1
   - name: Vincent Topin
-    orcid: XXXX-XXXX-XXXX-XXXX
+    orcid: 0009-0009-5897-4979
     affiliation: 1    
   - name: Guillaume Bareigts
-    orcid: XXXX-XXXX-XXXX-XXXX
-    affiliation: 1        
+    orcid: 0000-0002-9444-9858
+    affiliation: 1       
+  - name:Bruno Collard
+    orcid: 0000-0002-9444-9858
+    affiliation: 1     
 affiliations:
  - name: CEA, DES, IRESNE, DEC, Cadarache F 13108 St-Paul-Lez-Durance
    index: 1
