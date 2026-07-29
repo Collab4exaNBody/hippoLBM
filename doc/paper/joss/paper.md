@@ -31,23 +31,28 @@ bibliography: paper.bib
 
 # Introduction
 
-The Lattice Boltzmann Method (LBM) [@krueger2017lattice] is a numerical method for computational fluid dynamics (CFD) based on a mesoscopic description of fluid dynamics. Unlike classical methods for solving the Navier-Stokes equations, which directly describe the evolution of macroscopic quantities such as velocity and pressure, LBM governs the spatio-temporal evolution of distribution functions representing the statistical behavior of the particles making up the fluid.
-
-This approach originates from the kinetic theory of gases. Instead of directly solving the macroscopic equations of fluid motion, LBM describes the evolution of distribution functions associated with fictitious particles moving along a discrete set of directions defined on a regular lattice.
+The Lattice Boltzmann Method (LBM) [@PhysRevLett.61.2332] is a numerical method for computational fluid dynamics (CFD) based on a mesoscopic description of fluid dynamics. Unlike classical methods for solving the Navier-Stokes equations, which directly describe the evolution of macroscopic quantities such as velocity and pressure, LBM governs the spatio-temporal evolution of distribution functions representing the statistical behavior of the particles making up the fluid. This approach originates from the kinetic theory of gases [@chapman1916mathematical]. Instead of directly solving the macroscopic equations of fluid motion, LBM describes the evolution of distribution functions associated with fictitious particles moving along a discrete set of directions defined on a regular lattice.
 
 One of the main advantages of LBM lies in its local and explicit formulation. Computations are performed only between neighboring lattice nodes, which enables efficient parallelization on modern computing architectures such as multicore CPUs and GPU accelerators. This feature makes the method particularly well suited to high-resolution three-dimensional simulations, and it inherently exposes fine-grained parallelism since updates at each lattice node are locally independent. Its use of a regular Cartesian mesh further facilitates efficient GPU implementations, enabling simulations at very large scale, ranging up to billions of lattice nodes.
 
-LBM also offers great flexibility for representing complex geometries and boundary conditions that are difficult to handle with classical methods. Various collision models have been developed to improve numerical stability and extend the range of applications of the method, including Multiple Relaxation Time (MRT) models, entropic models, and cumulant-based approaches [@krueger2017lattice].
+LBM also offers great flexibility for representing complex geometries and boundary conditions that are difficult to handle with classical methods. Various collision models have been developed to improve numerical stability [@PhysRevE.61.6546] and extend the range of applications of the method, including Multiple Relaxation Time (MRT) models, entropic models, and cumulant-based approaches [@krueger2017lattice]. Despite its many advantages, LBM has some limitations. Its classical formalism relies on a low-compressibility assumption and is therefore mainly suited to flows characterized by low Mach numbers. In addition, difficulties can arise in situations with strong pressure gradients or highly turbulent regimes. These limitations are nonetheless the subject of extensive ongoing work aimed at improving numerical stability and broadening the range of application of the method.
 
-Despite its many advantages, LBM has some limitations. Its classical formalism relies on a low-compressibility assumption and is therefore mainly suited to flows characterized by low Mach numbers. In addition, difficulties can arise in situations with strong pressure gradients or highly turbulent regimes. These limitations are nonetheless the subject of extensive ongoing work aimed at improving numerical stability and broadening the range of application of the method.
-
-This method remains particularly attractive because it can be coupled with other techniques, such as the Immersed Boundary Method (IBM), enabling the simulation of complex fluid-particle interactions relevant to nuclear engineering scenarios.
-
-To enable such couplings, we developed a framework that expresses each elementary operation (I/O, numerical schemes, analyses) as an operator and connects operators via slots. In this paper, we concentrate on the `HippoLBM` code, derived from legacy LBM/DEM software and refactored for GPU execution and hybrid MPI+GPU parallelization.
+This method remains particularly attrative for multiphysics simulations, as it can be easily coupled with other physical models. In particular, its combination with discrete particle methods through the Immersed Boundary Method(IBM) provides an efficient framework for simulating complex fluid-particle interactions relevant to nuclear engineering scenarii.  To implement such couplings, we developed a framework that expresses each elementary operation (I/O, numerical schemes, analyses) as an operator and connects operators via slots. In this paper, we concentrate on the `HippoLBM` code, derived from legacy LBM/DEM software and refactored for GPU execution and hybrid MPI+GPU parallelization.
 
 # Principle of the LBM
 
-In LBM, velocity space is discretized into a finite set of directions $\mathbf{e}_i$. The continuous distribution function is replaced by a set of discrete functions $f_i(\mathbf{r},t)$ associated with the different lattice directions. The time evolution of the distribution functions relies on two successive steps: collision and streaming. In the BGK (*Bhatnagar-Gross-Krook*) model, the collision operator is modeled as a simple relaxation toward an equilibrium distribution:
+As mentionned before, the LBM is a mesoscopic approach derived from the kinetic theory of gases. Instead of solving the macroscopic Navier-Stokes equations directly, it solves a discretiezed form of the Boltzmann equation for the particle distribution function :
+
+$$
+\frac{\partial f(\mathbf{r},\boldsymbol{\xi},t)}{\partial t}
++\boldsymbol{\xi}\cdot\nabla_{\mathbf{r}} f(\mathbf{r},\boldsymbol{\xi},t)
+=\Omega(f),
+$$
+
+
+where (f(\mathbf{r},\boldsymbol{\xi},t)) is the particle distribution function, (\mathbf{r}) denotes the spatial position, (\boldsymbol{\xi}) is the microscopic particle velocity, and (\Omega(f)) represents the collision operator.
+
+The LBM is obtained by discretizing the velocity space into a finite set of discrete velocities (\boldsymbol{e}_i), while the distribution function is replaced by a set of discrete populations (f_i(\mathbf{r},t)). Using a regular lattice and BGK collision operator (*Bhatnagar-Gross-Krook*), the streaming and collision processes can be separated, leading to the following discrete Boltzmann equation:
 
 $$
 f_i^*(\mathbf{r},t) = f_i(\mathbf{r},t) - \frac{\Delta t}{\tau}\left(f_i(\mathbf{r},t)-f_i^{eq}(\mathbf{r},t)\right),
