@@ -38,21 +38,13 @@ LBM also offers great flexibility for representing complex geometries and bounda
 
 Despite its many advantages, LBM has some limitations. Its classical formalism relies on a low-compressibility assumption and is therefore mainly suited to flows characterized by low Mach numbers. In addition, difficulties can arise in situations with strong pressure gradients or highly turbulent regimes. These limitations are nonetheless the subject of extensive ongoing work aimed at improving numerical stability and broadening the range of application of the method.
 
-This method is particularly attractive because it can be coupled with other techniques, such as the Immersed Boundary Method (IBM), enabling the simulation of complex fluid-particle interactions relevant to nuclear engineering scenarios.
+This method remains particularly attractive because it can be coupled with other techniques, such as the Immersed Boundary Method (IBM), enabling the simulation of complex fluid-particle interactions relevant to nuclear engineering scenarios.
 
 To enable such couplings, we developed a framework that expresses each elementary operation (I/O, numerical schemes, analyses) as an operator and connects operators via slots. In this paper, we concentrate on the `HippoLBM` code, derived from legacy LBM/DEM software and refactored for GPU execution and hybrid MPI+GPU parallelization.
 
 # Principle of the LBM
 
-In LBM, velocity space is discretized into a finite set of directions $\mathbf{e}_i$. The continuous distribution function is replaced by a set of discrete functions $f_i(\mathbf{r},t)$ associated with the different lattice directions:
-
-$$
-f_i(\mathbf{r},t) = f(\mathbf{r},\mathbf{e}_i,t),
-$$
-
-with $i=0,\dots,q-1$, where $q$ is the number of discrete directions of the lattice.
-
-The time evolution of the distribution functions relies on two successive steps: collision and streaming. In the BGK (*Bhatnagar-Gross-Krook*) model, the collision operator is modeled as a simple relaxation toward an equilibrium distribution:
+In LBM, velocity space is discretized into a finite set of directions $\mathbf{e}_i$. The continuous distribution function is replaced by a set of discrete functions $f_i(\mathbf{r},t)$ associated with the different lattice directions. The time evolution of the distribution functions relies on two successive steps: collision and streaming. In the BGK (*Bhatnagar-Gross-Krook*) model, the collision operator is modeled as a simple relaxation toward an equilibrium distribution:
 
 $$
 f_i^*(\mathbf{r},t) = f_i(\mathbf{r},t) - \frac{\Delta t}{\tau}\left(f_i(\mathbf{r},t)-f_i^{eq}(\mathbf{r},t)\right),
@@ -92,23 +84,10 @@ $$
 \nu = c_s^2\left(\tau-\frac{\Delta t}{2}\right),
 $$
 
-where $c_s$ is the lattice speed of sound and $\Delta t$ is the time step. This relation shows that the fluid viscosity is directly determined by the time required for the distribution functions to relax toward their equilibrium state. An increase in $\tau$ leads to an increase in kinematic viscosity, corresponding to a more dissipative fluid. Conversely, a value of $\tau$ close to $\Delta t/2$ corresponds to a low-viscosity fluid.
-
-In classical LBM simulations, numerical stability generally requires $\tau$ to be strictly greater than $\Delta t/2$. The choice of this parameter is therefore a trade-off between the physical viscosity of the fluid and the numerical stability of the computation.
-
-Through a Chapman-Enskog asymptotic expansion, it can be shown that LBM recovers the macroscopic mass and momentum conservation equations in the low Mach number limit. This expansion relies on a separation of spatial and temporal scales, establishing the link between the mesoscopic description of the distribution functions and the macroscopic equations of fluid mechanics [@chapman1916mathematical; @krueger2017lattice].
+where $c_s$ is the lattice speed of sound and $\Delta t$ is the time step. This relation shows that the fluid viscosity is directly determined by the time required for the distribution functions to relax toward their equilibrium state. Through a Chapman-Enskog asymptotic expansion, it can be shown that LBM recovers the macroscopic mass and momentum conservation equations in the low Mach number limit. This expansion relies on a separation of spatial and temporal scales, establishing the link between the mesoscopic description of the distribution functions and the macroscopic equations of fluid mechanics [@chapman1916mathematical; @krueger2017lattice].
 
 # Statement of need
-<!--
-`HippoLBM` is CFD code writen in C++ 20 ...
-`HippoLBM` a pour objectif de proposer un outil performant sur CPU et GPU pour effectuer des couplages LBM+X en utilisant le formalisme Onika qui permet de créer des graphes d'exécution à partir d'une liste d'opérateurs.
 
-Un opérateur peut être l'appel à un kernel de calcul comme l'étape de collision BGK ou MRT, l'initialisation d'un champ, des sorties ParaView ou n'importe quelle étape ou liste d'étapes lors du calcul. Dans `HippoLBM`, nous cherchons à proposer une granularité fine de ces opérateurs pour pouvoir construire des couplages avec d'autres codes utilisant eux aussi le formalisme Onika. 
-
-Le premier cas d'utilisation a été réalisé en couplant `HippoLBM` avec le code `exaDEM` pour effectuer des simulations DEM/LBM.
-
-Concernant les fonctionnalités de performance, `HippoLBM` propose une parallélisation hybride `MPI` + `X`, `X`=`OpenMP` ou `CUDA`, en utilisant les méthodes et stratégies classiques de parallélisation de la méthode LBM (décomposition spatiale du domaine, optimisation GPU TODO). Néanmoins, certaines stratégies comme l'utilisation de méthode de raffinement adaptatif de maillage ou la fusion automatique de kernel n'ont pas été intégrées.
--->
 
 `HippoLBM` is a C++20 LBM code that aims to provide a high-performance tool for LBM+X coupling on both CPU and GPU, using the `Onika` formalism [@carrard2023exanbody] to build execution graphs from a list of operators.
 In `HippoLBM`, an operator can be a compute kernel call such as the BGK or MRT collision step, a field initialization, a ParaView output, or any other step or sequence of steps in the computation. We target fine operator granularity to enable couplings with other codes that also use the `Onika` formalism. The first use case was coupling `HippoLBM` with the `exaDEM` code [@prat2025exadem] for DEM/LBM simulations using R-shaped particles.
@@ -124,29 +103,14 @@ Regarding performance, `HippoLBM` supports hybrid MPI+X parallelization, where X
 
 # State of the field                                                                                                                  
 
-<!--
-Dans le domaine des codes utilisant la méthode Lattice de Boltzmann en 3D, plusieurs codes proposent des fonctionnalités physiques plus avancées qu'`HippoLBM` comme `ProLB` qui permet de simuler des fluides compressibles ou `LBMSaclay` permettant de réaliser des simulations multiphase.
 
-`HippoLBM` se différencie principalement de l'état de l'art plus dans sa conception que dans ses fonctionnalités physiques ou HPC qui pourront être enrichies par la suite, afin de s'intégrer dans des écosystèmes complexes et multi-physiques.
--->
-
-In the field of codes using the 3D Lattice Boltzmann Method, several codes offer more advanced physical capabilities than `HippoLBM`, such as `ProLB` [@feng2021prolb], which can simulate compressible fluids, `OpenLB` [@heuveline2007openlb], which provides a broad, general-purpose set of physical models (e.g., thermal, particulate, and free-surface flows), or `LBMSaclay` [@cartalade2016lattice], which enables multiphase simulations.
+In the field of codes using the 3D Lattice Boltzmann Method, several codes offer more advanced physical capabilities than `HippoLBM`, such as open source codes `OpenLB` [@heuveline2007openlb], which provides a broad, general-purpose set of physical models (e.g., thermal, particulate, and free-surface flows), or `LBMSaclay` [@cartalade2016lattice], which enables multiphase simulations. Not open source codes `ProLB` [@feng2021prolb] that can simulate compressible fluids or `PowerFLOW`®, 
 
 
-`HippoLBM` differs from the state of the art mainly in its design rather than in its physical or HPC capabilities, which can be further enriched in the future in order to integrate into complex, multi-physics ecosystems. Note that waLBerla [@bauer2021walberla] + , Palabos [@latt2021palabos] with LIGGGTHS proposes multiphysic couplings with HPC features.
+`HippoLBM` differs from the state of the art mainly in its design rather than in its physical or HPC capabilities, which can be further enriched in the future in order to integrate into complex, multi-physics ecosystems. Note that waLBerla [@bauer2021walberla] and Palabos [@latt2021palabos] with LIGGGTHS proposes multiphysic couplings with HPC features.
 
 
 # Software design
-<!--
-`HippoLBM`'s design philosophy is to decompose the LBM simulations on a list of `onika` operators. 
-`HippoLBM` est composé de plusieurs plugins, actuellement tous les plugins présents forment le cœur d'`HippoLBM`:
-plugin grid: Ce plugin contient la plupart des structures de données comme les champs, les données sur le domaine, les paramètres LBM et propose tous les opérateurs permettant de modifier/initialiser ces structures de données, notamment l'équilibrage de charge (block).
-plugin collision: Ce plugin permet d'appliquer les étapes élémentaires de la LBM comme l'application de l'opérateur de collision BGK ou MRT, la phase de streaming ou le calcul des quantités macros comme la vitesse et la pression.
-plugin bcs: Ce plugin contient les noyaux de calculs pour appliquer les conditions limites comme des conditions de Neumann utilisées pour des cas tests académiques comme un écoulement de Couette ou de Poiseuille, bounce back pour modéliser des solides, ou des conditions limites spécifiques pour mettre en place des cavités entraînées.
-plugin IO: Ce plugin est actuellement utilisé pour afficher des logs et effectuer des sorties ParaView (post-traitement). Il a aussi vocation à évoluer pour intégrer des analyses in-situ.
-plugin Prepo: Ce plugin propose de pré-initialiser les champs pour des régimes très précis comme par exemple un double Couette.
-plugin Obstacle: Ce plugin permet de placer des objets solides inamovibles comme des murs.
--->
 
 
 `HippoLBM`'s design philosophy is to decompose LBM simulations into a list of `Onika` operators. To that end, it is organized into several plugins, all of which currently form the core of HippoLBM:
