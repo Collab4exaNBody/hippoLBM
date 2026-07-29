@@ -130,7 +130,7 @@ In the field of codes using the 3D Lattice Boltzmann Method, several codes offer
 - `prepro`: This plugin provides pre-initialization of fields for specific flow regimes, such as double Couette flow.
 - `obstacle`: This plugin allows placing fixed solid objects, such as walls or geometries defined by quadrics, see \autoref{fig:examples}.b, within the simulation domain. 
 
-![a) Overview of the HippoLBM plugins built on top of the Onika runtime. b) Example of an operator sequence, colored by plugin, executed within the time loop. \label{fig:design}](./LBMDesign.png){width=100%}
+![a) Overview of the HippoLBM plugins built on top of the Onika runtime. b) Example of an operator sequence, colored by plugin, executed within the time loop. \label{fig:design}](./LBMDesign.pdf){width=100%}
 
 # Research impact statement
 
