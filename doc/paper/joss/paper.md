@@ -50,9 +50,9 @@ $$
 $$
 
 
-where (f(\mathbf{r},\boldsymbol{\xi},t)) is the particle distribution function, (\mathbf{r}) denotes the spatial position, (\boldsymbol{\xi}) is the microscopic particle velocity, and (\Omega(f)) represents the collision operator.
+where $f(\mathbf{r},\boldsymbol{\xi},t)$ is the particle distribution function, $\mathbf{r}$ denotes the spatial position, $\boldsymbol{\xi}$ is the microscopic particle velocity, and $\Omega(f)$ represents the collision operator.
 
-The LBM is obtained by discretizing the velocity space into a finite set of discrete velocities (\boldsymbol{e}_i), while the distribution function is replaced by a set of discrete populations (f_i(\mathbf{r},t)). Using a regular lattice and BGK collision operator (*Bhatnagar-Gross-Krook*), the streaming and collision processes can be separated, leading to the following discrete Boltzmann equation:
+The LBM is obtained by discretizing the velocity space into a finite set of discrete velocities $\boldsymbol{e}_i$, while the distribution function is replaced by a set of discrete populations $f_i(\mathbf{r},t)$. Using a regular lattice and BGK collision operator (*Bhatnagar-Gross-Krook*), the streaming and collision processes can be separated, leading to the following discrete Boltzmann equation:
 
 $$
 f_i^*(\mathbf{r},t) = f_i(\mathbf{r},t) - \frac{\Delta t}{\tau}\left(f_i(\mathbf{r},t)-f_i^{eq}(\mathbf{r},t)\right),
