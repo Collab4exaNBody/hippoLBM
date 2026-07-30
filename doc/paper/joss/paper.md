@@ -37,7 +37,7 @@ One of the main advantages of LBM lies in its local and explicit formulation. Co
 
 LBM also offers great flexibility for representing complex geometries and boundary conditions that are difficult to handle with classical methods. Various collision models have been developed to improve numerical stability and extend the range of applications of the method, including Multiple Relaxation Time (MRT) models [@PhysRevE.61.6546], entropic models, and cumulant-based approaches [@krueger2017lattice]. Despite its many advantages, LBM has some limitations. Its classical formalism relies on a low-compressibility assumption and is therefore mainly suited to flows characterized by low Mach numbers. In addition, difficulties can arise in situations with strong pressure gradients or highly turbulent regimes. These limitations are nonetheless the subject of extensive ongoing work aimed at improving numerical stability and broadening the range of application of the method.
 
-This method remains particularly attractive for multiphysics simulations, as it can be easily coupled with other physical models. In particular, its combination with discrete particle methods through the Immersed Boundary Method (IBM) provides an efficient framework for simulating complex fluid-particle interactions relevant to nuclear engineering scenarios. To implement such couplings, we developed a framework that expresses each elementary operation (I/O, numerical schemes, analyses) as an operator and connects operators via slots. In this paper, we concentrate on the `HippoLBM` code, derived from legacy LBM/DEM software and refactored for GPU execution and hybrid MPI+GPU parallelization.
+This method remains particularly attractive for multiphysics simulations, as it can be easily coupled with other physical models. In particular, its combination with discrete particle methods through the Immersed Boundary Method (IBM) provides an efficient framework for simulating complex fluid-particle interactions relevant for a wide range of industrial or research applications. To implement such couplings, we developed a framework that expresses each elementary operation (I/O, numerical schemes, analyses) as an operator and connects operators via slots. In this paper, we concentrate on the `HippoLBM` code, derived from legacy LBM-DEM software and refactored for GPU execution and hybrid MPI+GPU parallelization.
 
 # Principle of the LBM
 
@@ -98,7 +98,7 @@ where $c_s$ is the lattice speed of sound and $\Delta t$ is the time step. This 
 
 
 `HippoLBM` is a C++20 LBM code that aims to provide a high-performance tool for LBM+X coupling on both CPU and GPU, using the `Onika` formalism [@carrard2023exanbody] to build execution graphs from a list of operators.
-In `HippoLBM`, an operator can be a compute kernel call such as the BGK or MRT collision step, a field initialization, a ParaView output, or any other step or sequence of steps in the computation. We target fine operator granularity to enable couplings with other codes that also use the `Onika` formalism. The first use case was coupling `HippoLBM` with the `exaDEM` code [@prat2025exadem] for DEM/LBM simulations using R-shaped particles.
+In `HippoLBM`, an operator can be a compute kernel call such as the BGK or MRT collision step, a field initialization, a ParaView output, or any other step or sequence of steps in the computation. We target fine operator granularity to enable couplings with other codes that also use the `Onika` formalism. The first use case was coupling `HippoLBM` with the `exaDEM` code [@prat2025exadem] for DEM-LBM simulations using R-shaped particles.
 
 ![a) Lid driven cavity simulation. b) Example using obstacles defined by quadrics. c) Von Kármán vortex street simulation. \label{fig:examples}](./groupir.png){width=70%} 
 
@@ -143,6 +143,6 @@ Generative AI tools were used to generate post-processing Python scripts and Dox
 
 # Acknowledgements
 
-This work was performed using HPC resources from CCRT funded by the CEA/DES simulation program. `HippoLBM` is part of the `PLEIADES` platform which has been developed in collaboration with the French nuclear industry - mainly CEA, EDF, and Framatome - for simulation of fuel elements.
+This work was performed using HPC resources from CCRT funded by the CEA/DES simulation program. `HippoLBM` is part of the `PLEIADES` platform which is developed in collaboration with the French nuclear industry - mainly CEA, EDF, and Framatome - for the simulation of nuclear fuel behavior.
 
 # References
