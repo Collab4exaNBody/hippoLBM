@@ -29,6 +29,10 @@ date: 26 June 2026
 bibliography: paper.bib
 ---
 
+# Summary
+
+`HippoLBM` is a high-performance software for simulating fluid flows with the Lattice Boltzmann Method (LBM), targeting both multicore CPUs and GPUs. Built on the `Onika` framework, it decomposes a simulation into a sequence of independent operators - collision, streaming, or boundary conditions - that can be freely assembled into custom simulation workflows. This operator-based design makes `HippoLBM` well suited for coupling LBM with other numerical methods, such as the Discrete Element Method (DEM), to simulate fluid-particle systems relevant to nuclear engineering and other research or industrial applications. `HippoLBM` is intended to run large-scale, three-dimensional LBM simulations, either standalone or coupled with other physics, on modern hybrid MPI+CPU/GPU supercomputers.
+
 # Introduction
 
 The Lattice Boltzmann Method (LBM) [@PhysRevLett.61.2332] is a numerical method for computational fluid dynamics (CFD) based on a mesoscopic description of fluid dynamics. Unlike classical methods for solving the Navier-Stokes equations, which directly describe the evolution of macroscopic quantities such as velocity and pressure, LBM governs the spatio-temporal evolution of distribution functions representing the statistical behavior of the particles making up the fluid. This approach originates from the kinetic theory of gases [@chapman1916mathematical]. Instead of directly solving the macroscopic equations of fluid motion, LBM describes the evolution of distribution functions associated with fictitious particles moving along a discrete set of directions defined on a regular lattice.
