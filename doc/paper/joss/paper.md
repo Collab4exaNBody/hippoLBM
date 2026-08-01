@@ -132,7 +132,7 @@ In the field of codes using the 3D Lattice Boltzmann Method, several codes offer
 - `bcs`: This plugin contains the compute kernels for applying boundary conditions (e.g., Neumann conditions for Couette or Poiseuille flows, bounce-back for solid boundaries, or lid-driven cavity setups).
 - `io`: This plugin is currently used to display logs and produce ParaView output files for post-processing. Future developments will extend it to support in-situ analysis.
 - `prepro`: This plugin provides pre-initialization of fields for specific flow regimes, such as double Couette flow.
-- `obstacle`: This plugin allows placing fixed solid objects, such as walls or geometries defined by quadrics, see \autoref{fig:examples}.b, within the simulation domain. 
+- `obstacle`: This plugin allows placing fixed solid objects, such as walls, rounded-shape particles (spheropolyhedra), or geometries defined by quadrics, see \autoref{fig:examples}.b, within the simulation domain. 
 
 ![a) Overview of the HippoLBM plugins built on top of the Onika runtime. b) Example of an operator sequence, colored by plugin, executed within the time loop. \label{fig:design}](./LBMDesign.pdf){width=100%}
 
