@@ -37,6 +37,6 @@ set_obstacles:
 
 global:
    simulation_paraview_freq: 100
-   simulation_end_iteration: 20000
+   simulation_end_iteration: 5000
    simulation_print_log_freq: 10   
    output_directory: "TourEiffelPeriodic"   
