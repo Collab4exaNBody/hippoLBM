@@ -45,32 +45,51 @@ endif()
 
 add_subdirectory(src)
 
-add_executable(hippoLBM hippoLBM.cpp)
-target_compile_options(hippoLBM PUBLIC ${ONIKA_COMPILE_OPTIONS})
-target_compile_definitions(hippoLBM PUBLIC ${ONIKA_COMPILE_DEFINITIONS})
-target_include_directories(hippoLBM PUBLIC ${ONIKA_INCLUDE_DIRS})
-target_link_directories(hippoLBM PUBLIC ${ONIKA_LIBRARY_DIRS})
-target_link_libraries(hippoLBM PUBLIC ${ONIKA_LIBRARIES})
-
-## non-regression tests
-add_subdirectory(regression-test)
-
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/hippolbm-config-step2.cmake")
 
-## CREATE env.sh
+# ===========================================================
+# === generate execution wrappers and environment scripts ===
+# ===========================================================
+
 if(DEFINED ONIKA_PLUGIN_PATH)
   list(APPEND ONIKA_PLUGIN_PATH ${CMAKE_CURRENT_BINARY_DIR}/plugins)
 else()
-  set(ONIKA_PLUGIN_PATH "${CMAKE_CURRENT_BINARY_DIR}/plugins")
+  set(ONIKA_PLUGIN_PATH "${onika_DIR}/plugins;${CMAKE_CURRENT_BINARY_DIR}/plugins")
 endif()
-
 string(REPLACE ";" ":" ONIKA_PLUGIN_PATH "${ONIKA_PLUGIN_PATH}")
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bin/setup-env.sh  
+
+## post-install environment setup script, sourced by the installed wrapper
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+file(WRITE  ${CMAKE_CURRENT_BINARY_DIR}/bin/setup-env.sh
   "#!/bin/bash\n"
   "source ${onika_DIR}/bin/setup-env.sh\n"
-	"export ONIKA_CONFIG_PATH=${CMAKE_CURRENT_SOURCE_DIR}/data/config\n"
-	"export ONIKA_PLUGIN_PATH=${ONIKA_PLUGIN_PATH} \n")
+  "export ONIKA_CONFIG_PATH=${CMAKE_INSTALL_PREFIX}/data/config\n"
+  "export ONIKA_PLUGIN_PATH=${onika_DIR}/plugins:${CMAKE_INSTALL_PREFIX}/plugins\n"
+  "[ $ONIKA_DEBUG ] && echo \"hippoLBM environment : LD_LIBRARY_PATH=$LD_LIBRARY_PATH , ONIKA_CONFIG_PATH=$ONIKA_CONFIG_PATH , ONIKA_PLUGIN_PATH=$ONIKA_PLUGIN_PATH , ONIKA_DATA_PATH=$ONIKA_DATA_PATH\"\n")
 
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin/ DESTINATION bin )
+## post-install execution wrapper (installed to <prefix>/bin/hippoLBM)
+file(WRITE  ${CMAKE_CURRENT_BINARY_DIR}/bin/hippoLBM
+  "#!/bin/bash\n"
+  "# hippoLBM execution wrapper\n"
+  "source ${CMAKE_INSTALL_PREFIX}/bin/setup-env.sh\n"
+  "${ONIKA_EXEC} $*\n")
+
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin/ DESTINATION bin
+  FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib/ DESTINATION lib )
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/hippoLBM DESTINATION include)
+
+## pre-installation execution wrapper, to run hippoLBM directly from the build directory
+file(WRITE  ${CMAKE_CURRENT_BINARY_DIR}/hippoLBM
+  "#!/bin/bash\n"
+  "# Pre-installation hippoLBM execution wraper\n"
+  "source ${onika_DIR}/bin/setup-env.sh\n"
+  "export LD_LIBRARY_PATH=${CMAKE_CURRENT_BINARY_DIR}/lib:$LD_LIBRARY_PATH\n"
+  "export ONIKA_CONFIG_PATH=${CMAKE_CURRENT_SOURCE_DIR}/data/config\n"
+  "export ONIKA_PLUGIN_PATH=${ONIKA_PLUGIN_PATH}\n"
+  "[ $ONIKA_DEBUG ] && echo \"hippoLBM pre-install environment : LD_LIBRARY_PATH=$LD_LIBRARY_PATH , ONIKA_CONFIG_PATH=$ONIKA_CONFIG_PATH , ONIKA_PLUGIN_PATH=$ONIKA_PLUGIN_PATH , ONIKA_DATA_PATH=$ONIKA_DATA_PATH\"\n"
+  "${ONIKA_EXEC} $*\n")
+file(CHMOD ${CMAKE_CURRENT_BINARY_DIR}/hippoLBM FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+
+## non-regression tests (rely on the pre-install wrapper above)
+add_subdirectory(regression-test)
