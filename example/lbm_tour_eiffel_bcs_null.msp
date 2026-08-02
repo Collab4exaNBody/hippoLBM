@@ -1,0 +1,46 @@
+do_domain:
+  - domain:
+     bounds:    [ [0, 0, 0],[0.6 m, 0.6 m, 2.0 m] ]
+     cell_dims: [ 240 , 240 , 800 ]
+     periodic:  [ false, false, false ]
+
+set_lbm_parameters:
+  - lbm_parameters:
+     Fext: [0,0,0]
+     nuth: 1e-4  # m2/s
+     tau: 0.6
+
+set_distributions:
+  - set_distribution:
+     value: 1.2
+#     bounds: [[ 0.0, 0.0, 0.02 ], [ 1.0, 1.0, 0.08 ] ]
+     quadrics: sphere
+     transform:
+       - scale:     [ 0.1, 0.1, 0.1 ]
+       - translate: [ 0.3, 0.3,  1.5]
+
+boundary_conditions:
+  - neumann:
+     U: [0,0,0]
+     regions: [plan_xy_0, plan_xy_l]
+  - lid_driven_cavity:
+     U: [0, 0.0, 0]
+     regions: [plan_yz_0, plan_yz_l,  plan_xz_0, plan_xz_l]
+
+pre_stream_bcs:
+  - wall_bounce_back
+
+set_obstacles:
+  - register_rshape:
+     id: 0
+     filename: "stl_files/toureiffel.stl"
+     center:      [0.3, 0.3, 0.0]
+     scale:       0.01
+     orientation: [1, 0, 0, 0]   # identity [w,x,y,z]
+     minkowski:   0.005
+
+global:
+   simulation_paraview_freq: 100
+   simulation_end_iteration: 5000
+   simulation_print_log_freq: 10   
+   output_directory: "TourEiffelBCSNull"   
