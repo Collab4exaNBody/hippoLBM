@@ -20,7 +20,7 @@ authors:
     orcid: 0000-0002-9444-9858
     affiliation: 1       
   - name: Bruno Collard
-    orcid: 0000-0002-9444-9858
+    orcid: 0009-0009-2152-3816
     affiliation: 1     
 affiliations:
  - name: CEA, DES, IRESNE, DEC, Cadarache F 13108 St-Paul-Lez-Durance
@@ -45,58 +45,15 @@ This method remains particularly attractive for multiphysics simulations, as it 
 
 # Principle of the LBM
 
-As mentioned before, the LBM is a mesoscopic approach derived from the kinetic theory of gases. Instead of solving the macroscopic Navier-Stokes equations directly, it solves a discretized form of the Boltzmann equation for the particle distribution function:
-
-$$
-\frac{\partial f(\mathbf{r},\boldsymbol{\xi},t)}{\partial t}
-+\boldsymbol{\xi}\cdot\nabla_{\mathbf{r}} f(\mathbf{r},\boldsymbol{\xi},t)
-=\Omega(f),
-$$
-
-
-where $f(\mathbf{r},\boldsymbol{\xi},t)$ is the particle distribution function, $\mathbf{r}$ denotes the spatial position, $\boldsymbol{\xi}$ is the microscopic particle velocity, and $\Omega(f)$ represents the collision operator.
-
-The LBM is obtained by discretizing the velocity space into a finite set of discrete velocities $\boldsymbol{e}_i$, while the distribution function is replaced by a set of discrete populations $f_i(\mathbf{r},t)$. Using a regular lattice and BGK collision operator (*Bhatnagar-Gross-Krook*), the streaming and collision processes can be separated, leading to the following discrete Boltzmann equation:
+The LBM discretizes the Boltzmann equation on a regular lattice, replacing the continuous distribution function with a finite set of populations $f_i(\mathbf{r},t)$ associated with discrete velocity directions $\mathbf{e}_i$ [@krueger2017lattice]. In the Bhatnagar-Gross-Krook (BGK) model used by `HippoLBM`, the collision and streaming steps read:
 
 $$
 f_i^*(\mathbf{r},t) = f_i(\mathbf{r},t) - \frac{\Delta t}{\tau}\left(f_i(\mathbf{r},t)-f_i^{eq}(\mathbf{r},t)\right),
+\qquad
+f_i(\mathbf{r}+\mathbf{e}_i\Delta t,t+\Delta t) = f_i^*(\mathbf{r},t),
 $$
 
-where $\tau$ is the relaxation time and $f_i^*$ is the distribution function after the collision step.
-
-The equilibrium distribution function $f_i^{eq}$ is obtained from a truncated expansion of the Maxwell-Boltzmann distribution to second order in Mach number, and is written as:
-
-$$
-f_i^{eq}(\mathbf{r},t) = w_i \rho(\mathbf{r},t)\left[1 + \frac{\mathbf{e}_i\cdot\mathbf{u}(\mathbf{r},t)}{c_s^2} + \frac{\left(\mathbf{e}_i\cdot\mathbf{u}(\mathbf{r},t)\right)^2}{2c_s^4} - \frac{\mathbf{u}(\mathbf{r},t)\cdot\mathbf{u}(\mathbf{r},t)}{2c_s^2}\right],
-$$
-
-where $w_i$ is the weight associated with discrete direction $\mathbf{e}_i$, $\rho$ is the fluid density, $\mathbf{u}$ is the macroscopic velocity, and $c_s$ is the lattice speed of sound. This approximation is valid in the low Mach number limit ($Ma \ll 1$).
-
-After the collision step, the distribution functions are streamed to neighboring lattice nodes along the discrete directions $\mathbf{e}_i$:
-
-$$
-f_i(\mathbf{r}+\mathbf{e}_i\Delta t,t+\Delta t) = f_i^*(\mathbf{r},t).
-$$
-
-The macroscopic fluid quantities are obtained by computing the moments of the distribution functions:
-
-$$
-\rho(\mathbf{r},t) = \sum_i f_i(\mathbf{r},t),
-$$
-
-and
-
-$$
-\rho\mathbf{u}(\mathbf{r},t) = \sum_i f_i(\mathbf{r},t)\mathbf{e}_i .
-$$
-
-The relaxation parameter $\tau$ plays a fundamental role in LBM, as it controls the dissipative properties of the fluid. In the BGK model, the relaxation time is directly related to the kinematic viscosity $\nu$ of the fluid through the relation:
-
-$$
-\nu = c_s^2\left(\tau-\frac{\Delta t}{2}\right),
-$$
-
-where $c_s$ is the lattice speed of sound and $\Delta t$ is the time step. This relation shows that the fluid viscosity is directly determined by the time required for the distribution functions to relax toward their equilibrium state. Through a Chapman-Enskog asymptotic expansion, it can be shown that LBM recovers the macroscopic mass and momentum conservation equations in the low Mach number limit. This expansion relies on a separation of spatial and temporal scales, establishing the link between the mesoscopic description of the distribution functions and the macroscopic equations of fluid mechanics [@chapman1916mathematical; @krueger2017lattice].
+where $\tau$ is the relaxation time and $f_i^{eq}$ is the equilibrium distribution, obtained from a second-order expansion of the Maxwell-Boltzmann distribution and valid in the low Mach number limit ($Ma \ll 1$) [@krueger2017lattice]. The macroscopic density $\rho$ and momentum $\rho\mathbf{u}$ are recovered as the zeroth- and first-order moments of $f_i$, and the fluid's kinematic viscosity is directly related to $\tau$. `HippoLBM` also implements the Multiple Relaxation Time (MRT) model, which relaxes the collision operator's moments independently rather than using a single relaxation time $\tau$, improving numerical stability over BGK at higher Reynolds numbers [@PhysRevE.61.6546]. For both models, a Chapman-Enskog asymptotic expansion shows that the scheme recovers the macroscopic mass and momentum conservation equations in the low Mach number limit [@chapman1916mathematical; @krueger2017lattice].
 
 # Statement of need
 
@@ -106,7 +63,7 @@ In `HippoLBM`, an operator can be a compute kernel call such as the BGK or MRT c
 
 ![a) Lid driven cavity simulation. b) Example using obstacles defined by quadrics. c) Von Kármán vortex street simulation. \label{fig:examples}](./groupir.png){width=70%} 
 
-Regarding performance, `HippoLBM` supports hybrid MPI+X parallelization, where X is either OpenMP or CUDA, and relies on standard LBM parallelization strategies (spatial domain decomposition, GPU optimization [@tran2017performance]). However, some strategies such as adaptive mesh refinement or automatic kernel fusion [@mahmoud2024optimized] are not yet implemented. `HippoLBM` has been tested on 192 NVIDIA A100 GPUs and can handle around 69 billion LB points (see \autoref{fig:perf}).
+Regarding performance, `HippoLBM` supports hybrid MPI+X parallelization, where X is either OpenMP or CUDA, and relies on standard LBM parallelization strategies (spatial domain decomposition, GPU optimization [@tran2017performance]). However, some strategies such as adaptive mesh refinement or automatic kernel fusion [@mahmoud2024optimized] are not yet implemented. `HippoLBM` has been tested on 192 NVIDIA A100 GPUs (see \autoref{fig:perf}) and can handle around 69 billion LB points.
 
 
 ![Number of Million Lattice Updates per Second (MLUPS) in strong scaling for different domain sizes of a Couette Flow simulation. This benchmark was conducted on NVIDIA A100 GPUs with CUDA 12.4 on the CCRT Topaze supercomputer. \label{fig:perf}](./perf.png){width=60%} 
@@ -142,8 +99,7 @@ In the field of codes using the 3D Lattice Boltzmann Method, several codes offer
 
 # AI usage disclosure
 
-No generative AI tools were used in the design and development of this software; however, they were used for refactoring and renaming classes.
-Generative AI tools were used to generate post-processing Python scripts and Doxygen documentation, and to translate texts for the website documentation.
+Generative AI tools were not used in the algorithmic design of this software. They were used for peripheral development tasks: refactoring and renaming classes, generating post-processing Python scripts and Doxygen documentation, and translating text for the website documentation.
 
 # Acknowledgements
 
