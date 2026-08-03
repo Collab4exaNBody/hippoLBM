@@ -20,7 +20,7 @@ authors:
     orcid: 0000-0002-9444-9858
     affiliation: 1       
   - name: Bruno Collard
-    orcid: 0009-0009-2152-3816
+    orcid: 0009-0009-2152-3816 
     affiliation: 1     
 affiliations:
  - name: CEA, DES, IRESNE, DEC, Cadarache F 13108 St-Paul-Lez-Durance
@@ -58,7 +58,7 @@ where $\tau$ is the relaxation time and $f_i^{eq}$ is the equilibrium distributi
 # Statement of need
 
 
-`HippoLBM` is a C++20 LBM code that aims to provide a high-performance tool for LBM+X coupling on both CPU and GPU, using the `Onika` formalism [@carrard2023exanbody] to build execution graphs from a list of operators.
+`HippoLBM` is a C++20 LBM code that aims to provide a high-performance tool for coupling LBM with other numerical methods on both CPU and GPU, using the `Onika` formalism [@carrard2023exanbody] to build execution graphs from a list of operators.
 In `HippoLBM`, an operator can be a compute kernel call such as the BGK or MRT collision step, a field initialization, a ParaView output, or any other step or sequence of steps in the computation. We target fine operator granularity to enable couplings with other codes that also use the `Onika` formalism. The first use case was coupling `HippoLBM` with the `exaDEM` code [@prat2025exadem] for DEM-LBM simulations using R-shaped particles.
 
 ![a) Lid driven cavity simulation. b) Example using obstacles defined by quadrics. c) Von Kármán vortex street simulation. \label{fig:examples}](./groupir.png){width=70%} 
@@ -76,7 +76,7 @@ Regarding performance, `HippoLBM` supports hybrid MPI+X parallelization, where X
 In the field of codes using the 3D Lattice Boltzmann Method, several codes offer more advanced physical capabilities than `HippoLBM`, such as open source codes `OpenLB` [@heuveline2007openlb], which provides a broad, general-purpose set of physical models (e.g., thermal, particulate, and free-surface flows), or `LBMSaclay` [@cartalade2016lattice], which enables multiphase simulations. Non-open-source codes such as `ProLB` [@feng2021prolb], which can simulate compressible fluids, or `PowerFLOW`®.
 
 
-`HippoLBM` differs from the state of the art mainly in its design rather than in its physical or HPC capabilities, which can be further enriched in the future in order to integrate into complex, multi-physics ecosystems. Note that waLBerla [@bauer2021walberla] and Palabos [@latt2021palabos] with LIGGGHTS offer multiphysics couplings with HPC features.
+`HippoLBM` differs from the state of the art mainly in its design rather than in its physical or HPC capabilities, which can be further enriched in the future in order to integrate into complex, multi-physics ecosystems. Note that waLBerla [@bauer2021walberla] and the Palabos-LIGGGHTS coupling [@latt2021palabos] offer similar multiphysics capabilities with HPC features.
 
 
 # Software design
