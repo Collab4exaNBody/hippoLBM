@@ -1,5 +1,5 @@
 ---
-title: 'HippoLBM: A HPC lightweight LBM software based on Onika'
+title: 'HippoLBM: Lightweight HPC LBM software based on Onikaa'
 tags:
   - Lattice Boltzmann
   - C++
