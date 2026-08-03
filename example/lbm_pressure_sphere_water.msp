@@ -1,0 +1,35 @@
+do_domain:
+  - domain:
+     bounds:    [ [0, 0, 0],[2.0, 2.0, 2.0] ]
+     cell_dims: [ 100, 100, 100 ]
+     periodic:  [ true, true, true ]
+
+set_lbm_parameters:
+  - lbm_parameters:
+     Fext: [0,0,0]
+     nuth: 1.0e-6    # m2/s, water at 20°C
+     avg_rho: 1000.0 # kg/m3, water
+     celerity: 14800.0   # 10 * célérité du son dans l'eau (m/s)
+#     tau: 0.52
+
+set_distributions:
+  - set_distribution:
+     value: 1.0
+  - set_pressures
+
+set_pressures:
+  - set_dp_pressure:
+     delta_p: 1.0e6
+     quadrics: sphere
+     transform:
+       - scale:     [ 0.15, 0.15, 0.15 ]
+       - translate: [ 1.0,  1.0, 1.0  ]
+     verbosity: true
+
+collision: mrt
+
+global:
+   simulation_paraview_freq: 20
+   simulation_end_iteration: 500
+   simulation_print_log_freq: 10
+   output_directory: "PressureSphereWater"
