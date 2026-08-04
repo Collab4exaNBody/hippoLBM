@@ -37,7 +37,6 @@ struct LidDrivenCavityBCsFunctor<19> {
 
   ONIKA_HOST_DEVICE_FUNC inline double compute_rho(int idx) const {
     double rho = 0.0;
-#pragma unroll
     for (int iLB = 0; iLB < Q; iLB++) {
       rho += F_(idx, iLB);
     }
