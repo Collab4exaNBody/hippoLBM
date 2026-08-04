@@ -14,7 +14,7 @@ See the [Installation guidlines](https://collab4exanbody.github.io/doc_hippoLBM/
 
 See the [Documentation website](https://collab4exanbody.github.io/doc_hippoLBM/index.html).
 
-[PDF version (16 MB)](https://collab4exanbody.github.io/doc_hippoLBM/_static/hippolbm-1-0-0.pdf), automatically generated from the website — GIFs and similar content don't appear.
+[PDF version (16 MB)](https://collab4exanbody.github.io/doc_hippoLBM/_static/hippolbm-1.0.0.pdf), automatically generated from the website — GIFs and similar content don't appear.
 
 
 # Community Guidelines
