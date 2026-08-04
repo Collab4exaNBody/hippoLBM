@@ -63,7 +63,7 @@ In `HippoLBM`, an operator can be a compute kernel call such as the BGK or MRT c
 
 ![a) Lid driven cavity simulation. b) Example using obstacles defined by quadrics. c) Von Kármán vortex street simulation. \label{fig:examples}](./groupir.png){width=70%} 
 
-Regarding performance, `HippoLBM` supports hybrid MPI+X parallelization, where X is either OpenMP or CUDA, and relies on standard LBM parallelization strategies (spatial domain decomposition, GPU optimization [@tran2017performance]). However, some strategies such as adaptive mesh refinement or automatic kernel fusion [@mahmoud2024optimized] are not yet implemented. `HippoLBM` has been tested on 192 NVIDIA A100 GPUs (see \autoref{fig:perf}) and can handle around 69 billion LB points.
+Regarding performance, `HippoLBM` supports hybrid MPI+X parallelization, where X is either OpenMP or CUDA, and relies on standard LBM parallelization strategies (spatial domain decomposition, GPU optimization [@tran2017performance]). However, some strategies such as adaptive mesh refinement or automatic kernel fusion [@mahmoud2024optimized] are not yet implemented. `HippoLBM` has been tested on 192 NVIDIA A100 GPUs and can handle around 69 billion LB points and proposes near-perfect scaling up to 128 nodes, see \autoref{fig:perf}.
 
 
 ![Number of Million Lattice Updates per Second (MLUPS) in strong scaling for different domain sizes of a Couette Flow simulation. This benchmark was conducted on NVIDIA A100 GPUs with CUDA 12.4 on the CCRT Topaze supercomputer. \label{fig:perf}](./perf.png){width=60%} 
@@ -95,7 +95,7 @@ In the field of codes using the 3D Lattice Boltzmann Method, several codes offer
 
 # Research impact statement
 
-`HippoLBM` was developed as part of a simulation platform dedicated to the study of granular flows immersed in a viscous fluid [@amarsid2017viscoinertial]. It relies on a coupling between the Lattice Boltzmann Method (LBM) and the Discrete Element Method (DEM). Designed for high-performance computing (HPC), `HippoLBM` aims to perform large-scale three-dimensional simulations. This coupling constitutes a promising tool for the community working on particulate suspensions, enabling resolved simulations of dense systems in which hydrodynamic interactions and particle contacts play a determining role. Through its interface with `Onika`, `HippoLBM` can also be coupled to physical models other than DEM, such as the Material Point Method (MPM) [@xiao2026volume], the Finite Element Method (FEM), or the Finite Difference Method (FDM).
+`HippoLBM` originates from the extraction of the LBM component out of a legacy, monolithic LBM-DEM code used to study granular flows immersed in a viscous fluid [@amarsid2017viscoinertial]. This extraction served two purposes: preparing a dedicated HPC (MPI+GPU) port of the LBM solver, and making these developments reusable beyond their original DEM-coupling context. Because `HippoLBM` and `exaDEM` [@prat2025exadem] are both built on the Onika framework, they can be coupled with minimal effort, as illustrated by the DEM-LBM simulations of R-shaped particles mentioned in the Statement of need. Through this same Onika interface, HippoLBM can also be coupled to other physical models, such as the Material Point Method (MPM) [@xiao2026volume], the Finite Element Method (FEM), or the Finite Difference Method (FDM), targeting the broader community working on resolved fluid-particle systems.
 
 # AI usage disclosure
 
