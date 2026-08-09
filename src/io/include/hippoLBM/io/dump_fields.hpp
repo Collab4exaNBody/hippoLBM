@@ -59,7 +59,11 @@ struct DumpHeader {
   int32_t num_ranks_ = 0;   ///< number of entries in the index table (ranks at write time, not at read time)
   int32_t global_size_[3] = {0, 0, 0};  ///< global grid size (nodes), not the local subdomain
   double dx_ = 0.0;                     ///< grid spacing
+  double bounds_bmin_[3] = {0, 0, 0};   ///< physical domain bounds (needed to rebuild a domain on read)
+  double bounds_bmax_[3] = {0, 0, 0};
+  uint8_t periodic_[3] = {0, 0, 0};  ///< periodicity per axis (needed to rebuild a domain on read)
   int64_t timestep_ = 0;
+  double physical_time_ = 0.0;
   LBMParameters params_;
   DumpFieldDescriptor fields_[MAX_FIELDS];
 };
@@ -74,8 +78,8 @@ struct DumpRankIndex {
 };
 
 struct DumpFieldSource {
-  std::string name_;            // name of the field, must match one of the DumpHeader::fields_ entries
-  const void* data_ = nullptr;  // pointer to the field data for this rank's real subdomain (ghost-free)
+  std::string name_;      // name of the field, must match one of the DumpHeader::fields_ entries
+  void* data_ = nullptr;  // pointer to the field's local (ghost-included) data; read from when dumping, written to when reading back
   int32_t components_ = 1;  // number of components per grid point (e.g. 1 for density, 3 for flux, Q for distributions)
   DumpFieldType datatype_ = DumpFieldType::FLOAT64;  // type of each component (int32 or float64)
 };
@@ -93,16 +97,18 @@ inline std::vector<DumpFieldSource> hippolbm_dump_fields(LBMFields<Q>& fields) {
 /** @brief Creates the checkpoint file and writes its DumpHeader (rank 0 only).
  * @param comm MPI communicator; every rank must call this function.
  * @param filename Path to the checkpoint file to create.
- * @param domain The LBM domain, used for its global grid size and dx.
+ * @param domain The LBM domain, used for its global grid size, dx, and bounds.
+ * @param periodic Periodicity of the domain per axis, needed to rebuild it on read.
  * @param params The current LBM parameters.
  * @param timestep The current simulation timestep.
+ * @param physical_time The current simulation physical time.
  * @param sources The fields that will be dumped for this file (name, components, type).
  * @return The DumpHeader that was written, to be passed on to write_dump_fields().
  */
 template <int Q>
 inline DumpHeader write_dump_header(MPI_Comm comm, const std::string& filename, const LBMDomain<Q>& domain,
-                                    const LBMParameters& params, long timestep,
-                                    const std::vector<DumpFieldSource>& sources) {
+                                    const std::vector<bool>& periodic, const LBMParameters& params, long timestep,
+                                    double physical_time, const std::vector<DumpFieldSource>& sources) {
   int rank, size;
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
@@ -111,10 +117,18 @@ inline DumpHeader write_dump_header(MPI_Comm comm, const std::string& filename, 
   header.Q_ = Q;
   header.num_ranks_ = size;
   header.timestep_ = timestep;
+  header.physical_time_ = physical_time;
   header.dx_ = domain.grid().dx_;
   header.global_size_[0] = domain.domain_size_[0];
   header.global_size_[1] = domain.domain_size_[1];
   header.global_size_[2] = domain.domain_size_[2];
+  header.bounds_bmin_[0] = domain.bounds_.bmin.x;
+  header.bounds_bmin_[1] = domain.bounds_.bmin.y;
+  header.bounds_bmin_[2] = domain.bounds_.bmin.z;
+  header.bounds_bmax_[0] = domain.bounds_.bmax.x;
+  header.bounds_bmax_[1] = domain.bounds_.bmax.y;
+  header.bounds_bmax_[2] = domain.bounds_.bmax.z;
+  for (int dim = 0; dim < 3; dim++) header.periodic_[dim] = periodic[dim] ? 1 : 0;
   header.params_ = params;
 
   if (sources.size() > static_cast<size_t>(DumpHeader::MAX_FIELDS)) {
@@ -170,21 +184,44 @@ inline void mpi_write_at_bytes(MPI_File file, uint64_t offset, const void* data,
   }
 }
 
+inline void mpi_read_at_bytes(MPI_File file, uint64_t offset, void* data, uint64_t n) {
+  uint8_t* p = reinterpret_cast<uint8_t*>(data);
+  uint64_t read = 0;
+  while (read < n) {
+    const uint64_t chunk = std::min(n - read, DUMP_MAX_IO_OPERATION_SIZE);
+    MPI_File_read_at(file, static_cast<MPI_Offset>(offset + read), p + read, static_cast<int>(chunk), MPI_BYTE,
+                     MPI_STATUS_IGNORE);
+    read += chunk;
+  }
+}
+
+/** @brief Componentwise intersection of two inclusive boxes. Only meaningful when hippoLBM::intersect() is true. */
+inline Box3D box_intersection(const Box3D& a, const Box3D& b) {
+  Point3D inf, sup;
+  for (int dim = 0; dim < 3; dim++) {
+    inf[dim] = std::max(a.inf_[dim], b.inf_[dim]);
+    sup[dim] = std::min(a.sup_[dim], b.sup_[dim]);
+  }
+  return {inf, sup};
+}
+
+/** @brief Local (ghost-included) storage offset of component `c` at local index `idx`, matching FieldView's layout. */
+inline uint64_t field_layout_offset(uint64_t idx, int32_t c, int32_t components, uint64_t num_local_points) {
+#ifdef WFAOS
+  return idx * components + c;
+#else
+  return num_local_points * uint64_t(c) + idx;
+#endif
+}
+
+// We don't use FieldView here because we want to pack/unpack the field the same way as hippoLBM's own fields,
+// which is not necessarily the same as FieldView's layout.
+
 inline std::vector<uint8_t> pack_field(const DumpFieldSource& source, const Box3D& local_real, const LBMGrid& grid,
                                        uint64_t num_local_points, uint64_t num_points) {
   const int32_t C = source.components_;
   const size_t elem_size = (source.datatype_ == DumpFieldType::INT32) ? sizeof(int32_t) : sizeof(double);
   std::vector<uint8_t> buffer(num_points * C * elem_size);
-
-  // We don't use FieldView here because we want to pack the field in the same way as hippoLBM's own fields, which is
-  // not necessarily the same as FieldView's layout.
-  auto src_offset = [&](uint64_t idx, int32_t c) -> uint64_t {
-#ifdef WFAOS
-    return idx * C + c;
-#else
-    return num_local_points * uint64_t(c) + idx;
-#endif
-  };
 
   uint64_t p = 0;
   for (int z = local_real.start(2); z <= local_real.end(2); z++) {
@@ -193,11 +230,12 @@ inline std::vector<uint8_t> pack_field(const DumpFieldSource& source, const Box3
         const uint64_t idx = static_cast<uint64_t>(grid(x, y, z));
         for (int32_t c = 0; c < C; c++) {
           const uint64_t dst = (p * C + c) * elem_size;
+          const uint64_t src = field_layout_offset(idx, c, C, num_local_points);
           if (source.datatype_ == DumpFieldType::INT32) {
-            const int32_t v = reinterpret_cast<const int32_t*>(source.data_)[src_offset(idx, c)];
+            const int32_t v = reinterpret_cast<const int32_t*>(source.data_)[src];
             std::memcpy(buffer.data() + dst, &v, elem_size);
           } else {
-            const double v = reinterpret_cast<const double*>(source.data_)[src_offset(idx, c)];
+            const double v = reinterpret_cast<const double*>(source.data_)[src];
             std::memcpy(buffer.data() + dst, &v, elem_size);
           }
         }
@@ -206,6 +244,40 @@ inline std::vector<uint8_t> pack_field(const DumpFieldSource& source, const Box3
     }
   }
   return buffer;
+}
+
+/** @brief Unpacks the `inter` region of a decompressed writer block (covering `writer_box`, packed the same way as
+ * pack_field()) into this rank's local storage for `dest`. */
+inline void unpack_field(const DumpFieldSource& dest, const std::vector<uint8_t>& block, const Box3D& writer_box,
+                         const Box3D& inter, const LBMGrid& grid, uint64_t num_local_points) {
+  const int32_t C = dest.components_;
+  const size_t elem_size = (dest.datatype_ == DumpFieldType::INT32) ? sizeof(int32_t) : sizeof(double);
+  const int32_t nx_w = writer_box.get_length(0);
+  const int32_t ny_w = writer_box.get_length(1);
+
+  for (int z = inter.start(2); z <= inter.end(2); z++) {
+    for (int y = inter.start(1); y <= inter.end(1); y++) {
+      for (int x = inter.start(0); x <= inter.end(0); x++) {
+        const uint64_t p_src = uint64_t(z - writer_box.start(2)) * ny_w * nx_w +
+                               uint64_t(y - writer_box.start(1)) * nx_w + uint64_t(x - writer_box.start(0));
+        const Point3D local = grid.convert<Area::Local>(x, y, z);
+        const uint64_t idx = static_cast<uint64_t>(grid(local[0], local[1], local[2]));
+        for (int32_t c = 0; c < C; c++) {
+          const uint64_t src = (p_src * C + c) * elem_size;
+          const uint64_t dst = field_layout_offset(idx, c, C, num_local_points);
+          if (dest.datatype_ == DumpFieldType::INT32) {
+            int32_t v;
+            std::memcpy(&v, block.data() + src, elem_size);
+            reinterpret_cast<int32_t*>(dest.data_)[dst] = v;
+          } else {
+            double v;
+            std::memcpy(&v, block.data() + src, elem_size);
+            reinterpret_cast<double*>(dest.data_)[dst] = v;
+          }
+        }
+      }
+    }
+  }
 }
 
 /** @brief Writes fields to a checkpoint file previously created by write_dump_header().
@@ -275,6 +347,55 @@ inline void write_dump_fields(MPI_Comm comm, const std::string& filename, const 
                     sizeof(DumpRankIndex), MPI_BYTE, MPI_STATUS_IGNORE);
   for (size_t s = 0; s < sources.size(); s++) {
     mpi_write_at_bytes(file, my_index.offset_[s], compressed[s].data(), compressed[s].size());
+  }
+
+  MPI_File_close(&file);
+}
+
+/** @brief Reads back fields written by write_dump_fields(), works with a different reading decomposition. */
+template <int Q>
+inline void read_dump_fields(MPI_Comm comm, const std::string& filename, const DumpHeader& header,
+                             const LBMDomain<Q>& domain, const std::vector<DumpFieldSource>& destinations) {
+  if (static_cast<int32_t>(destinations.size()) != header.num_fields_) {
+    std::cerr << "[dump_fields] Warning: " << destinations.size() << " fields passed to read_dump_fields(), but "
+              << header.num_fields_ << " were declared in the header." << std::endl;
+  }
+
+  const LBMGrid& grid = domain.grid();
+  Box3D my_box = grid.build_box<Area::Global, Traversal::Real>();
+  const uint64_t num_local_points =
+      static_cast<uint64_t>(grid.build_box<Area::Local, Traversal::All>().number_of_points());
+
+  const uint64_t index_section_offset = sizeof(DumpHeader);
+  const uint64_t index_section_size = static_cast<uint64_t>(header.num_ranks_) * sizeof(DumpRankIndex);
+
+  std::vector<DumpRankIndex> index(header.num_ranks_);
+  MPI_File file;
+  MPI_File_open(comm, filename.c_str(), MPI_MODE_RDONLY, MPI_INFO_NULL, &file);
+  mpi_read_at_bytes(file, index_section_offset, index.data(), index_section_size);
+
+  const size_t num_fields = std::min(destinations.size(), static_cast<size_t>(header.num_fields_));
+  for (size_t s = 0; s < num_fields; s++) {
+    for (int32_t r = 0; r < header.num_ranks_; r++) {
+      if (index[r].compressed_size_[s] == 0) continue;
+
+      Box3D writer_box = {Point3D(index[r].global_inf_[0], index[r].global_inf_[1], index[r].global_inf_[2]),
+                          Point3D(index[r].global_sup_[0], index[r].global_sup_[1], index[r].global_sup_[2])};
+      if (!intersect(writer_box, my_box)) continue;
+      Box3D inter = box_intersection(writer_box, my_box);
+
+      std::vector<uint8_t> compressed(index[r].compressed_size_[s]);
+      mpi_read_at_bytes(file, index[r].offset_[s], compressed.data(), compressed.size());
+
+      std::vector<uint8_t> raw;
+      if (index[r].is_compressed_[s]) {
+        raw = zlib_decompress(compressed.data(), compressed.size(), index[r].uncompressed_size_[s]);
+      } else {
+        raw = std::move(compressed);
+      }
+
+      unpack_field(destinations[s], raw, writer_box, inter, grid, num_local_points);
+    }
   }
 
   MPI_File_close(&file);

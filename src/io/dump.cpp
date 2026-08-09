@@ -46,11 +46,13 @@ class DumpLBM : public OperatorNode {
   ADD_SLOT(MPI_Comm, mpi, INPUT, MPI_COMM_WORLD, DocString{"MPI communicator."});
   ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED, DocString{"The LBM domain containing the simulation data."});
   ADD_SLOT(LBMFields<Q>, fields, INPUT, REQUIRED, DocString{"The LBM fields containing the simulation data."});
+  ADD_SLOT(std::vector<bool>, periodic, INPUT, REQUIRED, DocString{"Periodicity of the domain, per axis."});
   ADD_SLOT(LBMParameters, Params, INPUT, REQUIRED, DocString{"The LBM parameters for the simulation."});
   ADD_SLOT(std::string, filename, INPUT, "hippoLBM_%010d.dump", DocString{"The filename for the checkpoint file."});
   ADD_SLOT(std::string, output_directory, INPUT, "hippoLBMOutputDir",
            DocString{"The base directory for the checkpoint output."});
   ADD_SLOT(long, timestep, INPUT, 0, DocString{"The current timestep."});
+  ADD_SLOT(double, physical_time, INPUT, 0.0, DocString{"The current simulation physical time."});
   ADD_SLOT(bool, display_filename, INPUT, true, DocString{"Print filename"});
   ADD_SLOT(int, compression_level, INPUT, DUMP_COMPRESSION_FASTEST,
            DocString{"zlib compression level (1 = fastest, 9 = smallest)."});
@@ -89,7 +91,8 @@ class DumpLBM : public OperatorNode {
     }
 
     std::vector<DumpFieldSource> sources = hippolbm_dump_fields<Q>(*fields);
-    DumpHeader header = write_dump_header(*mpi, fullname, *domain, *Params, *timestep, sources);
+    DumpHeader header =
+        write_dump_header(*mpi, fullname, *domain, *periodic, *Params, *timestep, *physical_time, sources);
     write_dump_fields(*mpi, fullname, header, *domain, sources, *compression_level);
   }
 };

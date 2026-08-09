@@ -55,35 +55,7 @@ class DefineLBMFields : public OperatorNode {
     )EOF";
   }
 
-  inline void execute() final {
-    constexpr Area L = Area::Local;
-    constexpr Traversal Tr = Traversal::All;
-    LBMFields<Q>& grid_data = *fields;
-    LBMGrid& Grid = domain->grid();
-    Box3D& Box = domain->box();
-
-    // compute sizes
-    constexpr int Un = 5;
-    auto bx = Grid.build_box<L, Tr>();
-    int size_XYU = bx.get_length(0) * bx.get_length(1) * Un;
-    int size_YZU = bx.get_length(1) * bx.get_length(2) * Un;
-    int size_XZU = bx.get_length(0) * bx.get_length(2) * Un;
-    const size_t np = Box.number_of_points();
-
-    grid_data.grid_size_ = np;
-    if (grid_data.obst_.size() != np) {
-      grid_data.f_.resize(np * Q, 0);
-      grid_data.obst_.resize(np);
-      grid_data.m0_.resize(np, 0);
-      grid_data.m1_.resize(np * 3, 0);
-      grid_data.fi_x_0_.resize(size_YZU);
-      grid_data.fi_x_l_.resize(size_YZU);
-      grid_data.fi_y_0_.resize(size_XZU);
-      grid_data.fi_y_l_.resize(size_XZU);
-      grid_data.fi_z_0_.resize(size_XYU);
-      grid_data.fi_z_l_.resize(size_XYU);
-    }
-  }
+  inline void execute() final { resize_lbm_fields<Q>(*domain, *fields); }
 };
 
 // === register factories ===

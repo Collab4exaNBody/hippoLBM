@@ -3,6 +3,12 @@ set_lbm_parameters: nop
 set_obstacles: nop
 set_distributions: nop
 
+set_default_distribution:
+  condition: do_set_distributions
+  body:
+    - set_distribution:
+       do_update: false
+
 setup_obstacles:
   - init_obstacles
   - set_obstacles
@@ -19,8 +25,7 @@ initialize:
   - build_traversal
   - grid_flavor
   - init_obst
-  - set_distribution: # default f_iLB = 1
-     do_update: false
+  - set_default_distribution
   - set_distributions
   - setup_obstacles
   - update_obstacles
@@ -43,4 +48,5 @@ global:
    simulation_end_iteration: 100
    display_paraview_first_timestep: true
    display_last_output: true
+   do_set_distributions: true
 
