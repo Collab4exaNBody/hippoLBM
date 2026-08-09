@@ -9,8 +9,13 @@ set_default_distribution:
     - set_distribution:
        do_update: false
 
+init_obstacles_if_needed:
+  condition: do_set_distributions
+  body:
+    - init_obstacles
+
 setup_obstacles:
-  - init_obstacles
+  - init_obstacles_if_needed
   - set_obstacles
 
 default_grid: define_grid_3dq19
