@@ -127,10 +127,11 @@ class ReadDumpLBM : public OperatorNode {
     read_dump_fields(*mpi, *filename, header, *domain, destinations);
 
     *do_set_distributions = false;  // avoid some standard initialization of f_.
-  };
-
-  // === register factories ===
-  ONIKA_AUTORUN_INIT(read_dump) {
-    OperatorNodeFactory::instance()->register_factory("read_dump", make_variant_operator<ReadDumpLBM>);
   }
+};
+
+// === register factories ===
+ONIKA_AUTORUN_INIT(read_dump) {
+  OperatorNodeFactory::instance()->register_factory("read_dump", make_variant_operator<ReadDumpLBM>);
+}
 }  // namespace hippoLBM

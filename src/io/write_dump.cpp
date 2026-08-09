@@ -41,7 +41,7 @@ using namespace onika;
 using namespace scg;
 
 template <int Q>
-class DumpLBM : public OperatorNode {
+class WriteDumpLBM : public OperatorNode {
  public:
   ADD_SLOT(MPI_Comm, mpi, INPUT, MPI_COMM_WORLD, DocString{"MPI communicator."});
   ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED, DocString{"The LBM domain containing the simulation data."});
@@ -67,7 +67,7 @@ class DumpLBM : public OperatorNode {
 
     YAML example:
 
-      - dump:
+      - write_dump:
          filename: "hippoLBM_%010d.dump"
          output_directory: "hippoLBMOutputDir"
     )EOF";
@@ -98,5 +98,7 @@ class DumpLBM : public OperatorNode {
 };
 
 // === register factories ===
-ONIKA_AUTORUN_INIT(dump) { OperatorNodeFactory::instance()->register_factory("dump", make_variant_operator<DumpLBM>); }
+ONIKA_AUTORUN_INIT(write_dump) {
+  OperatorNodeFactory::instance()->register_factory("write_dump", make_variant_operator<WriteDumpLBM>);
+}
 }  // namespace hippoLBM

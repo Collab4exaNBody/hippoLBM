@@ -41,10 +41,10 @@ trigger_dump_checkpoint:
 dump_checkpoint_if_triggered:
   condition: trigger_dump_checkpoint
   body:
-    - dump
+    - write_dump
 
 last_output:
   condition: display_last_output
   body:
     - write_paraview
-    - dump
+    - write_dump
