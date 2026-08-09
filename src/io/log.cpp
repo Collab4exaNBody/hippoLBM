@@ -48,7 +48,7 @@ class LogLBM : public OperatorNode {
   typedef std::chrono::time_point<std::chrono::steady_clock> time_point;
 
  public:
-  ADD_SLOT(LBMDomain<Q>, domain, INPUT_OUTPUT, REQUIRED, DocString{"The LBM domain containing the simulation data."});
+  ADD_SLOT(LBMDomain<Q>, domain, INPUT_OUTPUT, LBMDomain<Q>{}, DocString{"The LBM domain containing the simulation data."});
   ADD_SLOT(SimulationStatistics, simulation_statistics, INPUT, REQUIRED,
            DocString{"Contains general information about the LBM grid, such as minimum and maximum fluid velocity."});
   ADD_SLOT(LBMParameters, Params, INPUT, REQUIRED,

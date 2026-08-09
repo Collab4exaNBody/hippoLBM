@@ -20,20 +20,18 @@ under the License.
 #pragma once
 
 #include <mpi.h>
-#include <zlib.h>
 
 #include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
-#include <string>
-#include <vector>
-
-#include <onika/log.h>
-
 #include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/lbm_parameters.hpp>
+#include <hippoLBM/io/dump_compression.hpp>
+#include <iostream>
+#include <string>
+#include <vector>
 
 namespace hippoLBM {
 
@@ -48,21 +46,17 @@ struct DumpFieldDescriptor {
   int32_t datatype_ = 0;  ///< DumpFieldType
 };
 
-/** @brief Global, decomposition-independent description of a checkpoint file: the
- * timestep, the LBM parameters, the global grid size, and the list of fields stored
- * for every grid point (name, components, type). This does NOT describe any
- * per-rank subdomain: it is written once at a fixed offset (0) and is identical
- * however many MPI ranks produced or later read the file. */
 struct DumpHeader {
-  static constexpr int32_t MAGIC = 0x4d424c48;  ///< 'HLBM', used to sanity-check the file on read
-  static constexpr int32_t VERSION = 1;
-  static constexpr int32_t MAX_FIELDS = 8;
+  // comment: used to sanity-check the file on read
+  static constexpr int32_t MAGIC = 0x4d424c48;  ///< TODO I'm not sure of what it did , I keep it ...
+  static constexpr int32_t VERSION = 100;       ///< represent the current version of the dump file format, 1.0.0 = 100
+  static constexpr int32_t MAX_FIELDS = 8;      ///< Warning: arbitrary limit, must be kept
 
   int32_t magic_ = MAGIC;
   int32_t version_ = VERSION;
-  int32_t Q_ = 0;                       ///< number of LBM discrete directions (e.g. 19 for D3Q19)
-  int32_t num_fields_ = 0;              ///< number of valid entries in fields_
-  int32_t num_ranks_ = 0;               ///< number of entries in the index table (ranks at write time, not at read time)
+  int32_t Q_ = 0;           ///< number of LBM discrete directions (e.g. 19 for D3Q19)
+  int32_t num_fields_ = 0;  ///< number of valid entries in fields_
+  int32_t num_ranks_ = 0;   ///< number of entries in the index table (ranks at write time, not at read time)
   int32_t global_size_[3] = {0, 0, 0};  ///< global grid size (nodes), not the local subdomain
   double dx_ = 0.0;                     ///< grid spacing
   int64_t timestep_ = 0;
@@ -70,10 +64,6 @@ struct DumpHeader {
   DumpFieldDescriptor fields_[MAX_FIELDS];
 };
 
-/** @brief Per-rank index record written right after the DumpHeader: describes where
- * (in global grid coordinates) a rank's data belongs, and where (byte offset,
- * compressed/uncompressed size) each of its compressed field blocks was written.
- * There are as many DumpRankIndex records as there were MPI ranks at dump time. */
 struct DumpRankIndex {
   int32_t global_inf_[3] = {0, 0, 0};  ///< inclusive lower corner of this rank's real subdomain, global coordinates
   int32_t global_sup_[3] = {0, 0, 0};  ///< inclusive upper corner of this rank's real subdomain, global coordinates
@@ -83,28 +73,15 @@ struct DumpRankIndex {
   uint8_t is_compressed_[DumpHeader::MAX_FIELDS] = {};       ///< 1 if the block on disk is zlib-compressed, 0 if raw
 };
 
-/** @brief Describes one field to dump: its name, a pointer to its local (ghost-included)
- * per-grid-point data, and its component count/type.
- *
- * `data_` must hold `components_` values per local grid point (including ghosts, i.e.
- * one entry per point of `domain.grid().build_box<Area::Local, Traversal::All>()`),
- * laid out the same way as hippoLBM's own fields: `data_[num_local_points * c + idx]`
- * per component `c` (or `data_[idx * components_ + c]` when built with `-DWFAOS`),
- * matching FieldView<Components>. This lets any application built on top of hippoLBM
- * dump its own grid fields (not just hippoLBM's `obstacle`/`f`), as long as they follow
- * this same per-grid-point layout; write_dump_header() and write_dump_fields() must be
- * called with the exact same field list, in the same order. */
 struct DumpFieldSource {
-  std::string name_;
-  const void* data_ = nullptr;
-  int32_t components_ = 1;
-  DumpFieldType datatype_ = DumpFieldType::FLOAT64;
+  std::string name_;            // name of the field, must match one of the DumpHeader::fields_ entries
+  const void* data_ = nullptr;  // pointer to the field data for this rank's real subdomain (ghost-free)
+  int32_t components_ = 1;  // number of components per grid point (e.g. 1 for density, 3 for flux, Q for distributions)
+  DumpFieldType datatype_ = DumpFieldType::FLOAT64;  // type of each component (int32 or float64)
 };
 
-/** @brief Convenience helper: the DumpFieldSource list for hippoLBM's own standard
- * fields, "obstacle" (1 x int32) and "f" (Q x float64). Other applications built on
- * hippoLBM are not required to use this and may build their own DumpFieldSource list
- * for their own fields instead. */
+// For USERs: use this function to get the list of fields to dump from an LBMFields object
+// Example usage: For ExaCoLD, add interface fields to the list of fields to dump.
 template <int Q>
 inline std::vector<DumpFieldSource> hippolbm_dump_fields(LBMFields<Q>& fields) {
   return {
@@ -114,12 +91,6 @@ inline std::vector<DumpFieldSource> hippolbm_dump_fields(LBMFields<Q>& fields) {
 }
 
 /** @brief Creates the checkpoint file and writes its DumpHeader (rank 0 only).
- *
- * Describes the global grid (size, dx, LBM parameters) and the list of fields that
- * write_dump_fields() will subsequently store for it. Must be called by every rank
- * of `comm` (it truncates/creates the file collectively) before write_dump_fields()
- * is called on the same file, with the same `sources` (name, components, type).
- *
  * @param comm MPI communicator; every rank must call this function.
  * @param filename Path to the checkpoint file to create.
  * @param domain The LBM domain, used for its global grid size and dx.
@@ -147,8 +118,8 @@ inline DumpHeader write_dump_header(MPI_Comm comm, const std::string& filename, 
   header.params_ = params;
 
   if (sources.size() > static_cast<size_t>(DumpHeader::MAX_FIELDS)) {
-    onika::lout << "[dump_fields] Error: " << sources.size() << " fields requested, but only "
-                << DumpHeader::MAX_FIELDS << " are supported (DumpHeader::MAX_FIELDS)." << std::endl;
+    std::cerr << "[dump_fields] Error: " << sources.size() << " fields requested, but only " << DumpHeader::MAX_FIELDS
+              << " are supported (DumpHeader::MAX_FIELDS)." << std::endl;
   }
   header.num_fields_ = std::min<int32_t>(static_cast<int32_t>(sources.size()), DumpHeader::MAX_FIELDS);
   for (int32_t i = 0; i < header.num_fields_; i++) {
@@ -168,9 +139,6 @@ inline DumpHeader write_dump_header(MPI_Comm comm, const std::string& filename, 
 }
 
 /** @brief Reads back the DumpHeader written by write_dump_header().
- *
- * Can be called independently by any rank (e.g. every rank of the restart run).
- *
  * @param comm MPI communicator to open the file with.
  * @param filename Path to the checkpoint file.
  * @return The DumpHeader stored at the beginning of the file.
@@ -183,8 +151,8 @@ inline DumpHeader read_dump_header(MPI_Comm comm, const std::string& filename) {
   MPI_File_close(&file);
 
   if (header.magic_ != DumpHeader::MAGIC) {
-    onika::lout << "[dump_fields] Warning: '" << filename << "' does not look like a hippoLBM checkpoint file."
-                << std::endl;
+    std::cerr << "[dump_fields] Warning: '" << filename << "' does not look like a hippoLBM checkpoint file."
+              << std::endl;
   }
   return header;
 }
@@ -196,45 +164,20 @@ inline void mpi_write_at_bytes(MPI_File file, uint64_t offset, const void* data,
   uint64_t written = 0;
   while (written < n) {
     const uint64_t chunk = std::min(n - written, DUMP_MAX_IO_OPERATION_SIZE);
-    MPI_File_write_at(file, static_cast<MPI_Offset>(offset + written), p + written, static_cast<int>(chunk),
-                      MPI_BYTE, MPI_STATUS_IGNORE);
+    MPI_File_write_at(file, static_cast<MPI_Offset>(offset + written), p + written, static_cast<int>(chunk), MPI_BYTE,
+                      MPI_STATUS_IGNORE);
     written += chunk;
   }
 }
 
-/** @brief Compresses a raw buffer with zlib. Falls back to storing it raw if compression doesn't shrink it. */
-inline std::vector<Bytef> zlib_compress(const void* src, uint64_t src_bytes, int compression_level,
-                                        bool& is_compressed) {
-  uLongf bound = compressBound(static_cast<uLong>(src_bytes));
-  std::vector<Bytef> dst(bound);
-  uLongf dst_len = bound;
-  int ret = compress2(dst.data(), &dst_len, reinterpret_cast<const Bytef*>(src), static_cast<uLong>(src_bytes),
-                      compression_level);
-  if (ret != Z_OK) {
-    onika::lout << "[dump_fields] zlib compression failed (error code " << ret << ")." << std::endl;
-    dst_len = static_cast<uLongf>(src_bytes) + 1;  // force the raw fallback below
-  }
-  if (dst_len >= src_bytes) {
-    dst.resize(src_bytes);
-    std::memcpy(dst.data(), src, src_bytes);
-    is_compressed = false;
-  } else {
-    dst.resize(dst_len);
-    is_compressed = true;
-  }
-  return dst;
-}
-
-/** @brief Packs one field's real (ghost-free) local subdomain into a contiguous,
- * x-fastest, node-major/component-minor byte buffer, ready to be compressed.
- * Reads `source` using the same access pattern as FieldView<Components>, so the
- * result does not depend on the AOS/SOA in-memory layout (-DWFAOS or not). */
 inline std::vector<uint8_t> pack_field(const DumpFieldSource& source, const Box3D& local_real, const LBMGrid& grid,
                                        uint64_t num_local_points, uint64_t num_points) {
   const int32_t C = source.components_;
   const size_t elem_size = (source.datatype_ == DumpFieldType::INT32) ? sizeof(int32_t) : sizeof(double);
   std::vector<uint8_t> buffer(num_points * C * elem_size);
 
+  // We don't use FieldView here because we want to pack the field in the same way as hippoLBM's own fields, which is
+  // not necessarily the same as FieldView's layout.
   auto src_offset = [&](uint64_t idx, int32_t c) -> uint64_t {
 #ifdef WFAOS
     return idx * C + c;
@@ -265,15 +208,7 @@ inline std::vector<uint8_t> pack_field(const DumpFieldSource& source, const Box3
   return buffer;
 }
 
-/** @brief Writes this rank's real (ghost-free) subdomain of `sources` into the
- * checkpoint file created by write_dump_header(), compressing each field with zlib
- * and placing it at its correct byte offset via MPI-IO.
- *
- * Every rank packs and compresses its own subdomain, then an exclusive prefix sum
- * (MPI_Exscan) over the ranks' total compressed bytes gives each rank its write
- * offset directly, with no need to gather other ranks' sizes. A DumpRankIndex is
- * then written per rank right after the DumpHeader, followed by the field data.
- *
+/** @brief Writes fields to a checkpoint file previously created by write_dump_header().
  * @param comm MPI communicator; every rank must call this function.
  * @param filename Path to the checkpoint file (already created by write_dump_header()).
  * @param header The header written by write_dump_header() for this same file.
@@ -284,21 +219,22 @@ inline std::vector<uint8_t> pack_field(const DumpFieldSource& source, const Box3
 template <int Q>
 inline void write_dump_fields(MPI_Comm comm, const std::string& filename, const DumpHeader& header,
                               const LBMDomain<Q>& domain, const std::vector<DumpFieldSource>& sources,
-                              int compression_level = Z_BEST_SPEED) {
+                              int compression_level = DUMP_COMPRESSION_FASTEST) {
   int rank, size;
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
 
   if (static_cast<int32_t>(sources.size()) != header.num_fields_) {
-    onika::lout << "[dump_fields] Warning: " << sources.size() << " fields passed to write_dump_fields(), but "
-                << header.num_fields_ << " were declared in the header." << std::endl;
+    std::cerr << "[dump_fields] Warning: " << sources.size() << " fields passed to write_dump_fields(), but "
+              << header.num_fields_ << " were declared in the header." << std::endl;
   }
 
   const LBMGrid& grid = domain.grid();
   Box3D local_real = grid.build_box<Area::Local, Traversal::Real>();
   Box3D global_real = grid.build_box<Area::Global, Traversal::Real>();
   const uint64_t num_points = static_cast<uint64_t>(local_real.number_of_points());
-  const uint64_t num_local_points = static_cast<uint64_t>(grid.build_box<Area::Local, Traversal::All>().number_of_points());
+  const uint64_t num_local_points =
+      static_cast<uint64_t>(grid.build_box<Area::Local, Traversal::All>().number_of_points());
 
   DumpRankIndex my_index;
   for (int dim = 0; dim < 3; dim++) {
@@ -306,7 +242,7 @@ inline void write_dump_fields(MPI_Comm comm, const std::string& filename, const 
     my_index.global_sup_[dim] = global_real.end(dim);
   }
 
-  std::vector<std::vector<Bytef>> compressed(sources.size());
+  std::vector<std::vector<uint8_t>> compressed(sources.size());
   uint64_t local_total_bytes = 0;
   for (size_t s = 0; s < sources.size(); s++) {
     std::vector<uint8_t> raw = pack_field(sources[s], local_real, grid, num_local_points, num_points);

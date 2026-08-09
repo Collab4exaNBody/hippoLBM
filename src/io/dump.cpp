@@ -18,7 +18,6 @@ under the License.
  */
 
 #include <mpi.h>
-#include <zlib.h>
 
 #include <filesystem>
 
@@ -53,7 +52,8 @@ class DumpLBM : public OperatorNode {
            DocString{"The base directory for the checkpoint output."});
   ADD_SLOT(long, timestep, INPUT, 0, DocString{"The current timestep."});
   ADD_SLOT(bool, display_filename, INPUT, true, DocString{"Print filename"});
-  ADD_SLOT(int, compression_level, INPUT, Z_BEST_SPEED, DocString{"zlib compression level (1 = fastest, 9 = smallest)."});
+  ADD_SLOT(int, compression_level, INPUT, DUMP_COMPRESSION_FASTEST,
+           DocString{"zlib compression level (1 = fastest, 9 = smallest)."});
 
   inline bool is_sink() const final { return true; }
 
@@ -95,7 +95,5 @@ class DumpLBM : public OperatorNode {
 };
 
 // === register factories ===
-ONIKA_AUTORUN_INIT(dump) {
-  OperatorNodeFactory::instance()->register_factory("dump", make_variant_operator<DumpLBM>);
-}
+ONIKA_AUTORUN_INIT(dump) { OperatorNodeFactory::instance()->register_factory("dump", make_variant_operator<DumpLBM>); }
 }  // namespace hippoLBM

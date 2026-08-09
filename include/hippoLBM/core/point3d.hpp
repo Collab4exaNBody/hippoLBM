@@ -35,7 +35,7 @@ ONIKA_HOST_DEVICE_FUNC inline int3d operator+(int3d& a, int b) {
 struct Point3D {
   int3d position_;  ///<! The coordinates of the point in 3D space.
 
-  ONIKA_HOST_DEVICE_FUNC Point3D() {};
+  ONIKA_HOST_DEVICE_FUNC Point3D() : position_{0, 0, 0} {};
   ONIKA_HOST_DEVICE_FUNC Point3D(int3d in) { position_ = in; };
   ONIKA_HOST_DEVICE_FUNC Point3D(int x, int y, int z) {
     position_[0] = x;

@@ -28,6 +28,6 @@ simulation:
   - init_cuda
   - initialize
   - compute_loop
-  - write_paraview
+  - last_output
   - checker
   - finalize_cuda

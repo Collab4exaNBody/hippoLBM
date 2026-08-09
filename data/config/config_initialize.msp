@@ -37,8 +37,10 @@ global:
    physical_time: 0.
    compute_loop_continue: true
    simulation_paraview_freq: -1
+   simulation_dump_freq: -1
    simulation_analysis_freq: -1
    simulation_print_log_freq: 1
    simulation_end_iteration: 100
    display_paraview_first_timestep: true
+   display_last_output: true
 

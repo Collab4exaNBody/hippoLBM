@@ -32,3 +32,19 @@ print_log_if_triggered:
   body:
     - simulation_state
     - log
+
+trigger_dump_checkpoint:
+  rebind: { freq: simulation_dump_freq , result: trigger_dump_checkpoint }
+  body:
+    - nth_timestep: { first: false }
+
+dump_checkpoint_if_triggered:
+  condition: trigger_dump_checkpoint
+  body:
+    - dump
+
+last_output:
+  condition: display_last_output
+  body:
+    - write_paraview
+    - dump

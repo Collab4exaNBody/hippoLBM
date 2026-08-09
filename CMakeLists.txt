@@ -34,6 +34,7 @@ endif()
 find_package(OpenMP REQUIRED)
 find_package(MPI REQUIRED)
 find_package(onika REQUIRED)
+find_package(ZLIB REQUIRED)
 
 
 # ======================================
