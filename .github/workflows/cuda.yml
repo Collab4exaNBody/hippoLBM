@@ -20,10 +20,11 @@ jobs:
       with:
         persist-credentials: false 
     - uses: actions/setup-node@v4
-    - name: Get Yaml-cpp and MPICH
+    - name: Get Yaml-cpp, ZLIB, and MPICH
       run: | 
         apt install -y libyaml-cpp-dev
         apt install -y mpich
+        apt-get install -y zlib1g-dev
 
     - name: Install recent CMake (Kitware apt repo)
       run: |
