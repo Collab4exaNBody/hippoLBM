@@ -30,13 +30,18 @@ For more details, see CONTRIBUTING.md. Main guidelines are:
 Main developers:
   - Raphaël Prat (CEA/DES) (raphael.prat@cea.fr)
   - Lhassan Amarsid (CEA/DES)
+
+
+Current Contributors:
   - Vincent Topin (CEA/DES)
   - Guillaume bareigts (CEA/DES)
+  - Bruno Collard (CEA/DES) 
 
-Past Contributions (`DEMLBM3D` Code):
+Past Contributions (legacy `DEMLBM3D` or `DEMLBM2D` Code):
   - Jean-Yves delenne (INRAE)
   - Farhang Radjaï (LMGC/CNRS)
   - Abdelbarie El Metni (Intership at CEA-2023)
+  - Duc Chung Vu (CEA/DES)
 
 # Some examples:
 
