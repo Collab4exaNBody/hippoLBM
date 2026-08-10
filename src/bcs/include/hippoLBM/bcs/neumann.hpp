@@ -20,9 +20,9 @@ under the License.
 #pragma once
 
 #include <hippoLBM/grid/field_view.hpp>
-#define FLUIDE_ -1  // TODO: move this to a more appropriate place (from LBMDEM3D code)
 
 namespace hippoLBM {
+namespace bcs {
 
 /** @brief Struct for handling Neumann boundary conditions at x=0. */
 template <int Q>
@@ -256,37 +256,38 @@ struct neumann_z_0<19> {
     }
   }
 };
+}  // namespace bcs
 }  // namespace hippoLBM
 
 namespace onika {
 namespace parallel {
 template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::neumann_x_0<Q>> {
+struct ParallelForFunctorTraits<hippoLBM::bcs::neumann_x_0<Q>> {
   static inline constexpr bool RequiresBlockSynchronousCall = false;
   static inline constexpr bool CudaCompatible = true;
 };
 template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::neumann_x_l<Q>> {
+struct ParallelForFunctorTraits<hippoLBM::bcs::neumann_x_l<Q>> {
   static inline constexpr bool RequiresBlockSynchronousCall = false;
   static inline constexpr bool CudaCompatible = true;
 };
 template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::neumann_y_0<Q>> {
+struct ParallelForFunctorTraits<hippoLBM::bcs::neumann_y_0<Q>> {
   static inline constexpr bool RequiresBlockSynchronousCall = false;
   static inline constexpr bool CudaCompatible = true;
 };
 template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::neumann_y_l<Q>> {
+struct ParallelForFunctorTraits<hippoLBM::bcs::neumann_y_l<Q>> {
   static inline constexpr bool RequiresBlockSynchronousCall = false;
   static inline constexpr bool CudaCompatible = true;
 };
 template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::neumann_z_0<Q>> {
+struct ParallelForFunctorTraits<hippoLBM::bcs::neumann_z_0<Q>> {
   static inline constexpr bool RequiresBlockSynchronousCall = false;
   static inline constexpr bool CudaCompatible = true;
 };
 template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::neumann_z_l<Q>> {
+struct ParallelForFunctorTraits<hippoLBM::bcs::neumann_z_l<Q>> {
   static inline constexpr bool RequiresBlockSynchronousCall = false;
   static inline constexpr bool CudaCompatible = true;
 };

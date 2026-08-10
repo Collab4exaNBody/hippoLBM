@@ -19,136 +19,164 @@ under the License.
 
 #pragma once
 
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/field_view.hpp>
 #define FLUIDE_ -1  // TODO: move this to a more appropriate place (from LBMDEM3D code)
 
 namespace hippoLBM {
-
-/** @brief Struct for handling rho boundary conditions at x=0. */
-template <int Q>
-struct rho_x_0 {};
-
-/** @brief Struct for handling rho boundary conditions at x=lx. */
-template <int Q>
-struct rho_x_l {};
+namespace bcs {
 
 /**
- * @brief A functor for handling rho boundary conditions at x=lx in the lattice Boltzmann method.
+ * @brief Rho (density/pressure) boundary condition functor, specialized per boundary plane.
+ * Undefined for any (Q, Traversal) pair without a matching specialization below.
  */
+template <int Q, Traversal T>
+struct Rho {};
+
+/** @brief rho boundary condition at x=lx (Q=19). */
 template <>
-struct rho_x_l<19> {
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double ux,
-                                                const double uy, const double uz) const {
+struct Rho<19, Traversal::Plan_yz_l> {
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double rho,
+                                                const double ux, const double uy, const double uz) const {
     if (obst[idx] == FLUIDE_) {
+      const double u =
+          -1. + (f(idx, 3) + f(idx, 4) + f(idx, 5) + f(idx, 6) + f(idx, 15) + f(idx, 17) + f(idx, 18) + f(idx, 16) +
+                 f(idx, 0) + 2. * (f(idx, 1) + f(idx, 7) + f(idx, 9) + f(idx, 11) + f(idx, 13))) /
+                    rho;
+      const double nyx = (1. / 2.) * (f(idx, 3) + f(idx, 15) + f(idx, 17) - (f(idx, 4) + f(idx, 18) + f(idx, 16))) -
+                         (1. / 3.) * rho * uy;
+      const double nzx = (1. / 2.) * (f(idx, 5) + f(idx, 18) + f(idx, 15) - (f(idx, 6) + f(idx, 17) + f(idx, 16))) -
+                         (1. / 3.) * rho * uz;
+      f(idx, 2) = f(idx, 1) - (1. / 3.) * rho * u;
+      f(idx, 10) = f(idx, 9) + (1. / 6.) * rho * (-u + uy) - nyx;
+      f(idx, 8) = f(idx, 7) + (1. / 6.) * rho * (-u - uy) + nyx;
+      f(idx, 12) = f(idx, 11) + (1. / 6.) * rho * (-u - uz) + nzx;
+      f(idx, 14) = f(idx, 13) + (1. / 6.) * rho * (-u + uz) - nzx;
     }
   }
 };
 
-/**
- * @brief A functor for handling rho boundary conditions at x=0 in the lattice Boltzmann method.
- */
+/** @brief rho boundary condition at x=0 (Q=19). */
 template <>
-struct rho_x_0<19> {
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double& ux,
-                                                const double& uy, const double& uz) const {
+struct Rho<19, Traversal::Plan_yz_0> {
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double rho,
+                                                const double ux, const double uy, const double uz) const {
     if (obst[idx] == FLUIDE_) {
+      const double u =
+          1. - (f(idx, 3) + f(idx, 4) + f(idx, 5) + f(idx, 6) + f(idx, 15) + f(idx, 17) + f(idx, 18) + f(idx, 16) +
+                f(idx, 0) + 2. * (f(idx, 2) + f(idx, 10) + f(idx, 8) + f(idx, 14) + f(idx, 12))) /
+                   rho;
+      const double nyx = (1. / 2.) * (f(idx, 3) + f(idx, 15) + f(idx, 17) - (f(idx, 4) + f(idx, 18) + f(idx, 16))) -
+                         (1. / 3.) * rho * uy;
+      const double nzx = (1. / 2.) * (f(idx, 5) + f(idx, 18) + f(idx, 15) - (f(idx, 6) + f(idx, 17) + f(idx, 16))) -
+                         (1. / 3.) * rho * uz;
+      f(idx, 1) = f(idx, 2) + (1. / 3.) * rho * u;
+      f(idx, 9) = f(idx, 10) + (1. / 6.) * rho * (u - uy) + nyx;
+      f(idx, 7) = f(idx, 8) + (1. / 6.) * rho * (u + uy) - nyx;
+      f(idx, 11) = f(idx, 12) + (1. / 6.) * rho * (u + uz) - nzx;
+      f(idx, 13) = f(idx, 14) + (1. / 6.) * rho * (u - uz) + nzx;
     }
   }
 };
 
-/** @brief Struct for handling rho boundary conditions at y=0. */
-template <int Q>
-struct rho_y_0 {};
-
-/** @brief Struct for handling rho boundary conditions at y=ly. */
-template <int Q>
-struct rho_y_l {};
-
-/**
- * @brief A functor for handling rho boundary conditions at y=ly in the lattice Boltzmann method.
- */
+/** @brief rho boundary condition at y=ly (Q=19). */
 template <>
-struct rho_y_l<19> {
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double ux,
-                                                const double uy, const double uz) const {
+struct Rho<19, Traversal::Plan_xz_l> {
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double rho,
+                                                const double ux, const double uy, const double uz) const {
     if (obst[idx] == FLUIDE_) {
+      const double u =
+          -1. + (f(idx, 1) + f(idx, 2) + f(idx, 5) + f(idx, 6) + f(idx, 11) + f(idx, 13) + f(idx, 14) + f(idx, 12) +
+                 f(idx, 0) + 2. * (f(idx, 3) + f(idx, 7) + f(idx, 10) + f(idx, 15) + f(idx, 17))) /
+                    rho;
+      const double nxy = (1. / 2.) * (f(idx, 1) + f(idx, 11) + f(idx, 13) - (f(idx, 2) + f(idx, 14) + f(idx, 12))) -
+                         (1. / 3.) * rho * ux;
+      const double nzy = (1. / 2.) * (f(idx, 5) + f(idx, 11) + f(idx, 14) - (f(idx, 6) + f(idx, 13) + f(idx, 12))) -
+                         (1. / 3.) * rho * uz;
+      f(idx, 4) = f(idx, 3) - (1. / 3.) * rho * u;
+      f(idx, 8) = f(idx, 7) + (1. / 6.) * rho * (-u - ux) + nxy;
+      f(idx, 9) = f(idx, 10) + (1. / 6.) * rho * (-u + ux) - nxy;
+      f(idx, 16) = f(idx, 15) + (1. / 6.) * rho * (-u - uz) + nzy;
+      f(idx, 18) = f(idx, 17) + (1. / 6.) * rho * (-u + uz) - nzy;
     }
   }
 };
 
-/**
- * @brief A functor for handling rho boundary conditions at y=0 in the lattice Boltzmann method.
- */
+/** @brief rho boundary condition at y=0 (Q=19). */
 template <>
-struct rho_y_0<19> {
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double& ux,
-                                                const double& uy, const double& uz) const {
+struct Rho<19, Traversal::Plan_xz_0> {
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double rho,
+                                                const double ux, const double uy, const double uz) const {
     if (obst[idx] == FLUIDE_) {
+      const double u =
+          1. - (f(idx, 1) + f(idx, 2) + f(idx, 5) + f(idx, 6) + f(idx, 11) + f(idx, 13) + f(idx, 14) + f(idx, 12) +
+                f(idx, 0) + 2. * (f(idx, 4) + f(idx, 9) + f(idx, 8) + f(idx, 18) + f(idx, 16))) /
+                   rho;
+      const double nxy = (1. / 2.) * (f(idx, 1) + f(idx, 11) + f(idx, 13) - (f(idx, 2) + f(idx, 14) + f(idx, 12))) -
+                         (1. / 3.) * rho * ux;
+      const double nzy = (1. / 2.) * (f(idx, 5) + f(idx, 11) + f(idx, 14) - (f(idx, 6) + f(idx, 13) + f(idx, 12))) -
+                         (1. / 3.) * rho * uz;
+      f(idx, 3) = f(idx, 4) + (1. / 3.) * rho * u;
+      f(idx, 7) = f(idx, 8) + (1. / 6.) * rho * (u + ux) - nxy;
+      f(idx, 10) = f(idx, 9) + (1. / 6.) * rho * (u - ux) + nxy;
+      f(idx, 15) = f(idx, 16) + (1. / 6.) * rho * (u + uz) - nzy;
+      f(idx, 17) = f(idx, 18) + (1. / 6.) * rho * (u - uz) + nzy;
     }
   }
 };
 
-/** @brief Struct for handling rho boundary conditions at z=0. */
-template <int Q>
-struct rho_z_0 {};
-/** @brief Struct for handling rho boundary conditions at z=lz. */
-template <int Q>
-struct rho_z_l {};
-
-/**
- * @brief A functor for handling rho boundary conditions at z=lz in the lattice Boltzmann method.
- */
+/** @brief rho boundary condition at z=lz (Q=19). */
 template <>
-struct rho_z_l<19> {
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double ux,
-                                                const double uy, const double uz) const {
+struct Rho<19, Traversal::Plan_xy_l> {
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double rho,
+                                                const double ux, const double uy, const double uz) const {
     if (obst[idx] == FLUIDE_) {
+      const double u =
+          -1. + (f(idx, 1) + f(idx, 2) + f(idx, 3) + f(idx, 4) + f(idx, 7) + f(idx, 10) + f(idx, 8) + f(idx, 9) +
+                 f(idx, 0) + 2. * (f(idx, 5) + f(idx, 11) + f(idx, 14) + f(idx, 15) + f(idx, 18))) /
+                    rho;
+      const double nxz =
+          (1. / 2.) * (f(idx, 1) + f(idx, 7) + f(idx, 9) - (f(idx, 2) + f(idx, 10) + f(idx, 8))) - (1. / 3.) * rho * ux;
+      const double nyz =
+          (1. / 2.) * (f(idx, 3) + f(idx, 7) + f(idx, 10) - (f(idx, 4) + f(idx, 9) + f(idx, 8))) - (1. / 3.) * rho * uy;
+      f(idx, 6) = f(idx, 5) - (1. / 3.) * rho * u;
+      f(idx, 13) = f(idx, 14) + (1. / 6.) * rho * (-u + ux) - nxz;
+      f(idx, 12) = f(idx, 11) + (1. / 6.) * rho * (-u - ux) + nxz;
+      f(idx, 17) = f(idx, 18) + (1. / 6.) * rho * (-u + uy) - nyz;
+      f(idx, 16) = f(idx, 15) + (1. / 6.) * rho * (-u - uy) + nyz;
     }
   }
 };
 
-/**
- * @brief A functor for handling rho boundary conditions at z=0 in the lattice Boltzmann method.
- */
+/** @brief rho boundary condition at z=0 (Q=19). */
 template <>
-struct rho_z_0<19> {
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double& ux,
-                                                const double& uy, const double& uz) const {
+struct Rho<19, Traversal::Plan_xy_0> {
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double rho,
+                                                const double ux, const double uy, const double uz) const {
     if (obst[idx] == FLUIDE_) {
+      const double u =
+          1. - (f(idx, 1) + f(idx, 2) + f(idx, 3) + f(idx, 4) + f(idx, 7) + f(idx, 9) + f(idx, 10) + f(idx, 8) +
+                f(idx, 0) + 2. * (f(idx, 6) + f(idx, 13) + f(idx, 12) + f(idx, 17) + f(idx, 16))) /
+                   rho;
+      const double nxz =
+          (1. / 2.) * (f(idx, 1) + f(idx, 7) + f(idx, 9) - (f(idx, 2) + f(idx, 10) + f(idx, 8))) - (1. / 3.) * rho * ux;
+      const double nyz =
+          (1. / 2.) * (f(idx, 3) + f(idx, 7) + f(idx, 10) - (f(idx, 4) + f(idx, 9) + f(idx, 8))) - (1. / 3.) * rho * uy;
+      f(idx, 5) = f(idx, 6) + (1. / 3.) * rho * u;
+      f(idx, 11) = f(idx, 12) + (1. / 6.) * rho * (u + ux) - nxz;
+      f(idx, 14) = f(idx, 13) + (1. / 6.) * rho * (u - ux) + nxz;
+      f(idx, 15) = f(idx, 16) + (1. / 6.) * rho * (u + uy) - nyz;
+      f(idx, 18) = f(idx, 17) + (1. / 6.) * rho * (u - uy) + nyz;
     }
   }
 };
+}  // namespace bcs
 }  // namespace hippoLBM
 
 namespace onika {
 namespace parallel {
-template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::rho_x_0<Q>> {
-  static inline constexpr bool RequiresBlockSynchronousCall = false;
-  static inline constexpr bool CudaCompatible = true;
-};
-template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::rho_x_l<Q>> {
-  static inline constexpr bool RequiresBlockSynchronousCall = false;
-  static inline constexpr bool CudaCompatible = true;
-};
-template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::rho_y_0<Q>> {
-  static inline constexpr bool RequiresBlockSynchronousCall = false;
-  static inline constexpr bool CudaCompatible = true;
-};
-template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::rho_y_l<Q>> {
-  static inline constexpr bool RequiresBlockSynchronousCall = false;
-  static inline constexpr bool CudaCompatible = true;
-};
-template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::rho_z_0<Q>> {
-  static inline constexpr bool RequiresBlockSynchronousCall = false;
-  static inline constexpr bool CudaCompatible = true;
-};
-template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::rho_z_l<Q>> {
+template <int Q, hippoLBM::Traversal T>
+struct ParallelForFunctorTraits<hippoLBM::bcs::Rho<Q, T>> {
   static inline constexpr bool RequiresBlockSynchronousCall = false;
   static inline constexpr bool CudaCompatible = true;
 };

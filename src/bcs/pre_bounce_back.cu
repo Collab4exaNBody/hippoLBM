@@ -45,6 +45,7 @@ using namespace onika;
 using namespace scg;
 using namespace onika::cuda;
 using namespace onika::parallel;
+using namespace bcs;
 using BoolVector = std::vector<bool>;
 
 template <int Q>

@@ -44,6 +44,7 @@ namespace hippoLBM {
 using namespace onika;
 using namespace scg;
 using namespace onika::cuda;
+using namespace bcs;
 
 template <int Q>
 class NeumannOp : public OperatorNode {

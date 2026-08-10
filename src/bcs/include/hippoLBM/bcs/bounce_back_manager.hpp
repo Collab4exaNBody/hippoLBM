@@ -25,6 +25,7 @@ under the License.
 #include <hippoLBM/grid/grid.hpp>
 
 namespace hippoLBM {
+namespace bcs {
 
 /** @brief Helper function to calculate the index for a given dimension and side. */
 template <int dim, Side dir>
@@ -116,4 +117,5 @@ struct bounce_back_manager<19> {
     }
   }
 };
+}  // namespace bcs
 }  // namespace hippoLBM
