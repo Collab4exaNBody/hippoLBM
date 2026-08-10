@@ -47,7 +47,7 @@ Past Contributions (legacy `DEMLBM3D` or `DEMLBM2D` Code):
 
 <img width="1132" height="452" alt="karman" src="https://github.com/user-attachments/assets/16191403-8ee3-486f-b3d0-3b7a46b7d4af" />
 
-<img width="466" height="806" alt="toureiffel_bcs_null" src="https://github.com/user-attachments/assets/5ca60099-389d-4725-90c5-7820c7042cf8" />
+<img width="1146" height="899" alt="tevent2" src="https://github.com/user-attachments/assets/7dc693a4-4b77-42a7-af85-7eb0f7a5279e" />
 
 <img width="709" height="400" alt="low_logo" src="https://github.com/user-attachments/assets/535142ed-d1ff-4a6f-aeff-6a4d3e24b09c" />
 
