@@ -24,29 +24,16 @@ under the License.
 namespace hippoLBM {
 namespace bcs {
 
-/** @brief Struct for handling Neumann boundary conditions at x=0. */
-template <int Q>
-struct neumann_x_0 {};
-
-/** @brief Struct for handling Neumann boundary conditions at x=lx. */
-template <int Q>
-struct neumann_x_l {};
-
 /**
- * @brief A functor for handling Neumann boundary conditions at z=lz in the lattice Boltzmann method.
+ * @brief Neumann boundary condition functor, specialized per boundary plane.
+ * Undefined for any (Q, Traversal) pair without a matching specialization below.
  */
+template <int Q, Traversal T>
+struct Neumann {};
+
+/** @brief Neumann boundary condition at x=lx (Q=19). */
 template <>
-struct neumann_x_l<19> {
-  /**
-   * @brief operator for applying neumann boundary conditions at x=0.
-   *
-   * @param idxq the index.
-   * @param obst pointer to an array of integers representing obstacles.
-   * @param f pointer to an array of doubles representing distribution functions.
-   * @param ux the x-component of velocity.
-   * @param uy the y-component of velocity.
-   * @param uz the z-component of velocity.
-   */
+struct Neumann<19, Traversal::Plan_yz_l> {
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double ux,
                                                 const double uy, const double uz) const {
     if (obst[idx] == FLUIDE_) {
@@ -66,23 +53,11 @@ struct neumann_x_l<19> {
   }
 };
 
-/**
- * @brief A functor for handling Neumann boundary conditions at z=0 in the lattice Boltzmann method.
- */
+/** @brief Neumann boundary condition at x=0 (Q=19). */
 template <>
-struct neumann_x_0<19> {
-  /**
-   * @brief Operator for applying Neumann boundary conditions at x=0.
-   *
-   * @param idx The index.
-   * @param obst Pointer to an array of integers representing obstacles.
-   * @param f Pointer to an array of doubles representing distribution functions.
-   * @param ux The x-component of velocity.
-   * @param uy The y-component of velocity.
-   * @param uz The z-component of velocity.
-   */
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double& ux,
-                                                const double& uy, const double& uz) const {
+struct Neumann<19, Traversal::Plan_yz_0> {
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double ux,
+                                                const double uy, const double uz) const {
     if (obst[idx] == FLUIDE_) {
       const double rho =
           (f(idx, 3) + f(idx, 4) + f(idx, 5) + f(idx, 6) + f(idx, 15) + f(idx, 17) + f(idx, 18) + f(idx, 16) +
@@ -101,29 +76,9 @@ struct neumann_x_0<19> {
   }
 };
 
-/** @brief Struct for handling Neumann boundary conditions at y=0. */
-template <int Q>
-struct neumann_y_0 {};
-
-/** @brief Struct for handling Neumann boundary conditions at y=ly. */
-template <int Q>
-struct neumann_y_l {};
-
-/**
- * @brief A functor for handling Neumann boundary conditions at z=lz in the lattice Boltzmann method.
- */
+/** @brief Neumann boundary condition at y=ly (Q=19). */
 template <>
-struct neumann_y_l<19> {
-  /**
-   * @brief operator for applying neumann boundary conditions at y=ly .
-   *
-   * @param idxq the index.
-   * @param obst pointer to an array of integers representing obstacles.
-   * @param f pointer to an array of doubles representing distribution functions.
-   * @param ux the x-component of velocity.
-   * @param uy the y-component of velocity.
-   * @param uz the z-component of velocity.
-   */
+struct Neumann<19, Traversal::Plan_xz_l> {
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double ux,
                                                 const double uy, const double uz) const {
     if (obst[idx] == FLUIDE_) {
@@ -144,23 +99,11 @@ struct neumann_y_l<19> {
   }
 };
 
-/**
- * @brief A functor for handling Neumann boundary conditions at z=0 in the lattice Boltzmann method.
- */
+/** @brief Neumann boundary condition at y=0 (Q=19). */
 template <>
-struct neumann_y_0<19> {
-  /**
-   * @brief Operator for applying Neumann boundary conditions at y=0.
-   *
-   * @param idx The index.
-   * @param obst Pointer to an array of integers representing obstacles.
-   * @param f Pointer to an array of doubles representing distribution functions.
-   * @param ux The x-component of velocity.
-   * @param uy The y-component of velocity.
-   * @param uz The z-component of velocity.
-   */
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double& ux,
-                                                const double& uy, const double& uz) const {
+struct Neumann<19, Traversal::Plan_xz_0> {
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double ux,
+                                                const double uy, const double uz) const {
     if (obst[idx] == FLUIDE_) {
       const double rho = (f(idx, 1) + f(idx, 2) + f(idx, 5) + f(idx, 6) + f(idx, 11) + f(idx, 13) + f(idx, 14) +
                           f(idx, 12) + f(idx, 0) + 2. * (f(idx, 4) + f(idx, 9) + f(idx, 8) + f(idx, 18) + f(idx, 16))) /
@@ -178,28 +121,9 @@ struct neumann_y_0<19> {
   }
 };
 
-/** @brief Struct for handling Neumann boundary conditions at z=0. */
-template <int Q>
-struct neumann_z_0 {};
-/** @brief Struct for handling Neumann boundary conditions at z=lz. */
-template <int Q>
-struct neumann_z_l {};
-
-/**
- * @brief A functor for handling Neumann boundary conditions at z=lz in the lattice Boltzmann method.
- */
+/** @brief Neumann boundary condition at z=lz (Q=19). */
 template <>
-struct neumann_z_l<19> {
-  /**
-   * @brief operator for applying neumann boundary conditions at z=0.
-   *
-   * @param idxq the index.
-   * @param obst pointer to an array of integers representing obstacles.
-   * @param f pointer to an array of doubles representing distribution functions.
-   * @param ux the x-component of velocity.
-   * @param uy the y-component of velocity.
-   * @param uz the z-component of velocity.
-   */
+struct Neumann<19, Traversal::Plan_xy_l> {
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double ux,
                                                 const double uy, const double uz) const {
     if (obst[idx] == FLUIDE_) {
@@ -221,23 +145,11 @@ struct neumann_z_l<19> {
   }
 };
 
-/**
- * @brief A functor for handling Neumann boundary conditions at z=0 in the lattice Boltzmann method.
- */
+/** @brief Neumann boundary condition at z=0 (Q=19). */
 template <>
-struct neumann_z_0<19> {
-  /**
-   * @brief Operator for applying Neumann boundary conditions at z=0.
-   *
-   * @param idx The index.
-   * @param obst Pointer to an array of integers representing obstacles.
-   * @param f Pointer to an array of doubles representing distribution functions.
-   * @param ux The x-component of velocity.
-   * @param uy The y-component of velocity.
-   * @param uz The z-component of velocity.
-   */
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double& ux,
-                                                const double& uy, const double& uz) const {
+struct Neumann<19, Traversal::Plan_xy_0> {
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double ux,
+                                                const double uy, const double uz) const {
     if (obst[idx] == FLUIDE_) {
       const double rho =
           (f(idx, 0) + f(idx, 1) + f(idx, 2) + f(idx, 3) + f(idx, 4) + f(idx, 7) + f(idx, 9) + f(idx, 10) + f(idx, 8) +
@@ -261,33 +173,8 @@ struct neumann_z_0<19> {
 
 namespace onika {
 namespace parallel {
-template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::bcs::neumann_x_0<Q>> {
-  static inline constexpr bool RequiresBlockSynchronousCall = false;
-  static inline constexpr bool CudaCompatible = true;
-};
-template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::bcs::neumann_x_l<Q>> {
-  static inline constexpr bool RequiresBlockSynchronousCall = false;
-  static inline constexpr bool CudaCompatible = true;
-};
-template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::bcs::neumann_y_0<Q>> {
-  static inline constexpr bool RequiresBlockSynchronousCall = false;
-  static inline constexpr bool CudaCompatible = true;
-};
-template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::bcs::neumann_y_l<Q>> {
-  static inline constexpr bool RequiresBlockSynchronousCall = false;
-  static inline constexpr bool CudaCompatible = true;
-};
-template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::bcs::neumann_z_0<Q>> {
-  static inline constexpr bool RequiresBlockSynchronousCall = false;
-  static inline constexpr bool CudaCompatible = true;
-};
-template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::bcs::neumann_z_l<Q>> {
+template <int Q, hippoLBM::Traversal T>
+struct ParallelForFunctorTraits<hippoLBM::bcs::Neumann<Q, T>> {
   static inline constexpr bool RequiresBlockSynchronousCall = false;
   static inline constexpr bool CudaCompatible = true;
 };

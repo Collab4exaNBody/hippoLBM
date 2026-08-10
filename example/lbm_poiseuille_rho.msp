@@ -1,0 +1,33 @@
+do_domain:
+  - domain:
+     bounds:    [ [0,0,0],[0.1,0.1,0.1]]
+     cell_dims: [ 30 , 30 , 30 ]
+     periodic:  [ false, true, false]
+
+set_lbm_parameters:
+  - lbm_parameters:
+     nuth: 1e-3
+
+boundary_conditions:
+  - neumann:
+     U: [0.0,0,0]
+     regions: [plan_xy_0, plan_xy_l]
+  - rho:
+     U: [0.0,0,0]
+     regions: [plan_yz_0, plan_yz_l]
+     delta_p: [4.756243e-03 kg/m/s^2, -4.756243e-03 kg/m/s^2]  # in Pascal (Pa = kg.m^-1.s^-2)
+
+analysis:
+  - plot_line_velocity:
+     line: [[0.05,0.05,0],[0.05,0.05,0.1]]
+
+checker:
+  - plane_velocity_profile:
+     dimension: Z
+
+global:
+   simulation_paraview_freq: 100
+   simulation_end_iteration: 3000
+   simulation_print_log_freq: 10
+   simulation_analysis_freq: 300
+   output_directory: "PoiseuilleRhoTestDir"

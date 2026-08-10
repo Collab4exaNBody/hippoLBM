@@ -33,3 +33,31 @@ The fluid is initialized at rest (`set_distribution`, `value: 1.0`), then a `set
 ```
 
 ParaView output is written every 20 iterations in `PressureSphereWater/`; the `P` field is the pressure difference (Pa) relative to the water's reference state.
+
+# Poiseuille flow
+
+`lbm_poiseuille.msp` and `lbm_poiseuille_rho.msp` simulate the same plane Poiseuille flow: a `0.1 m x 0.1 m x 0.1 m` box discretized on a `30 x 30 x 30` grid (`nuth: 1e-3 m2/s`), with no-slip walls approximated by a Neumann condition on the top/bottom planes (`plan_xy_0`, `plan_xy_l`) and translational symmetry along y (`periodic: true`). The flow develops along x, and the resulting parabolic velocity profile is sampled along z at mid-channel (`plot_line_velocity`, checked by `plane_velocity_profile`).
+
+The two variants differ only in how the flow is driven:
+
+- **`lbm_poiseuille.msp`**: periodic in x (`periodic: [true, true, false]`), driven by a uniform body force `Fext: [9.512485e-05, 0, 0]` applied to the whole domain via `lbm_parameters`.
+- **`lbm_poiseuille_rho.msp`**: open in x (`periodic: [false, true, false]`), driven instead by a `rho` boundary condition imposing a pressure difference at the inlet/outlet planes (`plan_yz_0`, `plan_yz_l`). For `celerity = 1` (the default, `dtLB = dx`), a uniform body force `Fext_x` over a channel of length `Lx` is exactly equivalent to a pressure drop `delta_p = Fext_x * Lx` split symmetrically around the reference state, giving `delta_p: [4.756243e-03, -4.756243e-03]` Pa here.
+
+## Run
+
+```bash
+./hippoLBM example/lbm_poiseuille.msp --omp_num_threads 4
+./hippoLBM example/lbm_poiseuille_rho.msp --omp_num_threads 4
+```
+
+Both run for 3,000 iterations, with ParaView output every 100 iterations in `PoiseuilleTestDir/` and `PoiseuilleRhoTestDir/` respectively.
+
+> **Note on pressure units:** `rho`'s `delta_p` is parsed as an `onika::physics::Quantity`, whose unit table only knows base SI units (no `Pa`, `kPa`, `MPa`, `bar`, or `kbar` symbol). Express a pressure as the composite unit `kg/m/s^2` (1 Pa = 1 kg.m^-1.s^-2), scaling the numeric value for other pressure units:
+>
+> | Unit | Value in `kg/m/s^2` |
+> |------|----------------------|
+> | 1 Pa   | `1`     |
+> | 1 kPa  | `1e3`   |
+> | 1 MPa  | `1e6`   |
+> | 1 bar  | `1e5`   |
+> | 1 kbar | `1e8`   |

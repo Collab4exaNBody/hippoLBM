@@ -38,6 +38,7 @@ under the License.
 #include <hippoLBM/grid/make_variant_operator.hpp>
 
 // impl
+#include <hippoLBM/bcs/dispatch_traversal.hpp>
 #include <hippoLBM/bcs/neumann.hpp>
 
 namespace hippoLBM {
@@ -84,6 +85,8 @@ class NeumannOp : public OperatorNode {
     const std::vector<std::string>& region_names = *regions;
     const std::vector<traversal_data> trs = get_traversal(traversals, region_names, allowed_tr);
 
+    auto make_ctx = [this](const char* name) { return parallel_execution_context(name); };
+
     auto it = region_names.begin();
     // run kernel
     for (auto& traversal : trs) {
@@ -92,31 +95,8 @@ class NeumannOp : public OperatorNode {
 
       if (traversal.size_ == 0) continue;  // No LBM point in this subdomain
 
-      if (traversal_names == "plan_yz_0") {
-        neumann_x_0<Q> neumann = {};
-        parallel_for_id(traversal.ptr_, traversal.size_, neumann, parallel_execution_context(kernel_name.c_str()),
-                        pobst, pf, ux, uy, uz);
-      } else if (traversal_names == "plan_yz_l") {
-        neumann_x_l<Q> neumann = {};
-        parallel_for_id(traversal.ptr_, traversal.size_, neumann, parallel_execution_context(kernel_name.c_str()),
-                        pobst, pf, ux, uy, uz);
-      } else if (traversal_names == "plan_xz_0") {
-        neumann_y_0<Q> neumann = {};
-        parallel_for_id(traversal.ptr_, traversal.size_, neumann, parallel_execution_context(kernel_name.c_str()),
-                        pobst, pf, ux, uy, uz);
-      } else if (traversal_names == "plan_xz_l") {
-        neumann_y_l<Q> neumann = {};
-        parallel_for_id(traversal.ptr_, traversal.size_, neumann, parallel_execution_context(kernel_name.c_str()),
-                        pobst, pf, ux, uy, uz);
-      } else if (traversal_names == "plan_xy_0") {
-        neumann_z_0<Q> neumann = {};
-        parallel_for_id(traversal.ptr_, traversal.size_, neumann, parallel_execution_context(kernel_name.c_str()),
-                        pobst, pf, ux, uy, uz);
-      } else if (traversal_names == "plan_xy_l") {
-        neumann_z_l<Q> neumann = {};
-        parallel_for_id(traversal.ptr_, traversal.size_, neumann, parallel_execution_context(kernel_name.c_str()),
-                        pobst, pf, ux, uy, uz);
-      }
+      dispatch_traversal<Neumann, Q>(make_ctx, traversal_from_string(traversal_names), kernel_name, traversal.ptr_,
+                                     traversal.size_, pobst, pf, ux, uy, uz);
     }
 
     // run kernel
