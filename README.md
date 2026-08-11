@@ -40,8 +40,8 @@ Current Contributors:
 Past Contributions (legacy `DEMLBM3D` or `DEMLBM2D` Code):
   - Jean-Yves delenne (INRAE)
   - Farhang Radjaï (LMGC/CNRS)
-  - Abdelbarie El Metni (Intership at CEA-2023)
-  - Duc Chung Vu (CEA/DES)
+  - Abdelbarie El Metni (Intership at CEA-2023) - // MPI of DEMLBM3D
+  - Duc Chung Vu (CEA/DES) - User with several examples
 
 # Some examples:
 
