@@ -47,6 +47,7 @@ using namespace onika;
 using namespace onika::parallel;
 using namespace scg;
 using namespace onika::cuda;
+using namespace bcs;
 
 template <int Q>
 class PostBounceBack : public OperatorNode {

@@ -24,6 +24,7 @@ under the License.
 #include <hippoLBM/grid/grid.hpp>
 
 namespace hippoLBM {
+namespace bcs {
 constexpr Side LEFT = Side::Left;
 constexpr Side RIGHT = Side::Right;
 
@@ -183,24 +184,25 @@ struct wall_bounce_back<19> {
     }
   }
 };
+}  // namespace bcs
 }  // namespace hippoLBM
 
 namespace onika {
 namespace parallel {
 template <int Dim, hippoLBM::Side S, int Q>
-struct ParallelForFunctorTraits<hippoLBM::pre_bounce_back<Dim, S, Q>> {
+struct ParallelForFunctorTraits<hippoLBM::bcs::pre_bounce_back<Dim, S, Q>> {
   static inline constexpr bool RequiresBlockSynchronousCall = false;
   static inline constexpr bool CudaCompatible = true;
 };
 
 template <int Dim, hippoLBM::Side S, int Q>
-struct ParallelForFunctorTraits<hippoLBM::post_bounce_back<Dim, S, Q>> {
+struct ParallelForFunctorTraits<hippoLBM::bcs::post_bounce_back<Dim, S, Q>> {
   static inline constexpr bool RequiresBlockSynchronousCall = false;
   static inline constexpr bool CudaCompatible = true;
 };
 
 template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::wall_bounce_back<Q>> {
+struct ParallelForFunctorTraits<hippoLBM::bcs::wall_bounce_back<Q>> {
   static inline constexpr bool RequiresBlockSynchronousCall = false;
   static inline constexpr bool CudaCompatible = true;
 };
