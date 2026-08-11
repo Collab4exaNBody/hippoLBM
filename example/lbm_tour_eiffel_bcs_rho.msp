@@ -1,0 +1,42 @@
+## 16xA100 GPU
+# simulation_time_minutes: 28.42 # 1.705e+06 ms = 1705 s (~28.42 min)
+# post_processing_time_minutes: 2.26 # 1.356e+05 ms = 135.6 s (~2.26 min)
+
+do_domain:
+  - domain:
+     bounds:    [ [0, 0, 0],[5.0 m, 0.6 m, 2.0 m] ]
+     cell_dims: [ 2000 , 240 , 800 ]
+     periodic:  [ false, true, false ]
+
+set_lbm_parameters:
+  - lbm_parameters:
+     Fext: [0,0,0]
+     nuth: 1e-4  # m2/s
+     tau: 0.6
+
+boundary_conditions:
+  - neumann:
+     U: [0,0,0]
+     regions: [plan_xy_0, plan_xy_l]
+  - rho:
+     U: [0.0,0,0]
+     regions: [plan_yz_0, plan_yz_l]
+     delta_p: [50 kg/m/s^2, -50 kg/m/s^2]  # in Pascal (Pa = kg.m^-1.s^-2)
+
+pre_stream_bcs:
+  - wall_bounce_back
+
+set_obstacles:
+  - register_rshape:
+     id: 0
+     filename: "toureiffel.stl"
+     center:      [0.6, 0.3, 0.0]
+     scale:       0.01
+     orientation: [1, 0, 0, 0]   # identity [w,x,y,z]
+     minkowski:   0.005
+
+global:
+   simulation_paraview_freq: 10000
+   simulation_end_iteration: 50000
+   simulation_print_log_freq: 10   
+   output_directory: "TourEiffelBCSNull"   

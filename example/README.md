@@ -1,24 +1,24 @@
 # Eiffel Tower example
 
-`lbm_tour_eiffel_bcs_null.msp` and `lbm_tour_eiffel_bcs_periodic.msp` simulate a fluid flow around a scaled model of the Eiffel Tower, imported as an R-shaped obstacle from `stl_files/toureiffel.stl` (`register_rshape`), with `wall_bounce_back` applied on its surface.
+`lbm_tour_eiffel_bcs_null.msp`, `lbm_tour_eiffel_bcs_periodic.msp` and `lbm_tour_eiffel_bcs_rho.msp` simulate a fluid flow around a scaled model of the Eiffel Tower, imported as an R-shaped obstacle from `stl_files/toureiffel.stl` (`register_rshape`), with `wall_bounce_back` applied on its surface.
 
-The domain is a `0.6 m x 0.6 m x 2.0 m` box discretized on a `240 x 240 x 800` grid, with the tower placed at its base and a spherical perturbation of the distribution function (`set_distribution` with `quadrics: sphere`) added upstream to seed the flow.
-
-The two variants differ only in their lateral boundary conditions:
-
-- **`lbm_tour_eiffel_bcs_null.msp`**: non-periodic domain (`periodic: [false, false, false]`), with a Neumann condition on the top/bottom planes and a `lid_driven_cavity` condition (constant inflow velocity) on the four lateral planes. Runs for 5,000 iterations, output in `TourEiffelBCSNull/`.
-- **`lbm_tour_eiffel_bcs_periodic.msp`**: periodic domain in the x/y directions (`periodic: [true, true, false]`), with only a Neumann condition on the top/bottom planes. Runs for 5,000 iterations, output in `TourEiffelPeriodic/`.
+- **`lbm_tour_eiffel_bcs_null.msp`**: `0.6 m x 0.6 m x 2.0 m` domain on a `240 x 240 x 800` grid, non-periodic (`periodic: [false, false, false]`), tower placed at its base with a spherical perturbation of the distribution function (`set_distribution`, `quadrics: sphere`) added upstream to seed the flow. Neumann condition on the top/bottom planes, `lid_driven_cavity` (constant inflow velocity) on the four lateral planes. Runs for 5,000 iterations, output in `TourEiffelBCSNull/`.
+- **`lbm_tour_eiffel_bcs_periodic.msp`**: same domain and seeding as above, periodic in the x/y directions (`periodic: [true, true, false]`), with only a Neumann condition on the top/bottom planes. Runs for 5,000 iterations, output in `TourEiffelPeriodic/`.
+- **`lbm_tour_eiffel_bcs_rho.msp`**: elongated `5.0 m x 0.6 m x 2.0 m` domain on a `2000 x 240 x 800` grid to give the wake room to develop, periodic in y only (`periodic: [false, true, false]`). The flow is driven by a `rho` boundary condition imposing `delta_p: ±50 Pa` at the inlet/outlet planes (`plan_yz_0`, `plan_yz_l`) instead of a velocity condition, with Neumann still on the top/bottom planes; no upstream perturbation is needed since the pressure difference alone starts the flow. Runs for 50,000 iterations, ParaView output every 10,000 iterations.
 
 ## Run
 
 ```bash
 ./hippoLBM example/lbm_tour_eiffel_bcs_null.msp --omp_num_threads 4
 ./hippoLBM example/lbm_tour_eiffel_bcs_periodic.msp --omp_num_threads 4
+./hippoLBM example/lbm_tour_eiffel_bcs_rho.msp --omp_num_threads 4
 ```
 
-ParaView output is written every 100 iterations (`simulation_paraview_freq: 100`) in the corresponding `output_directory`.
+ParaView output is written every 100 iterations (`simulation_paraview_freq: 100`) for the null/periodic variants, and every 10,000 iterations for `lbm_tour_eiffel_bcs_rho.msp`, in the corresponding `output_directory`.
 
 > **Note:** on an NVIDIA A100 GPU, writing the ParaView output files accounts for about 87% of the total run time. Increasing `simulation_paraview_freq` (or disabling ParaView output) is recommended to get a more representative measure of the LBM solver's performance.
+>
+> **Note:** `lbm_tour_eiffel_bcs_rho.msp` was benchmarked on 16x A100 GPUs, processing 386,275,041 LBM nodes over 50,000 timesteps in ~28.4 minutes.
 
 # Pressurized sphere in water
 
