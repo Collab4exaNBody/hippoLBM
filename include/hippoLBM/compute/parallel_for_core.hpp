@@ -63,6 +63,21 @@ inline void for_all(const LBMGrid& grid, Func& a_func, Args&&... a_args) {
       }
 }
 
+/** @brief Same as the (Area,Traversal)-templated for_all above, but iterates an arbitrary,
+ * runtime-provided local box (e.g. a region restricted to a subbox via restrict_box_to_grid)
+ * instead of a named Traversal region. */
+template <typename Func, typename... Args>
+inline void for_all(const LBMGrid& grid, const Box3D& bx, Func& a_func, Args&&... a_args) {
+  for (int k = bx.start(2); k <= bx.end(2); k++)
+    for (int j = bx.start(1); j <= bx.end(1); j++)
+      for (int i = bx.start(0); i <= bx.end(0); i++) {
+        if constexpr (ForAllGridTraits<Func>::UsedIJK)
+          a_func(i, j, k, std::forward<Args>(a_args)...);
+        else
+          a_func(grid(i, j, k), std::forward<Args>(a_args)...);
+      }
+}
+
 // CPU AND GPU
 template <typename Func, typename... Args>
 struct parallel_for_id_runner {
