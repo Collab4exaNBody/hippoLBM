@@ -26,7 +26,6 @@ under the License.
 #include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/fields.hpp>
-#include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/io/writer.hpp>
 
@@ -129,26 +128,31 @@ struct ParaviewBuffers {
   }
 };
 
-/** @brief Write the Paraview XML header for the external fields
+inline void gather_piece_boxes(MPI_Comm comm, const Box3D& local_global_box, bool is_valid,
+                               std::vector<Box3D>& piece_boxes, std::vector<int>& piece_valid) {
+  int size;
+  MPI_Comm_size(comm, &size);
+  piece_boxes.resize(size);
+  piece_valid.resize(size);
+  int valid_flag = is_valid ? 1 : 0;
+  MPI_Gather(&local_global_box, sizeof(Box3D), MPI_CHAR, piece_boxes.data(), sizeof(Box3D), MPI_CHAR, 0, comm);
+  MPI_Gather(&valid_flag, 1, MPI_INT, piece_valid.data(), 1, MPI_INT, 0, comm);
+  MPI_Barrier(comm);
+}
+
+/** @brief Write the pvtr (parallel header) file.
  * @param basedir The base directory for the output files
  * @param basename The base name for the output files
  * @param number_of_files The number of files to write
- * @param domain The LBM domain containing the simulation data
+ * @param whole_extent The extent covered by the union of all pieces (global coordinates)
+ * @param piece_boxes Per-rank piece extent (global coordinates), gathered on rank 0
+ * @param piece_valid Per-rank flag: 1 if that rank has a piece to reference, 0 to skip it
  * @param external_paraview_fields The external Paraview fields to write
  */
-template <typename LBMDomain, typename EPF>
-inline void write_pvtr(std::string basedir, std::string basename, size_t number_of_files, LBMDomain& domain,
+template <typename EPF>
+inline void write_pvtr(std::string basedir, std::string basename, size_t number_of_files, const Box3D& whole_extent,
+                       const std::vector<Box3D>& piece_boxes, const std::vector<int>& piece_valid,
                        const EPF& external_paraview_fields = ExternalParaviewFieldsNullOp{}) {
-  const LBMGrid& grid = domain.grid();
-  auto [lx, ly, lz] = domain.domain_size_;
-  // I could be smarter here
-  int box_size = sizeof(Box3D);
-  auto global = grid.build_box<Area::Global, Traversal::All>();
-  std::vector<Box3D> recv;
-  recv.resize(number_of_files);
-  MPI_Gather(&global, box_size, MPI_CHAR, recv.data(), box_size, MPI_CHAR, 0, MPI_COMM_WORLD);
-  MPI_Barrier(MPI_COMM_WORLD);
-
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -161,18 +165,17 @@ inline void write_pvtr(std::string basedir, std::string basename, size_t number_
     }
 
     outFile << " <VTKFile type=\"PRectilinearGrid\"> " << std::endl;
-    outFile << "   <PRectilinearGrid WholeExtent=\"0 " << lx - 1 << " 0 " << ly - 1 << " 0 " << lz - 1 << "\""
-            << std::endl;
-    ;
+    outFile << "   <PRectilinearGrid WholeExtent=\"" << whole_extent.start(0) << " " << whole_extent.end(0) << " "
+            << whole_extent.start(1) << " " << whole_extent.end(1) << " " << whole_extent.start(2) << " "
+            << whole_extent.end(2) << "\"" << std::endl;
     outFile << "                     GhostLevel=\"#\">" << std::endl;
-    // outFile << " GhostLevel=\"#\">" << std::endl;
-    //   outFile << "      <Piece Extent=\"0 " << lx << " 0 " << ly << " 0 " << lz<< "\"" << std::endl;
     for (size_t i = 0; i < number_of_files; i++) {
+      if (!piece_valid[i]) continue;  // this rank has no piece for this extraction
       std::string subfile = basename + "/%06d.vtr";
       subfile = onika::format_string(subfile, i);
-      outFile << "     <Piece Extent=\" " << recv[i].start(0) << " " << recv[i].end(0) << " " << recv[i].start(1) << " "
-              << recv[i].end(1) << " " << recv[i].start(2) << " " << recv[i].end(2) << "\" Source=\"" << subfile
-              << "\"/>" << std::endl;
+      outFile << "     <Piece Extent=\" " << piece_boxes[i].start(0) << " " << piece_boxes[i].end(0) << " "
+              << piece_boxes[i].start(1) << " " << piece_boxes[i].end(1) << " " << piece_boxes[i].start(2) << " "
+              << piece_boxes[i].end(2) << "\" Source=\"" << subfile << "\"/>" << std::endl;
     }
     outFile << "    <PCoordinates>" << std::endl;
     outFile << "      <PDataArray type=\"Float32\" Name=\"X\"/>" << std::endl;
@@ -191,18 +194,18 @@ inline void write_pvtr(std::string basedir, std::string basename, size_t number_
   }
 }
 
-/** @brief Write the Paraview XML file for a single process
+/** @brief Write the Paraview XML file for a single process, restricted to `local_box`
+ * (local coordinates; pass grid.build_box<Area::Local,Traversal::All>() for the full domain).
  * @param name The name of the output file
  * @param domain The LBM domain containing the simulation data
  * @param data The simulation data to write
- * @param traversals The grid traversals for the simulation
  * @param params The LBM parameters
+ * @param local_box The region of the local grid to write (local coordinates)
  * @param external_paraview_fields The external Paraview fields to write
  */
 template <typename LBMDomain, typename LBMFieds, typename EPF>
-inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data, const LBMGridRegion& traversals,
-                      const LBMParameters& params,
-                      const EPF& external_paraview_fields = ExternalParaviewFieldsNullOp{}) {
+inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data, const LBMParameters& params,
+                      const Box3D& local_box, const EPF& external_paraview_fields = ExternalParaviewFieldsNullOp{}) {
   const LBMGrid& grid = domain.grid();
   auto [lx, ly, lz] = domain.domain_size_;
   const double dx = grid.dx_;
@@ -212,13 +215,10 @@ inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data,
     std::cerr << "Erreur : impossible de créer le fichier de sortie suivant: " << name << std::endl;
     return;
   }
-  // only real point
-  constexpr Area L = Area::Local;
-  constexpr Area G = Area::Global;
-  auto local = grid.build_box<L, Traversal::All>();
-  auto global = grid.build_box<G, Traversal::All>();
 
-  auto [traversal_ptr, traversal_size] = traversals.get_data<Traversal::All>();
+  // full local box: used to index into the (full-size) field arrays, regardless of local_box
+  const Box3D local_full = grid.build_box<Area::Local, Traversal::All>();
+  Box3D global_box = grid.convert<Area::Global>(local_box);
 
   const int* const obst = data.obstacles();
 
@@ -227,26 +227,20 @@ inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data,
 
   double ratio_dx_dtLB = dx / params.dtLB_;
   UWriter u = {obst, ratio_dx_dtLB};
-  WriteVec3d writer_vec3d = {u, local};
-  // WriteVec3d writer_vec3d = {nullop, local};
+  WriteVec3d writer_vec3d = {u, local_full};
 
   double c_c_avg_rho_div_three = 1. / 3. * params.celerity_ * params.celerity_ * params.avg_rho_;
   PressionWriter pression = {obst, c_c_avg_rho_div_three};
   write_file writer_double = {pression};
-  // write_file writer_double = {nullop};
-
-  assert(local.get_length(0) == global.get_length(0));
-  assert(local.get_length(1) == global.get_length(1));
-  assert(local.get_length(2) == global.get_length(2));
 
   ParaviewBuffers paraview_streams;
-  paraview_streams.sim_header_to_stream(global, dx);
+  paraview_streams.sim_header_to_stream(global_box, dx);
 
   outFile << "<VTKFile type=\"RectilinearGrid\">" << std::endl;
   outFile << " <RectilinearGrid WholeExtent=\" 0 " << lx - 1 << " 0 " << ly - 1 << " 0 " << lz - 1 << "\">"
           << std::endl;
-  outFile << "      <Piece Extent=\"" << global.start(0) << " " << global.end(0) << " " << global.start(1) << " "
-          << global.end(1) << " " << global.start(2) << " " << global.end(2) << " \">" << std::endl;
+  outFile << "      <Piece Extent=\"" << global_box.start(0) << " " << global_box.end(0) << " " << global_box.start(1)
+          << " " << global_box.end(1) << " " << global_box.start(2) << " " << global_box.end(2) << " \">" << std::endl;
   outFile << "      <Coordinates>" << std::endl;
   outFile << "          <DataArray type=\"Float32\" Name=\"X\" format=\"ascii\">" << std::endl;
   outFile << paraview_streams.i_.rdbuf();
@@ -265,7 +259,7 @@ inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data,
   outFile << "          <DataArray type=\"Float32\" Name=\"P\" format=\"ascii\">" << std::endl;
   {
     std::stringstream paraview_stream_buffer;
-    for_all(traversal_ptr, traversal_size, writer_double, paraview_stream_buffer, onika::cuda::vector_data(data.m0_));
+    for_all(grid, local_box, writer_double, paraview_stream_buffer, onika::cuda::vector_data(data.m0_));
     outFile << paraview_stream_buffer.rdbuf();
   }
   outFile << std::endl;
@@ -273,7 +267,7 @@ inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data,
   outFile << "          <DataArray type=\"Float32\" Name=\"U\" format=\"ascii\" NumberOfComponents=\"3\">" << std::endl;
   {
     std::stringstream paraview_stream_buffer;
-    for_all<L, Traversal::All>(grid, writer_vec3d, paraview_stream_buffer, data.flux());
+    for_all(grid, local_box, writer_vec3d, paraview_stream_buffer, data.flux());
     outFile << paraview_stream_buffer.rdbuf();
   }
   outFile << std::endl;
@@ -281,7 +275,7 @@ inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data,
   outFile << "          <DataArray type=\"Float32\" Name=\"OBST\" format=\"ascii\">" << std::endl;
   {
     std::stringstream paraview_stream_buffer;
-    for_all(traversal_ptr, traversal_size, writer_obst, paraview_stream_buffer, onika::cuda::vector_data(data.obst_));
+    for_all(grid, local_box, writer_obst, paraview_stream_buffer, onika::cuda::vector_data(data.obst_));
     outFile << paraview_stream_buffer.rdbuf();
   }
   outFile << std::endl;
@@ -289,7 +283,6 @@ inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data,
 
   // define your fields in external_paraview_fields
   external_paraview_fields.write_vtr(grid, outFile);
-  // external_paraview_fields.write_vtr<L, Traversal::All>( grid, outFile);
 
   // end file
   outFile << "      </PointData>" << std::endl;
@@ -300,11 +293,16 @@ inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data,
 
 template <int Q>
 void write_paraview(MPI_Comm comm, std::string filename, std::string basedir, long timestep, LBMFields<Q>& fields,
-                    const LBMParameters& parameters, const LBMGridRegion& traversals, const LBMDomain<Q>& domain,
+                    const LBMParameters& parameters, const LBMDomain<Q>& domain,
                     const ExternalParaviewFields& external_paraview_fields, bool display_filename = false) {
   int rank, size;
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
+
+  const LBMGrid& grid = domain.grid();
+  auto [lx, ly, lz] = domain.domain_size_;
+  const Box3D local_box = grid.build_box<Area::Local, Traversal::All>();
+  const Box3D whole_extent = {Point3D{0, 0, 0}, Point3D{lx - 1, ly - 1, lz - 1}};
 
   std::string file_name = filename;
   file_name = onika::format_string(file_name, timestep);
@@ -322,7 +320,12 @@ void write_paraview(MPI_Comm comm, std::string filename, std::string basedir, lo
   fullname = onika::format_string(fullname, rank);
 
   MPI_Barrier(comm);
-  write_pvtr(basedir, file_name, size, domain, external_paraview_fields);
-  write_vtr(fullname, domain, fields, traversals, parameters, external_paraview_fields);
+
+  std::vector<Box3D> piece_boxes;
+  std::vector<int> piece_valid;
+  gather_piece_boxes(comm, grid.convert<Area::Global>(local_box), true, piece_boxes, piece_valid);
+
+  write_pvtr(basedir, file_name, size, whole_extent, piece_boxes, piece_valid, external_paraview_fields);
+  write_vtr(fullname, domain, fields, parameters, local_box, external_paraview_fields);
 }
 }  // namespace hippoLBM

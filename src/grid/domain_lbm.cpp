@@ -27,6 +27,8 @@ under the License.
 #include <onika/scg/operator_factory.h>
 #include <onika/scg/operator_slot.h>
 
+#include <algorithm>
+#include <cmath>
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/make_domain.hpp>
@@ -38,6 +40,14 @@ using namespace scg;
 using onika::math::AABB;
 using BoolVector = std::vector<bool>;
 
+/** @brief Relative (with an absolute fallback near zero) equality check, used to tolerate
+ * floating-point round-off when validating resolution/grid/bounds consistency. */
+inline bool nearly_equal(double a, double b, double rel_tol) {
+  double diff = std::abs(a - b);
+  double scale = std::max({1.0, std::abs(a), std::abs(b)});
+  return diff <= rel_tol * scale;
+}
+
 template <int Q>
 class InitDomainLBM : public OperatorNode {
  public:
@@ -47,10 +57,20 @@ class InitDomainLBM : public OperatorNode {
   ADD_SLOT(onika::math::IJK, cell_dims, INPUT, REQUIRED,
            DocString{"Number of cells in each dimension. Grid dims: cells_dims+1."});
   ADD_SLOT(onika::math::AABB, bounds, INPUT_OUTPUT, REQUIRED, DocString{"Domain's bounds"});
+  ADD_SLOT(double, tolerance, INPUT, 1e-6,
+           DocString{"Relative tolerance used to check consistency between resolution, grid size, and bounds."});
 
   inline std::string documentation() const final {
     return R"EOF(
 		This operator initializes the computational domain for ²the LBM simulation.
+
+		Parameters:
+
+		- cell_dims [IJK] : Number of cells in each dimension. Required. Grid dims: cell_dims+1.
+		- bounds [AABB] : Domain's bounds (bmin/bmax). Required.
+		- periodic [bool[3]] : Periodic boundary conditions for each dimension. Required.
+		- tolerance [double] : Relative tolerance used to check consistency between resolution,
+		  grid size, and bounds. Default: 1e-6.
 
 		YAML example:
 
@@ -60,6 +80,7 @@ class InitDomainLBM : public OperatorNode {
 			 bmin: [0.0, 0.0, 0.0]
 			 bmax: [1.0, 1.0, 1.0]
 		   periodic: [true, true, true]
+		   tolerance: 1e-6
 		)EOF";
   }
 
@@ -78,8 +99,10 @@ class InitDomainLBM : public OperatorNode {
     resolution_dims.z = (sup.z - inf.z) / double(grid_size.k - 1);
 
     // check
+    const double tol = *tolerance;
     bool check_grid_size = false;
-    if (resolution_dims.x != resolution_dims.y || resolution_dims.x != resolution_dims.z) {
+    if (!nearly_equal(resolution_dims.x, resolution_dims.y, tol) ||
+        !nearly_equal(resolution_dims.x, resolution_dims.z, tol)) {
       lout << "[Error, domain], Dx is not the same for all dimension" << std::endl;
       lout << "Dx: [ " << resolution_dims << " ] " << std::endl;
       std::exit(EXIT_FAILURE);
@@ -87,13 +110,13 @@ class InitDomainLBM : public OperatorNode {
 
     double reso = resolution_dims.x;
 
-    if (inf.x + (grid_size.i - 1) * reso != sup.x) {
+    if (!nearly_equal(inf.x + (grid_size.i - 1) * reso, sup.x, tol)) {
       check_grid_size = true;
     }
-    if (inf.y + (grid_size.j - 1) * reso != sup.y) {
+    if (!nearly_equal(inf.y + (grid_size.j - 1) * reso, sup.y, tol)) {
       check_grid_size = true;
     }
-    if (inf.z + (grid_size.k - 1) * reso != sup.z) {
+    if (!nearly_equal(inf.z + (grid_size.k - 1) * reso, sup.z, tol)) {
       check_grid_size = true;
     }
     if (check_grid_size) {
