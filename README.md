@@ -1,5 +1,8 @@
 ![](docs/logo_hippoLBM.png)
 
+<img width="902" height="429" alt="hippo_zoom" src="https://github.com/user-attachments/assets/d0c153ac-1110-454c-85c1-a0da06d1f7c4" />
+
+
 # Overview
 
 ``HippoLBM`` is a high-performance Lattice Boltzmann Method (LBM) simulation code developed in C++ and built on the ``Onika`` runtime and and inherits several physical functionalities from the DEMLBM3D code. It is designed for large-scale fluid dynamics simulations and features a parallelization strategy to maximize computational efficiency. ``HippoLBM`` integrates hybrid MPI + OpenMP parallelism for CPU execution and CUDA acceleration for GPU architectures, ensuring scalability across different hardware configurations.
