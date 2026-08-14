@@ -40,9 +40,7 @@ using namespace scg;
 using onika::math::AABB;
 using BoolVector = std::vector<bool>;
 
-/** @brief Relative (with an absolute fallback near zero) equality check, used to tolerate
- * floating-point round-off when validating resolution/grid/bounds consistency. */
-inline bool nearly_equal(double a, double b, double rel_tol) {
+inline bool equal_rel_tol(double a, double b, double rel_tol) {
   double diff = std::abs(a - b);
   double scale = std::max({1.0, std::abs(a), std::abs(b)});
   return diff <= rel_tol * scale;
@@ -101,8 +99,8 @@ class InitDomainLBM : public OperatorNode {
     // check
     const double tol = *tolerance;
     bool check_grid_size = false;
-    if (!nearly_equal(resolution_dims.x, resolution_dims.y, tol) ||
-        !nearly_equal(resolution_dims.x, resolution_dims.z, tol)) {
+    if (!equal_rel_tol(resolution_dims.x, resolution_dims.y, tol) ||
+        !equal_rel_tol(resolution_dims.x, resolution_dims.z, tol)) {
       lout << "[Error, domain], Dx is not the same for all dimension" << std::endl;
       lout << "Dx: [ " << resolution_dims << " ] " << std::endl;
       std::exit(EXIT_FAILURE);
@@ -110,13 +108,13 @@ class InitDomainLBM : public OperatorNode {
 
     double reso = resolution_dims.x;
 
-    if (!nearly_equal(inf.x + (grid_size.i - 1) * reso, sup.x, tol)) {
+    if (!equal_rel_tol(inf.x + (grid_size.i - 1) * reso, sup.x, tol)) {
       check_grid_size = true;
     }
-    if (!nearly_equal(inf.y + (grid_size.j - 1) * reso, sup.y, tol)) {
+    if (!equal_rel_tol(inf.y + (grid_size.j - 1) * reso, sup.y, tol)) {
       check_grid_size = true;
     }
-    if (!nearly_equal(inf.z + (grid_size.k - 1) * reso, sup.z, tol)) {
+    if (!equal_rel_tol(inf.z + (grid_size.k - 1) * reso, sup.z, tol)) {
       check_grid_size = true;
     }
     if (check_grid_size) {
