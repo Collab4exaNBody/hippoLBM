@@ -22,11 +22,8 @@ under the License.
 #include <onika/string_utils.h>
 
 #include <filesystem>
-<<<<<<< HEAD
 #include <vector>
 
-=======
->>>>>>> 49-paraview-dump-a-subbox-of-the-subdomain
 #include <hippoLBM/compute/parallel_for_core.hpp>
 #include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/domain.hpp>
@@ -34,20 +31,9 @@ under the License.
 #include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/io/write_paraview.hpp>
 #include <hippoLBM/io/writer.hpp>
-<<<<<<< HEAD
 
 namespace hippoLBM {
 
-/** @brief Writes a subpart of the LBM grid, restricted to `bounds` (a physical-space AABB), to a
- * Paraview file pair (.pvtr + one .vtr per overlapping rank), reusing write_pvtr/write_vtr so the
- * output is in the exact same P/U/OBST format as write_paraview. Ranks whose local subdomain does
- * not overlap `bounds` write nothing. */
-=======
-#include <vector>
-
-namespace hippoLBM {
-
->>>>>>> 49-paraview-dump-a-subbox-of-the-subdomain
 template <int Q>
 void write_paraview_subbox(MPI_Comm comm, std::string filename, std::string basedir, long timestep,
                            LBMFields<Q>& fields, const LBMParameters& parameters, const LBMDomain<Q>& domain,
