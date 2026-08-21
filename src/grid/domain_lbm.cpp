@@ -40,12 +40,6 @@ using namespace scg;
 using onika::math::AABB;
 using BoolVector = std::vector<bool>;
 
-inline bool equal_rel_tol(double a, double b, double rel_tol) {
-  double diff = std::abs(a - b);
-  double scale = std::max({1.0, std::abs(a), std::abs(b)});
-  return diff <= rel_tol * scale;
-}
-
 template <int Q>
 class InitDomainLBM : public OperatorNode {
  public:
@@ -84,17 +78,21 @@ class InitDomainLBM : public OperatorNode {
 
   inline void execute() final {
     GridConfig grid;
-    grid.dims_ = *cell_dims + 1;  // +1 because cell_dims represents the number of cells
-    grid.bounds_ = *bounds;
     grid.periodic_ = convert<std::array<bool, 3>>(*periodic);
+    grid.dims_.i = cell_dims->i + (grid.periodic_[0] ? 0 : 1);
+    grid.dims_.j = cell_dims->j + (grid.periodic_[1] ? 0 : 1);
+    grid.dims_.k = cell_dims->k + (grid.periodic_[2] ? 0 : 1);
+    grid.bounds_ = *bounds;
 
     onika::math::IJK grid_size = grid.dims_;
     auto [inf, sup] = grid.bounds_;
 
+    auto nb_intervals = [&](int dim, ssize_t n) { return grid.periodic_[dim] ? n : n - 1; };
+
     onika::math::Vec3d resolution_dims;
-    resolution_dims.x = (sup.x - inf.x) / double(grid_size.i - 1);
-    resolution_dims.y = (sup.y - inf.y) / double(grid_size.j - 1);
-    resolution_dims.z = (sup.z - inf.z) / double(grid_size.k - 1);
+    resolution_dims.x = (sup.x - inf.x) / double(nb_intervals(0, grid_size.i));
+    resolution_dims.y = (sup.y - inf.y) / double(nb_intervals(1, grid_size.j));
+    resolution_dims.z = (sup.z - inf.z) / double(nb_intervals(2, grid_size.k));
 
     // check
     const double tol = *tolerance;
@@ -108,13 +106,13 @@ class InitDomainLBM : public OperatorNode {
 
     double reso = resolution_dims.x;
 
-    if (!equal_rel_tol(inf.x + (grid_size.i - 1) * reso, sup.x, tol)) {
+    if (!equal_rel_tol(inf.x + nb_intervals(0, grid_size.i) * reso, sup.x, tol)) {
       check_grid_size = true;
     }
-    if (!equal_rel_tol(inf.y + (grid_size.j - 1) * reso, sup.y, tol)) {
+    if (!equal_rel_tol(inf.y + nb_intervals(1, grid_size.j) * reso, sup.y, tol)) {
       check_grid_size = true;
     }
-    if (!equal_rel_tol(inf.z + (grid_size.k - 1) * reso, sup.z, tol)) {
+    if (!equal_rel_tol(inf.z + nb_intervals(2, grid_size.k) * reso, sup.z, tol)) {
       check_grid_size = true;
     }
     if (check_grid_size) {
