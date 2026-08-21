@@ -4,5 +4,5 @@ includes:
 do_domain:
   - domain:
      bounds: [[0,0,0],[0.1,0.1,0.1]]
-     grid_dims: [256, 256, 256]
+     cell_dims: [256, 256, 256]
      periodic: [true, true, false]

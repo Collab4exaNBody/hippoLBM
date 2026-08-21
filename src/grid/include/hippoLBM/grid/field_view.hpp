@@ -25,29 +25,29 @@ namespace hippoLBM {
 /** @brief A view of a field in the grid.
  * @tparam Components The number of components in the field.
  */
-template <int Components>
-struct FieldView {
-  double* const data_ = nullptr;  ///< Pointer to the field data.
-  uint64_t num_elements_ = 0;     ///< The number of elements in the field.
+template <int Components> struct FieldView {
+  double *const __restrict__ data_ = nullptr; ///< Pointer to the field data.
+  uint64_t num_elements_ = 0; ///< The number of elements in the field.
 
   /** @brief Reset the field values at the specified index.
    * @param idx The index of the element to reset.
    */
   ONIKA_HOST_DEVICE_FUNC
   inline void reset(size_t idx) const {
-    for (size_t component_index = 0; component_index < Components; component_index++) {
+    for (size_t component_index = 0; component_index < Components;
+         component_index++) {
       this->operator()(idx, component_index) = 0;
     }
   }
 
- private:
+private:
   /** @brief Access the field value at the specified index and component.
    * @param idx The index of the element.
    * @param component_index The index of the component.
    * @return Reference to the field value.
    */
   ONIKA_HOST_DEVICE_FUNC
-  inline double& access(size_t idx, size_t component_index) {
+  inline double &access(size_t idx, size_t component_index) {
 #ifdef WFAOS
     // Access the field value based on the memory layout defined by WFAOS
     return data_[idx * Components + component_index];
@@ -57,13 +57,14 @@ struct FieldView {
 #endif
   }
 
-  /** @brief Access the field value at the specified index and component (const version).
+  /** @brief Access the field value at the specified index and component (const
+   * version).
    * @param idx The index of the element.
    * @param component_index The index of the component.
    * @return Reference to the field value.
    */
   ONIKA_HOST_DEVICE_FUNC
-  inline double& access(size_t idx, size_t component_index) const {
+  inline double &access(size_t idx, size_t component_index) const {
 #ifdef WFAOS
     // Access the field value based on the memory layout defined by WFAOS
     return data_[idx * Components + component_index];
@@ -73,26 +74,27 @@ struct FieldView {
 #endif
   }
 
- public:
+public:
   /** @brief Access the field value at the specified index and component.
    * @param idx The index of the element.
    * @param component_index The index of the component.
    * @return Reference to the field value.
    */
   ONIKA_HOST_DEVICE_FUNC
-  inline double& operator()(size_t idx, size_t component_index) {
+  inline double &operator()(size_t idx, size_t component_index) {
     assert(idx < num_elements_);
     assert(component_index < Components);
     return access(idx, component_index);
   }
 
-  /** @brief Access the field value at the specified index and component (const version).
+  /** @brief Access the field value at the specified index and component (const
+   * version).
    * @param idx The index of the element.
    * @param component_index The index of the component.
    * @return Reference to the field value.
    */
   ONIKA_HOST_DEVICE_FUNC
-  inline double& operator()(size_t idx, size_t component_index) const {
+  inline double &operator()(size_t idx, size_t component_index) const {
     assert(idx < num_elements_);
     assert(component_index < Components);
     return access(idx, component_index);
@@ -102,7 +104,7 @@ struct FieldView {
    * @param fv The field view to copy from.
    */
   ONIKA_HOST_DEVICE_FUNC
-  inline void operator=(FieldView<Components>& fv) {
+  inline void operator=(FieldView<Components> &fv) {
     this->data_ = fv.data_;
     this->num_elements_ = fv.num_elements_;
   }
@@ -127,7 +129,7 @@ struct FieldView {
    * @param in The 3D vector representing the field value.
    */
   ONIKA_HOST_DEVICE_FUNC
-  void set(size_t idx, onika::math::Vec3d& in)
+  void set(size_t idx, onika::math::Vec3d &in)
     requires(Components == 3)
   {
     access(idx, 0) = in.x;
@@ -135,12 +137,13 @@ struct FieldView {
     access(idx, 2) = in.z;
   }
 
-  /** @brief Set the field value at the specified index to a 3D vector (const version).
+  /** @brief Set the field value at the specified index to a 3D vector (const
+   * version).
    * @param idx The index of the element.
    * @param in The 3D vector representing the field value.
    */
   ONIKA_HOST_DEVICE_FUNC
-  void set(size_t idx, const onika::math::Vec3d& in) const
+  void set(size_t idx, const onika::math::Vec3d &in) const
     requires(Components == 3)
   {
     access(idx, 0) = in.x;
@@ -157,20 +160,23 @@ struct FieldView {
  * @param size The number of elements to copy.
  */
 template <int Components>
-ONIKA_HOST_DEVICE_FUNC inline void copyTo(const FieldView<Components>& dest_data, int dest_idx,
-                                          const FieldView<Components>& from_data, int from_idx, int size) {
+ONIKA_HOST_DEVICE_FUNC inline void
+copyTo(const FieldView<Components> &dest_data, int dest_idx,
+       const FieldView<Components> &from_data, int from_idx, int size) {
 #ifdef WFAOS
   // case 1
-  double* from = &from_data(from_idx, 0);
-  double* dest = &dest_data(dest_idx, 0);
+  double *from = &from_data(from_idx, 0);
+  double *dest = &dest_data(dest_idx, 0);
   int nb_byte = size * Components * sizeof(double);
   std::memcpy(dest, from, nb_byte);
 #else
   // case 2
   int nb_byte = size * sizeof(double);
-  for (size_t component_index = 0; component_index < Components; component_index++) {
-    std::memcpy(&dest_data(dest_idx, component_index), &from_data(from_idx, component_index), nb_byte);
+  for (size_t component_index = 0; component_index < Components;
+       component_index++) {
+    std::memcpy(&dest_data(dest_idx, component_index),
+                &from_data(from_idx, component_index), nb_byte);
   }
 #endif
 }
-}  // namespace hippoLBM
+} // namespace hippoLBM

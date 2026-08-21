@@ -1,0 +1,14 @@
+includes:
+  - perf_couette_512x512x512.msp
+
+collision: bgk
+
+streaming_pipeline:
+  body:
+  - macro_variables
+  - collision
+  - pre_stream_bcs
+  - streaming:
+     asynchrone: false
+  - post_stream_bcs
+  - boundary_conditions

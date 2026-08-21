@@ -42,35 +42,41 @@ under the License.
 #include <hippoLBM/grid/make_variant_operator.hpp>
 #include <hippoLBM/grid/update_ghost.hpp>
 
-// implementation file
-#include <hippoLBM/collision/macro_variables.hpp>
+// implementation files
+#include <hippoLBM/collision/fuse_collision.hpp>
+#include <hippoLBM/collision/streaming.hpp>
 
 namespace hippoLBM {
 using namespace onika;
 using namespace scg;
 using namespace onika::cuda;
 
-template <int Q>
-class MacroVariables : public OperatorNode {
+template <int Q, typename CollisionModel>
+class FuseCollision : public OperatorNode {
+ public:
   ADD_SLOT(LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED,
            DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
   ADD_SLOT(LBMGridRegion, grid_region, INPUT, REQUIRED,
            DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
   ADD_SLOT(LBMParameters, Params, INPUT, REQUIRED, DocString{"Contains global LBM simulation parameters"});
+  ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED,
+           DocString{"Defines the computational domain and its properties for the LBM simulation."});
 
- public:
-  inline std::string documentation() const override final {
-    return R"EOF(  
-      A functor for computing macroscopic variables (densities and flux) for lattice Boltzmann method.
+  inline std::string documentation() const final {
+    return R"EOF(
 
-      YAML example:
-        - macro_variables
-        )EOF";
+    YAML example:
+
+      - fuse_inplace_bgk
+      - fuse_inplace_mrt
+    )EOF";
   }
 
-  inline void execute() override final {
+  inline void execute() final {
     auto& data = *fields;
     auto& traversals = *grid_region;
+    auto& params = *Params;
+    LBMGrid& Grid = domain->grid();
 
     // get fields
     FieldView<3> pm1 = data.flux();
@@ -78,19 +84,38 @@ class MacroVariables : public OperatorNode {
     FieldView<Q> pf = data.distributions();
     double* const pm0 = data.densities();
 
-    // get traversal
+    // shared by the fused macro_variables+collision kernel and streaming: both iterate the same
+    // per-point traversal levels array.
     auto [ptr, size] = traversals.get_levels();
 
-    // define functor
-    MacroVariablesLauncher<Q, Traversal::All> func = {ptr, pobst, pf, pm0, pm1};
+    // --- fused macro_variables + collision ---
+    fuse_macro_collision<Q, Traversal::Real, CollisionModel> macro_collide = {ptr,   params.Fext_, pm1,
+                                                                               pobst, pf,           pm0,
+                                                                               params.tau_};
+    parallel_for_simple(size, macro_collide, parallel_execution_context("fuse_macro_collide"));
 
-    // run kernel over the lbm grid
-    parallel_for_simple(size, func, parallel_execution_context("macro_variables"));
+    // --- streaming ---
+    streaming_step1<Q, Traversal::Real> step1 = {ptr, pf};
+    streaming_step2<Q, Traversal::Extend> step2 = {ptr, Grid, pf};
+    auto par_exec_ctx = [this](const char* exec_name) { return this->parallel_execution_context(exec_name); };
+
+    parallel_for_simple(size, step1, parallel_execution_context("fuse_collision_streaming_step1"));
+    update_ghost(*domain, pf, par_exec_ctx);
+    parallel_for_simple(size, step2, parallel_execution_context("fuse_collision_streaming_step2"));
   }
 };
 
+template <int Q>
+using FuseInplaceBGK = FuseCollision<Q, BGKCollisionModel>;
+
+template <int Q>
+using FuseInplaceMRT = FuseCollision<Q, MRTCollisionModel>;
+
 // === register factories ===
-ONIKA_AUTORUN_INIT(macro_variables) {
-  OperatorNodeFactory::instance()->register_factory("macro_variables", make_variant_operator<MacroVariables>);
+ONIKA_AUTORUN_INIT(fuse_inplace_bgk) {
+  OperatorNodeFactory::instance()->register_factory("fuse_inplace_bgk", make_variant_operator<FuseInplaceBGK>);
+}
+ONIKA_AUTORUN_INIT(fuse_inplace_mrt) {
+  OperatorNodeFactory::instance()->register_factory("fuse_inplace_mrt", make_variant_operator<FuseInplaceMRT>);
 }
 }  // namespace hippoLBM

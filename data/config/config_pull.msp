@@ -1,0 +1,10 @@
+# Streaming scheme override: pull (gather) scheme instead of the default in-place push/swap
+# scheme set by config_compute_loop.msp. Include this file after main-config.msp to switch.
+streaming_pipeline:
+  body:
+  - macro_variables
+  - collision
+  - pre_stream_bcs
+  - pull_streaming
+  - post_stream_bcs
+  - boundary_conditions
