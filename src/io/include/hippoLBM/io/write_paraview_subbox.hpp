@@ -22,8 +22,6 @@ under the License.
 #include <onika/string_utils.h>
 
 #include <filesystem>
-#include <vector>
-
 #include <hippoLBM/compute/parallel_for_core.hpp>
 #include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/domain.hpp>
@@ -31,6 +29,7 @@ under the License.
 #include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/io/write_paraview.hpp>
 #include <hippoLBM/io/writer.hpp>
+#include <vector>
 
 namespace hippoLBM {
 
