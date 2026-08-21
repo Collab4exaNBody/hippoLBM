@@ -25,21 +25,18 @@ under the License.
 #define FLUIDE_ -1
 
 namespace hippoLBM {
-template <int Q>
-struct mrt {};
-/**
- * @brief A functor for collision operations in the lattice Boltzmann method.
+/** @brief Computes the MRT moment-space relaxation.
+ * @param f The field view for the distribution functions.
+ * @param idx The index of the lattice node.
+ * @param tau The relaxation time.
  */
-template <>
-struct mrt<19> {
-  const onika::math::Vec3d Fext_;  // External force term, used in the computation of macroscopic variables.
+template <int Q>
+ONIKA_HOST_DEVICE_FUNC inline void mrt_moments(const FieldView<Q>& f, const size_t idx, double tau) {
+  static_assert(Q == 19, "mrt_moments is only implemented for the D3Q19 scheme");
+}
 
-  /** @brief Computes the MRT collision operator for a given lattice node.
-   * @param f The field view for the distribution functions.
-   * @param idx The index of the lattice node.
-   * @param tau The relaxation time.
-   */
-  ONIKA_HOST_DEVICE_FUNC void mrt_core(const FieldView<19>& f, const size_t idx, double tau) const {
+template <>
+ONIKA_HOST_DEVICE_FUNC inline void mrt_moments<19>(const FieldView<19>& f, const size_t idx, double tau) {
     const double s9 = 1 / tau, s13 = s9;
     // D'humiéres et al parametrization
     const double s1 = 1.19, s2 = 1.4, s4 = 1.2, s10 = s2, s16 = 1.98;
@@ -171,33 +168,48 @@ struct mrt<19> {
                  1. / 40 * qzO - 1. / 18 * pxx3O - 1. / 36 * pixx3O - 1. / 4 * pyzO + 1. / 8 * myO + 1. / 8 * mzO;
     f(idx, 18) = +1. / 19 * rho + 4. / 1197 * eO + 1. / 252 * epsO - 1. / 10 * jy - 1. / 40 * qyO + 1. / 10 * jz +
                  1. / 40 * qzO - 1. / 18 * pxx3O - 1. / 36 * pixx3O - 1. / 4 * pyzO - 1. / 8 * myO - 1. / 8 * mzO;
-  }
+}
+
+template <int Q>
+ONIKA_HOST_DEVICE_FUNC inline void mrt_collide(int idx, bool update, const FieldView<Q>& f, double rho,
+                                               const onika::math::Vec3d& Fext, double tau) {
+  if (!update) return;
+  // step 1, fill f[iLB]
+  mrt_moments<Q>(f, idx, tau);
+  // step 2, adjust with Fext
+  stencil::for_each<typename LBMScheme<Q>::Coefficients>([&]<typename coeff>(int iLB) {
+    const double ef = coeff::ex * Fext.x + coeff::ey * Fext.y + coeff::ez * Fext.z;
+    double& fiLB = f(idx, iLB);
+    fiLB += 3. * rho * coeff::w * ef;
+  });
+}
+
+template <int Q, Traversal TR>
+struct MRTLauncher {};
+
+template <Traversal TR>
+struct MRTLauncher<19, TR> {
+  const int* __restrict__ levels_;  // traversal level (0 inside, 0 1 Real, 0 1 2 Extend, 0 1 2 3 All)
+  const onika::math::Vec3d Fext_;  // External force term, used in the computation of macroscopic variables.
+  int* const __restrict__ obst_;   // Pointer to the obstacle field.
+  const FieldView<19> f_;          // The field view for the distribution functions.
+  double* const __restrict__ m0_;  // Pointer to the density field (zeroth-order moment).
+  const double tau_;               // Relaxation time for the MRT collision model.
 
   /**
-   * @brief Operator for performing collision operations at a given index.
+   * @brief Runs the MRT collision at a given index.
    */
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const __restrict__ obst, const FieldView<19>& f,
-                                                double* const __restrict__ m0, const double tau) const {
-    if (obst[idx] == FLUIDE_) {
-      const double rho = m0[idx];
-
-      // step 1, fill f[iLB]
-      mrt_core(f, idx, tau);
-      // step 2, adjust with Fext
-      stencil::for_each<typename LBMScheme<19>::Coefficients>([&]<typename coeff>(int iLB) {
-        const double ef = coeff::ex * Fext_.x + coeff::ey * Fext_.y + coeff::ez * Fext_.z;
-        double& fiLB = f(idx, iLB);
-        fiLB += 3. * rho * coeff::w * ef;
-      });
-    }
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx) const {
+    const bool update = check_level<TR>(levels_[idx]) && obst_[idx] == FLUIDE_;
+    mrt_collide<19>(idx, update, f_, m0_[idx], Fext_, tau_);
   }
 };
 }  // namespace hippoLBM
 
 namespace onika {
 namespace parallel {
-template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::mrt<Q>> {
+template <int Q, hippoLBM::Traversal Tr>
+struct ParallelForFunctorTraits<hippoLBM::MRTLauncher<Q, Tr>> {
   static inline constexpr bool RequiresBlockSynchronousCall = false;
   static inline constexpr bool CudaCompatible = true;
 };

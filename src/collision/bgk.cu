@@ -88,7 +88,7 @@ class CollisionBGK : public OperatorNode {
     // get traversal
     auto [ptr, size] = traversals.get_levels();
     // define functor
-    bgk<Q, Traversal::Real> func = {ptr, params.Fext_, pm1, pobst, pf, pm0, params.tau_};
+    BGKLauncher<Q, Traversal::Real> func = {ptr, params.Fext_, pm1, pobst, pf, pm0, params.tau_};
     // run kernel over the lbm grid
     parallel_for_simple(size, func, parallel_execution_context("bgk"));
   }

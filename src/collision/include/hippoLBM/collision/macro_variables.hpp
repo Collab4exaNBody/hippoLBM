@@ -21,69 +21,74 @@ under the License.
 
 #include <hippoLBM/grid/field_view.hpp>
 
-// TODO: This file is a temporary place for the macro_variables functor. It should be moved to a more appropriate
-// location in the future, such as a compute or utility directory, to better organize the codebase.
 #define FLUIDE_ -1
 
 namespace hippoLBM {
-/**
- * @brief A functor for computing macroscopic variables for lattice Boltzmann method.
- * @tparam Q The number of discrete velocity directions in the LBM scheme.
- */
+struct MacroState {
+  double rho, ux, uy, uz;
+};
+
 template <int Q>
-struct macro_variables {
-  const onika::math::Vec3d
-      Fext_2_;  // External force term divided by 2, used in the computation of macroscopic variables.
+ONIKA_HOST_DEVICE_FUNC inline MacroState compute_macro(int idx, const FieldView<Q>& f) {
+  double rho = 0.0;
+  double ux = 0.0;
+  double uy = 0.0;
+  double uz = 0.0;
 
-  /** @brief Computes the macroscopic variables for a given lattice node.
-   * @param idx The index of the lattice node.
-   * @param pm1 The field view for the macroscopic variables.
-   * @param pobst The obstacle field.
-   * @param pf The distribution functions.
-   * @param pm0 The density field.
-   * @param pex The x-components of the discrete velocity vectors.
-   * @param pey The y-components of the discrete velocity vectors.
-   * @param pez The z-components of the discrete velocity vectors.
+  stencil::for_each<typename LBMScheme<Q>::Coefficients, 0, Q>([&]<typename coeff>(int iLB) {
+    const double s = f(idx, iLB);
+    ux += s * coeff::ex;
+    uy += s * coeff::ey;
+    uz += s * coeff::ez;
+    rho += s;
+  });
+
+  if (rho > 1.0e-14) {
+    ux /= rho;
+    uy /= rho;
+    uz /= rho;
+  }
+  return {rho, ux, uy, uz};
+}
+
+template <int Q>
+ONIKA_HOST_DEVICE_FUNC inline void compute_macro_variables(int idx, int* const __restrict__ obst,
+                                                            const FieldView<Q>& f, double* const __restrict__ m0,
+                                                            const FieldView<3>& m1) {
+  if (obst[idx] >= FLUIDE_) {
+    const MacroState mv = compute_macro<Q>(idx, f);
+    m0[idx] = mv.rho;
+    m1(idx, 0) = mv.ux;
+    m1(idx, 1) = mv.uy;
+    m1(idx, 2) = mv.uz;
+  } else {
+    m1(idx, 0) = 0;
+    m1(idx, 1) = 0;
+    m1(idx, 2) = 0;
+  }
+}
+
+template <int Q, Traversal TR>
+struct MacroVariablesLauncher {
+  const int* __restrict__ levels_;  // traversal level (0 inside, 0 1 Real, 0 1 2 Extend, 0 1 2 3 All)
+  int* const __restrict__ obst_;    // Pointer to the obstacle field.
+  const FieldView<Q> f_;            // The field view for the distribution functions.
+  double* const __restrict__ m0_;   // Pointer to the density field (zeroth-order moment), written.
+  const FieldView<3> m1_;           // The field view for the first-order moments (velocity), written.
+
+  /**
+   * @brief Computes the macroscopic variables at a given index.
    */
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(const int idx, const FieldView<3>& pm1, int* const pobst,
-                                                const FieldView<Q>& pf, double* const pm0) const {
-    if (pobst[idx] >= FLUIDE_) {
-      double rho = 0.0;
-      double ux = 0.0;
-      double uy = 0.0;
-      double uz = 0.0;
-
-      stencil::for_each<typename LBMScheme<Q>::Coefficients, 0, Q>([&]<typename coeff>(int iLB) {
-        const double s = pf(idx, iLB);
-        ux += s * coeff::ex;
-        uy += s * coeff::ey;
-        uz += s * coeff::ez;
-        rho += s;
-      });
-
-      if (rho > 1.0e-14) {
-        ux /= rho;
-        uy /= rho;
-        uz /= rho;
-      }
-
-      pm0[idx] = rho;
-      pm1(idx, 0) = ux;
-      pm1(idx, 1) = uy;
-      pm1(idx, 2) = uz;
-    } else {
-      pm1(idx, 0) = 0;
-      pm1(idx, 1) = 0;
-      pm1(idx, 2) = 0;
-    }
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx) const {
+    if (check_level<TR>(levels_[idx])) compute_macro_variables<Q>(idx, obst_, f_, m0_, m1_);
   }
 };
 }  // namespace hippoLBM
 
 namespace onika {
 namespace parallel {
-template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::macro_variables<Q>> {
+template <int Q, hippoLBM::Traversal Tr>
+struct ParallelForFunctorTraits<hippoLBM::MacroVariablesLauncher<Q, Tr>> {
   static inline constexpr bool RequiresBlockSynchronousCall = false;
   static inline constexpr bool CudaCompatible = true;
 };

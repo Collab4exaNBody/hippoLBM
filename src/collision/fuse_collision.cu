@@ -43,7 +43,7 @@ under the License.
 #include <hippoLBM/grid/update_ghost.hpp>
 
 // implementation files
-#include <hippoLBM/collision/fuse_bgk.hpp>
+#include <hippoLBM/collision/fuse_collision.hpp>
 #include <hippoLBM/collision/streaming.hpp>
 
 namespace hippoLBM {
@@ -51,11 +51,8 @@ using namespace onika;
 using namespace scg;
 using namespace onika::cuda;
 
-/** @brief Fuses macro_variables + bgk collision into a single kernel launch, then runs
- * streaming (step1, ghost update, step2) exactly as the standalone streaming operator does.
- * Combines three OperatorNode executions into one. */
-template <int Q>
-class FuseBGK : public OperatorNode {
+template <int Q, typename CollisionModel>
+class FuseCollision : public OperatorNode {
  public:
   ADD_SLOT(LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED,
            DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
@@ -67,16 +64,11 @@ class FuseBGK : public OperatorNode {
 
   inline std::string documentation() const final {
     return R"EOF(
-    Fuses macro_variables, bgk, and streaming into a single operator, to avoid the overhead
-    of three separate OperatorNode executions per timestep. macro_variables and bgk are fused
-    into one kernel (they run over the same points, with no communication in between);
-    streaming still runs as its own pass afterwards, since it needs every local point's
-    post-collision distributions before it can swap values with neighbors, and involves an
-    MPI ghost exchange in between its two steps.
 
     YAML example:
 
-      - fuse_bgk
+      - fuse_inplace_bgk
+      - fuse_inplace_mrt
     )EOF";
   }
 
@@ -92,27 +84,38 @@ class FuseBGK : public OperatorNode {
     FieldView<Q> pf = data.distributions();
     double* const pm0 = data.densities();
 
-    // shared by the fused macro_variables+bgk kernel and streaming: both iterate the same
+    // shared by the fused macro_variables+collision kernel and streaming: both iterate the same
     // per-point traversal levels array.
     auto [ptr, size] = traversals.get_levels();
 
-    // --- fused macro_variables + bgk ---
-    fuse_macro_bgk<Q, Traversal::Real> macro_bgk = {ptr, params.Fext_, pm1, pobst, pf, pm0, params.tau_};
-    parallel_for_simple(size, macro_bgk, parallel_execution_context("fuse_bgk_macro_bgk"));
+    // --- fused macro_variables + collision ---
+    fuse_macro_collision<Q, Traversal::Real, CollisionModel> macro_collide = {ptr,   params.Fext_, pm1,
+                                                                               pobst, pf,           pm0,
+                                                                               params.tau_};
+    parallel_for_simple(size, macro_collide, parallel_execution_context("fuse_macro_collide"));
 
     // --- streaming ---
     streaming_step1<Q, Traversal::Real> step1 = {ptr, pf};
     streaming_step2<Q, Traversal::Extend> step2 = {ptr, Grid, pf};
     auto par_exec_ctx = [this](const char* exec_name) { return this->parallel_execution_context(exec_name); };
 
-    parallel_for_simple(size, step1, parallel_execution_context("fuse_bgk_streaming_step1"));
+    parallel_for_simple(size, step1, parallel_execution_context("fuse_collision_streaming_step1"));
     update_ghost(*domain, pf, par_exec_ctx);
-    parallel_for_simple(size, step2, parallel_execution_context("fuse_bgk_streaming_step2"));
+    parallel_for_simple(size, step2, parallel_execution_context("fuse_collision_streaming_step2"));
   }
 };
 
+template <int Q>
+using FuseInplaceBGK = FuseCollision<Q, BGKCollisionModel>;
+
+template <int Q>
+using FuseInplaceMRT = FuseCollision<Q, MRTCollisionModel>;
+
 // === register factories ===
-ONIKA_AUTORUN_INIT(fuse_bgk) {
-  OperatorNodeFactory::instance()->register_factory("fuse_bgk", make_variant_operator<FuseBGK>);
+ONIKA_AUTORUN_INIT(fuse_inplace_bgk) {
+  OperatorNodeFactory::instance()->register_factory("fuse_inplace_bgk", make_variant_operator<FuseInplaceBGK>);
+}
+ONIKA_AUTORUN_INIT(fuse_inplace_mrt) {
+  OperatorNodeFactory::instance()->register_factory("fuse_inplace_mrt", make_variant_operator<FuseInplaceMRT>);
 }
 }  // namespace hippoLBM

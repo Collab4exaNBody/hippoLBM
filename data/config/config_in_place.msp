@@ -1,0 +1,12 @@
+# Streaming scheme override: in-place push/swap scheme (already the default set by
+# config_compute_loop.msp). Provided for symmetry with config_pull.msp, e.g. to switch back
+# after including config_pull.msp.
+streaming_pipeline:
+  body:
+  - macro_variables
+  - collision
+  - pre_stream_bcs
+  - streaming:
+     asynchrone: false
+  - post_stream_bcs
+  - boundary_conditions

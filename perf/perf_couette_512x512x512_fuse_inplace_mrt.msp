@@ -1,0 +1,16 @@
+includes:
+  - perf_couette_512x512x512.msp
+
+# fuse_inplace_mrt replaces macro_variables + collision + streaming (in-place push/swap) with a
+# single fused OperatorNode; only boundary_conditions still needs to run separately afterwards.
+compute_loop:
+  loop: true
+  name: loop
+  condition: compute_loop_continue
+  body:
+  - start_iteration
+  - fuse_inplace_mrt
+  - boundary_conditions
+  - end_iteration
+  - next_time_step
+  - compute_loop_stop

@@ -73,19 +73,19 @@ class CollisionMRT : public OperatorNode {
     auto& traversals = *grid_region;
     auto& params = *Params;
 
-    // define functor
-    mrt<Q> func = {params.Fext_};
-
     // get fields
     int* const pobst = data.obstacles();
     FieldView<Q> pf = data.distributions();
     double* const pm0 = data.densities();
 
     // get traversal
-    auto [ptr, size] = traversals.get_data<Traversal::Real>();
+    auto [ptr, size] = traversals.get_levels();
 
-    // run kernel
-    parallel_for_id(ptr, size, func, parallel_execution_context(), pobst, pf, pm0, params.tau_);
+    // define functor
+    MRTLauncher<Q, Traversal::Real> func = {ptr, params.Fext_, pobst, pf, pm0, params.tau_};
+
+    // run kernel over the lbm grid
+    parallel_for_simple(size, func, parallel_execution_context("mrt"));
   }
 };
 

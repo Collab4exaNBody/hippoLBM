@@ -25,11 +25,22 @@ under the License.
 #define FLUIDE_ -1
 
 namespace hippoLBM {
-/**
- * @brief A functor for collision operations in the lattice Boltzmann method.
- */
+
+template <int Q>
+ONIKA_HOST_DEVICE_FUNC inline void bgk_collide(int idx, bool update, const FieldView<Q>& f, double rho, double ux,
+                                               double uy, double uz, const onika::math::Vec3d& Fext, double tau) {
+  const double u_squ = (ux * ux + uy * uy + uz * uz);
+  stencil::for_each<typename LBMScheme<Q>::Coefficients, 0, Q>([&]<typename coeff>(int iLB) {
+    double& fiLB = f(idx, iLB);
+    double ef = coeff::ex * Fext.x + coeff::ey * Fext.y + coeff::ez * Fext.z;
+    double eu = coeff::ex * ux + coeff::ey * uy + coeff::ez * uz;
+    double feq = coeff::w * rho * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
+    fiLB += update * ((feq - fiLB) / tau + 3. * rho * coeff::w * ef);
+  });
+}
+
 template <int Q, Traversal TR>
-struct bgk {
+struct BGKLauncher {
   const int* __restrict__ levels_;  // It contains the traversal level (0 inside,
   // 0 1 Real,
   // 0 1 2 Extend,
@@ -42,23 +53,11 @@ struct bgk {
   const double tau_;               // Relaxation time for the BGK collision model.
 
   /**
-   * @brief Operator for performing collision operations at a given index.
+   * @brief Runs the BGK collision at a given index.
    */
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx) const {
-    bool update = check_level<TR>(levels_[idx]) && (obst_[idx] == FLUIDE_);
-    const double rho = m0_[idx];
-    const double ux = m1_(idx, 0);
-    const double uy = m1_(idx, 1);
-    const double uz = m1_(idx, 2);
-    const double u_squ = (ux * ux + uy * uy + uz * uz);
-
-    stencil::for_each<typename LBMScheme<Q>::Coefficients, 0, Q>([&]<typename coeff>(int iLB) {
-      double& fiLB = f_(idx, iLB);
-      double ef = coeff::ex * Fext_.x + coeff::ey * Fext_.y + coeff::ez * Fext_.z;
-      double eu = coeff::ex * ux + coeff::ey * uy + coeff::ez * uz;
-      double feq = coeff::w * rho * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
-      fiLB += update * ((feq - fiLB) / tau_ + 3. * rho * coeff::w * ef);
-    });
+    const bool update = check_level<TR>(levels_[idx]) && (obst_[idx] == FLUIDE_);
+    bgk_collide<Q>(idx, update, f_, m0_[idx], m1_(idx, 0), m1_(idx, 1), m1_(idx, 2), Fext_, tau_);
   }
 };
 }  // namespace hippoLBM
@@ -66,7 +65,7 @@ struct bgk {
 namespace onika {
 namespace parallel {
 template <int Q, hippoLBM::Traversal Tr>
-struct ParallelForFunctorTraits<hippoLBM::bgk<Q, Tr>> {
+struct ParallelForFunctorTraits<hippoLBM::BGKLauncher<Q, Tr>> {
   static inline constexpr bool RequiresBlockSynchronousCall = false;
   static inline constexpr bool CudaCompatible = true;
 };

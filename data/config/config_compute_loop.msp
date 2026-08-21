@@ -20,12 +20,8 @@ end_iteration:
 
 collision: bgk # default model
 
-compute_loop:
-  loop: true
-  name: loop
-  condition: compute_loop_continue
+streaming_pipeline:
   body:
-  - start_iteration
   - macro_variables
   - collision
   - pre_stream_bcs
@@ -33,6 +29,14 @@ compute_loop:
      asynchrone: false
   - post_stream_bcs
   - boundary_conditions
+
+compute_loop:
+  loop: true
+  name: loop
+  condition: compute_loop_continue
+  body:
+  - start_iteration
+  - streaming_pipeline
   - end_iteration
-  - next_time_step  
+  - next_time_step
   - compute_loop_stop
