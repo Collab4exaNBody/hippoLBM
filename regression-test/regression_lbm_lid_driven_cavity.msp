@@ -23,7 +23,7 @@ collision: mrt # or bgk
 
 checker_op:
   - check_macro_quantities:
-     density: 29791
+     density: 28830   # 31x30x31
      tol: 1.e-8
      vmin: 0.0  # m/s
      vmax: 1.0  # m/s
