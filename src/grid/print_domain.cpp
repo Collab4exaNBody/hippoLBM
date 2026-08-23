@@ -69,6 +69,8 @@ class PrintDomainLBM : public OperatorNode {
     lout << "== Dx: " << domain->dx() << std::endl;
     lout << "== Grid size: (LX: " << domain_size[0] << ", LY: " << domain_size[1] << ", LZ " << domain_size[2] << ")"
          << std::endl;
+    lout << "== Periodicity: [" << domain->periodic_[0] << ", " << domain->periodic_[1] << ", " << domain->periodic_[2]
+         << "]" << std::endl;
     lout << "=================================" << std::endl;
     lout << "== Grid info " << std::endl;
     lout << "= Rank 0 " << std::endl;
