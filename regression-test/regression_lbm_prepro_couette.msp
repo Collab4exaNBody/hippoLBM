@@ -9,12 +9,12 @@ set_lbm_parameters:
      nuth: 1e-2
 
 compute_macro_variables:
-  - macro_variables_couette:
+  - macro_variables_couette_relax:
      U_inf: [-0.001,0,0]
      U_sup: [0.001,0,0]
 
 collision:
-  - bgk_couette:
+  - bgk_couette_relax:
      U_inf: [-0.001,0,0]
      U_sup: [0.001,0,0]
 
