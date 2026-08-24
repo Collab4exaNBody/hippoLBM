@@ -43,6 +43,7 @@ under the License.
 #include <hippoLBM/grid/update_ghost.hpp>
 
 // implementation file
+#include <hippoLBM/collision/fext.hpp>
 #include <hippoLBM/collision/macro_variables.hpp>
 
 namespace hippoLBM {
@@ -74,7 +75,8 @@ class MacroVariables : public OperatorNode {
     auto& params = *Params;
 
     // define functor
-    macro_variables<Q> func = {params.Fext_ / 2};
+    FextConstantFunc fext = {params.Fext_};
+    macro_variables<Q, FextConstantFunc> func = {fext};
 
     // get fields
     FieldView<3> pm1 = data.flux();

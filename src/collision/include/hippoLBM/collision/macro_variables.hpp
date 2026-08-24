@@ -30,10 +30,9 @@ namespace hippoLBM {
  * @brief A functor for computing macroscopic variables for lattice Boltzmann method.
  * @tparam Q The number of discrete velocity directions in the LBM scheme.
  */
-template <int Q>
+template <int Q, typename FextFunc>
 struct macro_variables {
-  const onika::math::Vec3d
-      Fext_2_;  // External force term divided by 2, used in the computation of macroscopic variables.
+  const FextFunc fext_;  // Functor returning the external force term at a given index.
 
   /** @brief Computes the macroscopic variables for a given lattice node.
    * @param idx The index of the lattice node.
@@ -62,9 +61,11 @@ struct macro_variables {
       });
 
       if (rho > 1.0e-14) {
-        ux /= rho;
-        uy /= rho;
-        uz /= rho;
+        const onika::math::Vec3d u_tmp = {ux / rho, uy / rho, uz / rho};
+        const onika::math::Vec3d Fext_2 = fext_(idx, u_tmp) * 0.5;
+        ux = (ux + Fext_2.x) / rho;
+        uy = (uy + Fext_2.y) / rho;
+        uz = (uz + Fext_2.z) / rho;
       }
 
       pm0[idx] = rho;
@@ -82,8 +83,8 @@ struct macro_variables {
 
 namespace onika {
 namespace parallel {
-template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::macro_variables<Q>> {
+template <int Q, typename FextFunc>
+struct ParallelForFunctorTraits<hippoLBM::macro_variables<Q, FextFunc>> {
   static inline constexpr bool RequiresBlockSynchronousCall = false;
   static inline constexpr bool CudaCompatible = true;
 };

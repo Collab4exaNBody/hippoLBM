@@ -18,6 +18,7 @@ end_iteration:
     - print_log_if_triggered
     - print_analysis_if_triggered
 
+compute_macro_variables: macro_variables # default model
 collision: bgk # default model
 
 compute_loop:
@@ -26,7 +27,7 @@ compute_loop:
   condition: compute_loop_continue
   body:
   - start_iteration
-  - macro_variables
+  - compute_macro_variables
   - collision
   - pre_stream_bcs
   - streaming:
