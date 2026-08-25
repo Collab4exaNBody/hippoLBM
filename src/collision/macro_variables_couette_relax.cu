@@ -22,19 +22,16 @@ under the License.
 // onika
 #include <onika/cuda/cuda.h>
 #include <onika/log.h>
+#include <onika/math/basic_types_operators.h>
+#include <onika/math/basic_types_stream.h>
+#include <onika/math/basic_types_yaml.h>
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
 #include <onika/scg/operator.h>
 #include <onika/scg/operator_factory.h>
 #include <onika/scg/operator_slot.h>
 
-// onika types
-#include <onika/math/basic_types_operators.h>
-#include <onika/math/basic_types_stream.h>
-#include <onika/math/basic_types_yaml.h>
-
 // hippoLBM
-
 #include <hippoLBM/compute/parallel_for_core.hpp>
 #include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/comm.hpp>
@@ -43,10 +40,11 @@ under the License.
 #include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
+#include <hippoLBM/grid/update_ghost.hpp>
 
-// implementation files
-#include <hippoLBM/collision/bgk.hpp>
+// implementation file
 #include <hippoLBM/collision/fext.hpp>
+#include <hippoLBM/collision/macro_variables.hpp>
 
 namespace hippoLBM {
 using namespace onika;
@@ -54,8 +52,7 @@ using namespace scg;
 using namespace onika::cuda;
 
 template <int Q>
-class CollisionBGK : public OperatorNode {
- public:
+class MacroVariablesCouetteRelax : public OperatorNode {
   ADD_SLOT(LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED,
            DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
   ADD_SLOT(LBMGridRegion, grid_region, INPUT, REQUIRED,
@@ -63,22 +60,38 @@ class CollisionBGK : public OperatorNode {
   ADD_SLOT(LBMParameters, Params, INPUT, REQUIRED, DocString{"Contains global LBM simulation parameters"});
   ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED,
            DocString{"Defines the computational domain and its properties for the LBM simulation."});
+  ADD_SLOT(onika::math::Vec3d, U_inf, INPUT, REQUIRED,
+           DocString{"Physical velocity used to derive the external force term at the lower boundary (k = 0)."});
+  ADD_SLOT(
+      onika::math::Vec3d, U_sup, INPUT, REQUIRED,
+      DocString{
+          "Physical velocity used to derive the external force term at the upper boundary (k = domain_size_z - 1)."});
 
+ public:
   inline std::string documentation() const override final {
     return R"EOF(
-    The `CollisionBGK` operator implements the Bhatnagar-Gross-Krook (BGK) collision model for the Lattice Boltzmann Method (LBM).
-    This model assumes a single relaxation time approach  to approximate the collision process, driving the distribution functions toward equilibrium.
 
-    YAML example:
-
-      - bgk
+      YAML example:
+        - macro_variables_couette_relax:
+           U_inf: [0.0, 0.0, 0.0]
+           U_sup: [0.1, 0.0, 0.0]
         )EOF";
   }
 
-  inline void execute() final {
+  inline void execute() override final {
     auto& data = *fields;
     auto& traversals = *grid_region;
     auto& params = *Params;
+    LBMGrid& grid = domain->grid();
+    int3d domain_size = domain->size();
+
+    // define functor
+    const double Lz = domain_size[DIMZ] - 1;
+    onika::math::Vec3d Uc_inf = convert_velocity<LBM_UNITS>(*U_inf, params);
+    onika::math::Vec3d Uc_sup = convert_velocity<LBM_UNITS>(*U_sup, params);
+    onika::math::Vec3d dU = (Uc_sup - Uc_inf) / Lz;
+    FextCouetteFunc fext = {grid, Uc_inf, dU, 1. / params.tau_};
+    macro_variables<Q, FextCouetteFunc> func = {fext};
 
     // get fields
     FieldView<3> pm1 = data.flux();
@@ -87,19 +100,16 @@ class CollisionBGK : public OperatorNode {
     double* const pm0 = data.densities();
 
     // get traversal
-    auto [ptr, size] = traversals.get_levels();
-    // define functor
-    FextConstantFunc fext = {params.Fext_};
-    bgk<Q, Traversal::Real, FextConstantFunc> func = {ptr, fext, pm1, pobst, pf, pm0, params.tau_};
-    // run kernel over the lbm grid
-    parallel_for_simple(size, func, parallel_execution_context("bgk"));
+    auto [ptr, size] = traversals.get_data<Traversal::All>();
+
+    // run kernel
+    parallel_for_id(ptr, size, func, parallel_execution_context(), pm1, pobst, pf, pm0);
   }
 };
 
-using CollisionBGK3D19Q = CollisionBGK<19>;
-
 // === register factories ===
-ONIKA_AUTORUN_INIT(CollisionBGK) {
-  OperatorNodeFactory::instance()->register_factory("bgk", make_variant_operator<CollisionBGK>);
+ONIKA_AUTORUN_INIT(macro_variables_couette_relax) {
+  OperatorNodeFactory::instance()->register_factory("macro_variables_couette_relax",
+                                                    make_variant_operator<MacroVariablesCouetteRelax>);
 }
 }  // namespace hippoLBM
