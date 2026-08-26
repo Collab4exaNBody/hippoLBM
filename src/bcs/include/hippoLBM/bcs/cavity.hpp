@@ -23,6 +23,7 @@ under the License.
 #include <hippoLBM/grid/field_view.hpp>
 
 namespace hippoLBM {
+namespace bcs {
 
 /** @brief Coefficients for the cavity boundary condition according to the dimension and side. */
 template <int DIM, Side S, int Q>
@@ -86,12 +87,13 @@ struct cavity<Dim, S, 19> {
     }
   }
 };
+}  // namespace bcs
 }  // namespace hippoLBM
 
 namespace onika {
 namespace parallel {
 template <int Dim, hippoLBM::Side S, int Q>
-struct ParallelForFunctorTraits<hippoLBM::cavity<Dim, S, Q>> {
+struct ParallelForFunctorTraits<hippoLBM::bcs::cavity<Dim, S, Q>> {
   static inline constexpr bool RequiresBlockSynchronousCall = false;
   static inline constexpr bool CudaCompatible = true;
 };

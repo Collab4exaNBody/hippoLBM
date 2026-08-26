@@ -27,6 +27,8 @@ under the License.
 #include <onika/scg/operator_factory.h>
 #include <onika/scg/operator_slot.h>
 
+#include <algorithm>
+#include <cmath>
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/make_domain.hpp>
@@ -47,10 +49,20 @@ class InitDomainLBM : public OperatorNode {
   ADD_SLOT(onika::math::IJK, cell_dims, INPUT, REQUIRED,
            DocString{"Number of cells in each dimension. Grid dims: cells_dims+1."});
   ADD_SLOT(onika::math::AABB, bounds, INPUT_OUTPUT, REQUIRED, DocString{"Domain's bounds"});
+  ADD_SLOT(double, tolerance, INPUT, 1e-6,
+           DocString{"Relative tolerance used to check consistency between resolution, grid size, and bounds."});
 
   inline std::string documentation() const final {
     return R"EOF(
 		This operator initializes the computational domain for ²the LBM simulation.
+
+		Parameters:
+
+		- cell_dims [IJK] : Number of cells in each dimension. Required. Grid dims: cell_dims+1.
+		- bounds [AABB] : Domain's bounds (bmin/bmax). Required.
+		- periodic [bool[3]] : Periodic boundary conditions for each dimension. Required.
+		- tolerance [double] : Relative tolerance used to check consistency between resolution,
+		  grid size, and bounds. Default: 1e-6.
 
 		YAML example:
 
@@ -60,26 +72,33 @@ class InitDomainLBM : public OperatorNode {
 			 bmin: [0.0, 0.0, 0.0]
 			 bmax: [1.0, 1.0, 1.0]
 		   periodic: [true, true, true]
+		   tolerance: 1e-6
 		)EOF";
   }
 
   inline void execute() final {
     GridConfig grid;
-    grid.dims_ = *cell_dims + 1;  // +1 because cell_dims represents the number of cells
-    grid.bounds_ = *bounds;
     grid.periodic_ = convert<std::array<bool, 3>>(*periodic);
+    grid.dims_.i = cell_dims->i + (grid.periodic_[0] ? 0 : 1);
+    grid.dims_.j = cell_dims->j + (grid.periodic_[1] ? 0 : 1);
+    grid.dims_.k = cell_dims->k + (grid.periodic_[2] ? 0 : 1);
+    grid.bounds_ = *bounds;
 
     onika::math::IJK grid_size = grid.dims_;
     auto [inf, sup] = grid.bounds_;
 
+    auto nb_intervals = [&](int dim, ssize_t n) { return grid.periodic_[dim] ? n : n - 1; };
+
     onika::math::Vec3d resolution_dims;
-    resolution_dims.x = (sup.x - inf.x) / double(grid_size.i - 1);
-    resolution_dims.y = (sup.y - inf.y) / double(grid_size.j - 1);
-    resolution_dims.z = (sup.z - inf.z) / double(grid_size.k - 1);
+    resolution_dims.x = (sup.x - inf.x) / double(nb_intervals(0, grid_size.i));
+    resolution_dims.y = (sup.y - inf.y) / double(nb_intervals(1, grid_size.j));
+    resolution_dims.z = (sup.z - inf.z) / double(nb_intervals(2, grid_size.k));
 
     // check
+    const double tol = *tolerance;
     bool check_grid_size = false;
-    if (resolution_dims.x != resolution_dims.y || resolution_dims.x != resolution_dims.z) {
+    if (!equal_rel_tol(resolution_dims.x, resolution_dims.y, tol) ||
+        !equal_rel_tol(resolution_dims.x, resolution_dims.z, tol)) {
       lout << "[Error, domain], Dx is not the same for all dimension" << std::endl;
       lout << "Dx: [ " << resolution_dims << " ] " << std::endl;
       std::exit(EXIT_FAILURE);
@@ -87,13 +106,13 @@ class InitDomainLBM : public OperatorNode {
 
     double reso = resolution_dims.x;
 
-    if (inf.x + (grid_size.i - 1) * reso != sup.x) {
+    if (!equal_rel_tol(inf.x + nb_intervals(0, grid_size.i) * reso, sup.x, tol)) {
       check_grid_size = true;
     }
-    if (inf.y + (grid_size.j - 1) * reso != sup.y) {
+    if (!equal_rel_tol(inf.y + nb_intervals(1, grid_size.j) * reso, sup.y, tol)) {
       check_grid_size = true;
     }
-    if (inf.z + (grid_size.k - 1) * reso != sup.z) {
+    if (!equal_rel_tol(inf.z + nb_intervals(2, grid_size.k) * reso, sup.z, tol)) {
       check_grid_size = true;
     }
     if (check_grid_size) {

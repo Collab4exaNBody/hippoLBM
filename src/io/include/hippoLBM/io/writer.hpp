@@ -74,6 +74,13 @@ struct write_file {
   }
 };
 
+/** write_file takes a linear grid index, not (i,j,k): use the grid(x,y,z) index when driven
+ * by the Box3D-based for_all. */
+template <typename Func>
+struct ForAllGridTraits<write_file<Func>> {
+  static constexpr bool UsedIJK = false;
+};
+
 /** @brief A writer for writing data to a file. */
 struct WriterExternalData {
   int num_components_;     // The number of components in the data to be written.

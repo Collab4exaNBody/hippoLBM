@@ -15,3 +15,7 @@ run_test(regression_lbm_couette)
 run_test(regression_lbm_diff_pressure)
 run_test(regression_lbm_diff_pressure_complex_test)
 run_test(regression_lbm_lid_driven_cavity)
+
+if(ONIKA_BUILD_hippo_couette)
+  add_subdirectory(couette)
+endif()

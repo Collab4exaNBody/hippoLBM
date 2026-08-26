@@ -33,10 +33,20 @@ struct LBMDomain {
   int3d domain_size_;               //< The size of the local domain in terms of the number of nodes in each dimension.
   onika::math::IJK MPI_coord_;      //< The MPI coordinates of the current process in the Cartesian communicator.
   onika::math::IJK MPI_grid_size_;  //< The size of the MPI grid in terms of the number of processes in each dimension.
+  std::array<bool, 3> periodic_;    //< Periodicity flags along each axis.
+
   LBMDomain() : domain_size_{0, 0, 0}, MPI_coord_{0, 0, 0}, MPI_grid_size_{1, 1, 1} {};
+
   LBMDomain(LBMGhostManager<Q>& g, Box3D& b, LBMGrid& gr, onika::math::AABB& bd, int3d& ds, onika::math::IJK& mc,
-            onika::math::IJK& mgs)
-      : ghost_manager_(g), box_(b), grid_(gr), bounds_(bd), domain_size_(ds), MPI_coord_(mc), MPI_grid_size_(mgs) {}
+            onika::math::IJK& mgs, std::array<bool, 3>& pr)
+      : ghost_manager_(g),
+        box_(b),
+        grid_(gr),
+        bounds_(bd),
+        domain_size_(ds),
+        MPI_coord_(mc),
+        MPI_grid_size_(mgs),
+        periodic_(pr) {}
 
   int3d size() { return domain_size_; }  // return the number of nodes in each dimension, without ghost_layers
   double dx() { return grid_.dx_; }

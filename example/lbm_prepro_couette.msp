@@ -1,0 +1,40 @@
+do_domain:
+  - domain:
+     bounds:    [ [0,0,0],[0.1,0.1,0.1] ]
+     cell_dims: [ 100 , 100 , 100 ]
+     periodic:  [ true, true, false ]
+
+#set_distributions:
+#  - init_couette:
+#     U_inf: [0,0,0]
+#     U_sup: [0.001,0,0]
+#     dimension: Z
+
+set_lbm_parameters:
+  - lbm_parameters:
+     nuth: 1e-2
+     celerity: 1.0
+
+compute_macro_variables:
+  - macro_variables_couette_relax:
+     U_inf: [0,0,0]
+     U_sup: [0.001,0,0]
+
+collision:
+  - bgk_couette_relax:
+     U_inf: [0,0,0]
+     U_sup: [0.001,0,0]
+
+boundary_conditions:
+  - neumann:
+     U: [0.001,0,0]
+     regions: [plan_xy_l]
+  - neumann:
+     U: [0,0,0]
+     regions: [plan_xy_0]
+
+global:
+   simulation_paraview_freq: 10
+   simulation_end_iteration: 200
+   simulation_print_log_freq: 1
+   output_directory: "PreProCouetteDir"

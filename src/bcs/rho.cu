@@ -23,9 +23,12 @@ under the License.
 #include <onika/math/basic_types.h>
 #include <onika/memory/allocator.h>
 #include <onika/parallel/parallel_for.h>
+#include <onika/physics/units.h>
 #include <onika/scg/operator.h>
 #include <onika/scg/operator_factory.h>
 #include <onika/scg/operator_slot.h>
+
+#include <algorithm>
 
 // hippoLBM
 #include <hippoLBM/compute/parallel_for_core.hpp>
@@ -39,7 +42,7 @@ under the License.
 
 // impl
 #include <hippoLBM/bcs/dispatch_traversal.hpp>
-#include <hippoLBM/bcs/neumann.hpp>
+#include <hippoLBM/bcs/rho.hpp>
 
 namespace hippoLBM {
 using namespace onika;
@@ -48,13 +51,18 @@ using namespace onika::cuda;
 using namespace bcs;
 
 template <int Q>
-class NeumannOp : public OperatorNode {
+class RhoOp : public OperatorNode {
+  ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED,
+           DocString{"The domain containing the grid and other simulation parameters."});
   ADD_SLOT(LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED,
            DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
   ADD_SLOT(LBMGridRegion, grid_region, INPUT, REQUIRED,
            DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
-  ADD_SLOT(onika::math::Vec3d, U, INPUT, REQUIRED,
-           DocString{"Prescribed velocity at the boundary, enforcing the Neumann condition."});
+  ADD_SLOT(onika::math::Vec3d, U, INPUT, onika::math::Vec3d{0, 0, 0},
+           DocString{"Prescribed velocity at the boundary, enforcing the rho condition."});
+  ADD_SLOT(std::vector<onika::physics::Quantity>, delta_p, INPUT, REQUIRED,
+           DocString{"Pressure difference (Pa) relative to the fluid's reference state (avg_rho_, rho_lbm = 1), "
+                     "prescribed at each boundary. Must have the same size as regions."});
   ADD_SLOT(std::vector<std::string>, regions, INPUT, REQUIRED,
            DocString{"Lists of grid regions to apply BCS. Ex: [plan_xy_0]"});
   ADD_SLOT(LBMParameters, Params, INPUT, REQUIRED, DocString{"The computed LBM parameters based on the input values."});
@@ -62,15 +70,19 @@ class NeumannOp : public OperatorNode {
  public:
   inline std::string documentation() const final {
     return R"EOF(
-    This operator enforces a Neumann boundary condition at z = 0 or z = l in an LBM simulation. 
-    The Neumann boundary condition ensures that the gradient of the distribution function 
-    follows a prescribed value.
+    This operator enforces a rho (density/pressure) boundary condition at x/y/z = 0 or l in
+    an LBM simulation. delta_p is a pressure difference (Pa) relative to the fluid's
+    reference state (avg_rho_, rho_lbm = 1), converted internally to rho_lbm using the same
+    convention as set_dp_pressure.
         )EOF";
   }
 
   inline void execute() final {
     auto& data = *fields;
     auto& traversals = *grid_region;
+    LBMDomain<Q>& Domain = *domain;
+    LBMGrid& Grid = Domain.grid();
+    LBMParameters& params = *Params;
 
     // define functors
     auto [ux, uy, uz] = convert_velocity<LBM_UNITS>(*U, *Params);
@@ -83,20 +95,35 @@ class NeumannOp : public OperatorNode {
     const std::vector<std::string> allowed_tr = {"plan_xy_0", "plan_xy_l", "plan_yz_0",
                                                  "plan_yz_l", "plan_xz_0", "plan_xz_l"};
     const std::vector<std::string>& region_names = *regions;
+    const std::vector<onika::physics::Quantity>& delta_p_q = *delta_p;
+    std::vector<double> delta_ps(delta_p_q.size());
+    std::transform(delta_p_q.begin(), delta_p_q.end(), delta_ps.begin(),
+                   [](const onika::physics::Quantity& q) { return q.convert(); });
+
+    if (delta_ps.size() != region_names.size()) {
+      lout << "[Error, bcs::rho] delta_p size (" << delta_ps.size() << ") does not match regions size ("
+           << region_names.size() << ")" << std::endl;
+      std::exit(EXIT_FAILURE);
+    }
+
     const std::vector<traversal_data> trs = get_traversal(traversals, region_names, allowed_tr);
 
-    auto make_ctx = [this](const char* name) { return parallel_execution_context(name); };
-
-    auto it = region_names.begin();
     // run kernel
-    for (auto& traversal : trs) {
-      const std::string traversal_names = *it++;
-      std::string kernel_name = "neumann_on_" + traversal_names;
+    for (size_t i = 0; i < trs.size(); ++i) {
+      const auto& traversal = trs[i];
+      const std::string& traversal_names = region_names[i];
+      std::string kernel_name = "rho_on_" + traversal_names;
 
       if (traversal.size_ == 0) continue;  // No LBM point in this subdomain
 
-      dispatch_traversal<Neumann, Q>(make_ctx, traversal_from_string(traversal_names), kernel_name, traversal.ptr_,
-                                     traversal.size_, pobst, pf, ux, uy, uz);
+      // Physical delta_p (Pa) -> rho_lbm, same convention as set_dp_pressure.
+      const double real_delta_p = delta_ps[i];
+      const double lbm_delta_p = real_delta_p * params.dtLB_ * params.dtLB_ / (params.avg_rho_ * Grid.dx_ * Grid.dx_);
+      const double lbm_rho = 1.0 + 3.0 * lbm_delta_p;
+
+      auto make_ctx = [this](const char* name) { return parallel_execution_context(name); };
+      dispatch_traversal<Rho, Q>(make_ctx, traversal_from_string(traversal_names), kernel_name, traversal.ptr_,
+                                 traversal.size_, pobst, pf, lbm_rho, ux, uy, uz);
     }
 
     // run kernel
@@ -104,7 +131,5 @@ class NeumannOp : public OperatorNode {
 };
 
 // === register factories ===
-ONIKA_AUTORUN_INIT(neumann) {
-  OperatorNodeFactory::instance()->register_factory("neumann", make_variant_operator<NeumannOp>);
-}
+ONIKA_AUTORUN_INIT(rho) { OperatorNodeFactory::instance()->register_factory("rho", make_variant_operator<RhoOp>); }
 }  // namespace hippoLBM

@@ -44,6 +44,7 @@ namespace hippoLBM {
 using namespace onika;
 using namespace scg;
 using namespace onika::cuda;
+using namespace bcs;
 
 template <int Dim, Side S, int Q>
 class Cavity : public OperatorNode {

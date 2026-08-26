@@ -1,5 +1,8 @@
 ![](docs/logo_hippoLBM.png)
 
+<img width="902" height="429" alt="hippo_zoom" src="https://github.com/user-attachments/assets/d0c153ac-1110-454c-85c1-a0da06d1f7c4" />
+
+
 # Overview
 
 ``HippoLBM`` is a high-performance Lattice Boltzmann Method (LBM) simulation code developed in C++ and built on the ``Onika`` runtime and and inherits several physical functionalities from the DEMLBM3D code. It is designed for large-scale fluid dynamics simulations and features a parallelization strategy to maximize computational efficiency. ``HippoLBM`` integrates hybrid MPI + OpenMP parallelism for CPU execution and CUDA acceleration for GPU architectures, ensuring scalability across different hardware configurations.
@@ -30,19 +33,24 @@ For more details, see CONTRIBUTING.md. Main guidelines are:
 Main developers:
   - Raphaël Prat (CEA/DES) (raphael.prat@cea.fr)
   - Lhassan Amarsid (CEA/DES)
+
+
+Current Contributors:
   - Vincent Topin (CEA/DES)
   - Guillaume bareigts (CEA/DES)
+  - Bruno Collard (CEA/DES) 
 
-Past Contributions (`DEMLBM3D` Code):
+Past Contributions (legacy `DEMLBM3D` or `DEMLBM2D` Code):
   - Jean-Yves delenne (INRAE)
   - Farhang Radjaï (LMGC/CNRS)
-  - Abdelbarie El Metni (Intership at CEA-2023)
+  - Abdelbarie El Metni (Intership at CEA-2023) - // MPI of DEMLBM3D
+  - Duc Chung Vu (CEA/DES) - User with several examples
 
 # Some examples:
 
 <img width="1132" height="452" alt="karman" src="https://github.com/user-attachments/assets/16191403-8ee3-486f-b3d0-3b7a46b7d4af" />
 
-<img width="466" height="806" alt="toureiffel_bcs_null" src="https://github.com/user-attachments/assets/5ca60099-389d-4725-90c5-7820c7042cf8" />
+<img width="2894" height="1827" alt="image" src="https://github.com/user-attachments/assets/6f69b337-9abd-4d55-87f8-c52d0a33869d" />
 
 <img width="709" height="400" alt="low_logo" src="https://github.com/user-attachments/assets/535142ed-d1ff-4a6f-aeff-6a4d3e24b09c" />
 

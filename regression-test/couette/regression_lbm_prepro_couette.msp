@@ -6,26 +6,33 @@ do_domain:
 
 set_lbm_parameters:
   - lbm_parameters:
-     Fext: [0,0,0]
      nuth: 1e-2
+
+compute_macro_variables:
+  - macro_variables_couette_relax:
+     U_inf: [-0.001,0,0]
+     U_sup: [0.001,0,0]
+
+collision:
+  - bgk_couette_relax:
+     U_inf: [-0.001,0,0]
+     U_sup: [0.001,0,0]
 
 boundary_conditions:
   - neumann:
-     U: [0.001,0,0]
+     U: [-0.001,0,0]
      regions: [plan_xy_l]
   - neumann:
-     U: [0,0,0]
-     regions: [plan_xy_0]     
+     U: [0.001,0,0]
+     regions: [plan_xy_0]
 
 checker_op:
   - check_macro_quantities:
      density: 27900  # 30x30x31
      tol: 1e-8
      vmin: 0.00
-     vmax: 1.00001e-03
+     vmax: 1.2e-03
 
 global:
-   timestep: 0
-   physical_time: 0.
    simulation_paraview_freq: -1
-   simulation_end_iteration: 100
+   simulation_end_iteration: 20

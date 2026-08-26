@@ -54,7 +54,7 @@ using namespace scg;
 using namespace onika::cuda;
 
 template <int Q>
-class CollisionBGK : public OperatorNode {
+class CollisionBGKCouetteRelax : public OperatorNode {
  public:
   ADD_SLOT(LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED,
            DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
@@ -63,15 +63,20 @@ class CollisionBGK : public OperatorNode {
   ADD_SLOT(LBMParameters, Params, INPUT, REQUIRED, DocString{"Contains global LBM simulation parameters"});
   ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED,
            DocString{"Defines the computational domain and its properties for the LBM simulation."});
+  ADD_SLOT(onika::math::Vec3d, U_inf, INPUT, REQUIRED,
+           DocString{"Physical velocity used to derive the external force term at the lower boundary (k = 0)."});
+  ADD_SLOT(
+      onika::math::Vec3d, U_sup, INPUT, REQUIRED,
+      DocString{
+          "Physical velocity used to derive the external force term at the upper boundary (k = domain_size_z - 1)."});
 
   inline std::string documentation() const override final {
     return R"EOF(
-    The `CollisionBGK` operator implements the Bhatnagar-Gross-Krook (BGK) collision model for the Lattice Boltzmann Method (LBM).
-    This model assumes a single relaxation time approach  to approximate the collision process, driving the distribution functions toward equilibrium.
-
     YAML example:
 
-      - bgk
+      - bgk_couette_relax:
+          U_inf: [0.0, 0.0, 0.0]
+          U_sup: [0.1, 0.0, 0.0]
         )EOF";
   }
 
@@ -79,6 +84,8 @@ class CollisionBGK : public OperatorNode {
     auto& data = *fields;
     auto& traversals = *grid_region;
     auto& params = *Params;
+    LBMGrid& grid = domain->grid();
+    int3d domain_size = domain->size();
 
     // get fields
     FieldView<3> pm1 = data.flux();
@@ -89,17 +96,21 @@ class CollisionBGK : public OperatorNode {
     // get traversal
     auto [ptr, size] = traversals.get_levels();
     // define functor
-    FextConstantFunc fext = {params.Fext_};
-    bgk<Q, Traversal::Real, FextConstantFunc> func = {ptr, fext, pm1, pobst, pf, pm0, params.tau_};
+    const double Lz = domain_size[DIMZ] - 1;
+    onika::math::Vec3d Uc_inf = convert_velocity<LBM_UNITS>(*U_inf, params);
+    onika::math::Vec3d Uc_sup = convert_velocity<LBM_UNITS>(*U_sup, params);
+    onika::math::Vec3d dU = (Uc_sup - Uc_inf) / Lz;
+    FextCouetteFunc fext = {grid, Uc_inf, dU, 1. / params.tau_};
+    bgk<Q, Traversal::Real, FextCouetteFunc> func = {ptr, fext, pm1, pobst, pf, pm0, params.tau_};
     // run kernel over the lbm grid
-    parallel_for_simple(size, func, parallel_execution_context("bgk"));
+    parallel_for_simple(size, func, parallel_execution_context("bgk_couette_relax"));
   }
 };
 
-using CollisionBGK3D19Q = CollisionBGK<19>;
+using CollisionBGKCouetteRelax3D19Q = CollisionBGKCouetteRelax<19>;
 
 // === register factories ===
-ONIKA_AUTORUN_INIT(CollisionBGK) {
-  OperatorNodeFactory::instance()->register_factory("bgk", make_variant_operator<CollisionBGK>);
+ONIKA_AUTORUN_INIT(CollisionBGKCouetteRelax) {
+  OperatorNodeFactory::instance()->register_factory("bgk_couette_relax", make_variant_operator<CollisionBGKCouetteRelax>);
 }
 }  // namespace hippoLBM

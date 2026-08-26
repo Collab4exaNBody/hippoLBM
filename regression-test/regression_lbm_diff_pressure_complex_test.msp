@@ -49,7 +49,7 @@ post_stream_bcs:
 
 checker_op:
   - check_macro_quantities:
-     density: 32243
+     density: 31161
      tol: 1
      vmin: 0.00
      vmax: 1.03e-01

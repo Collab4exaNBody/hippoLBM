@@ -259,32 +259,41 @@ LBMDomain<Q> make_domain(const GridConfig grid, const SubGridConfig& subgrid) {
 
   auto bounds_cpy = grid.bounds_;
 
-  LBMDomain<Q> domain(manager, local_box, g, bounds_cpy, domain_size, mpi_coords, mpi_grid_dims);
+  LBMDomain<Q> domain(manager, local_box, g, bounds_cpy, domain_size, mpi_coords, mpi_grid_dims, periodic);
   return domain;
+}
+
+inline bool equal_rel_tol(double a, double b, double rel_tol) {
+  double diff = std::abs(a - b);
+  double scale = std::max({1.0, std::abs(a), std::abs(b)});
+  return diff <= rel_tol * scale;
 }
 
 /**
  * @brief Partition the global grid across MPI ranks using load balancing.
  *
- * This function uses MPI Cartesian topology to distribute the global grid
- * into subdomains, ensuring that each MPI rank receives a block of cells.
- * Handles periodic boundaries, computes local block size, offset, and
- * constructs a SubGridConfig for the calling rank.
- *
  * @param grid   Global grid configuration (size, bounds, periodicity).
  * @param comm   MPI communicator (will be converted into a Cartesian communicator).
+ * @param use_periodic Whether to respect periodicity when partitioning (default: true).
+ *                     Use false if you will refined the grid after.
  * @return SubGridConfig Subdomain configuration for the current MPI rank.
  */
-SubGridConfig load_balancing(const GridConfig& grid, MPI_Comm comm) {
+SubGridConfig load_balancing(const GridConfig& grid, MPI_Comm comm, bool use_periodic = true) {
+  using onika::lout;
+
   auto& [grid_size, bounds, periodic] = grid;
-  double GridDx = double(bounds.bmax.x - bounds.bmin.x) / double(grid_size.i - 1);
+  auto nb_intervals = [&](int dim, ssize_t n) { return periodic[dim] && use_periodic ? n : n - 1; };
+  double GridDx = double(bounds.bmax.x - bounds.bmin.x) / double(nb_intervals(0, grid_size.i));
 
   // Consistency check: ensure dx is the same in all directions
-  if (GridDx != double(bounds.bmax.y - bounds.bmin.y) / double(grid_size.j - 1)) {
-    onika::lout << "Grid dimensions and bounds are inconsistent: dx must be equal in X and Y." << std::endl;
+  if (!equal_rel_tol(GridDx, double(bounds.bmax.y - bounds.bmin.y) / double(nb_intervals(1, grid_size.j)), 1e-6)) {
+    lout << "Grid dimensions and bounds are inconsistent: dx must be equal in X and Y." << std::endl;
   }
-  if (GridDx != double(bounds.bmax.z - bounds.bmin.z) / double(grid_size.k - 1)) {
-    onika::lout << "Grid dimensions and bounds are inconsistent: dx must be equal in Z." << std::endl;
+  if (!equal_rel_tol(GridDx, double(bounds.bmax.z - bounds.bmin.z) / double(nb_intervals(2, grid_size.k)), 1e-6)) {
+    lout << "dx = " << GridDx
+         << " computed dx: " << double(bounds.bmax.z - bounds.bmin.z) / double(nb_intervals(2, grid_size.k))
+         << std::endl;
+    lout << "Grid dimensions and bounds are inconsistent: dx must be equal in Z." << std::endl;
   }
 
   // ----------------------------

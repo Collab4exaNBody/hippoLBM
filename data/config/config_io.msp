@@ -8,23 +8,23 @@ trigger_print_log:
   body:
     - nth_timestep: { first: true }	
 
-dump_paraview_if_triggered: 
-  condition: trigger_dump_paraview
-  body:
+
+dump_paraview:
     - update_ghost
     - macro_variables
     - write_paraview:
 #       distributions: true
        distributions: false
 
+dump_paraview_if_triggered: 
+  condition: trigger_dump_paraview
+  body:
+    - dump_paraview
+
 write_paraview_first_timestep: 
   condition: display_paraview_first_timestep
   body:
-    - update_ghost
-    - macro_variables
-    - write_paraview:
-#       distributions: true
-       distributions: false
+    - dump_paraview
 
 
 print_log_if_triggered:

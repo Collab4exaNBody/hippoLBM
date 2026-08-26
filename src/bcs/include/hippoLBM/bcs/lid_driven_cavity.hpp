@@ -23,6 +23,7 @@ under the License.
 #include <hippoLBM/grid/field_view.hpp>
 
 namespace hippoLBM {
+namespace bcs {
 
 template <int Q>
 struct LidDrivenCavityBCsFunctor;
@@ -60,12 +61,13 @@ struct LidDrivenCavityBCsFunctor<19> {
     }
   }
 };
+}  // namespace bcs
 }  // namespace hippoLBM
 
 namespace onika {
 namespace parallel {
 template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::LidDrivenCavityBCsFunctor<Q>> {
+struct ParallelForFunctorTraits<hippoLBM::bcs::LidDrivenCavityBCsFunctor<Q>> {
   static inline constexpr bool RequiresBlockSynchronousCall = false;
   static inline constexpr bool CudaCompatible = true;
 };

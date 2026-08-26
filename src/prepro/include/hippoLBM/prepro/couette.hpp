@@ -1,0 +1,60 @@
+/*
+   Licensed to the Apache Software Foundation (ASF) under one
+   or more contributor license agreements.  See the NOTICE file
+   distributed with this work for additional information
+   regarding copyright ownership.  The ASF licenses this file
+   to you under the Apache License, Version 2.0 (the
+   "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+ */
+
+#pragma once
+
+#include <hippoLBM/core/enum.hpp>
+
+namespace hippoLBM {
+template <int Q, int DIM>
+struct InitCouetteFunc {
+  LBMGrid g_;
+  FieldView<Q> f_;
+  const onika::math::Vec3d dU_lbm_;  // (U_sup_c - U_inf_c) / (l_dir (x,y,z) - 1);
+  const onika::math::Vec3d U_inf_;   // U_inf_real / c;
+
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t coord) const {
+    const int idx = g_(coord.x, coord.y, coord.z);
+    double value;
+    if constexpr (DIM == DIMX) value = coord.x + g_.offset_[0];
+    if constexpr (DIM == DIMY) value = coord.y + g_.offset_[1];
+    if constexpr (DIM == DIMZ) value = coord.z + g_.offset_[2];
+
+    onika::math::Vec3d uii = U_inf_ + dU_lbm_ * value;
+
+    double eu;
+    double u_squ = dot(uii, uii);
+
+    stencil::for_each<typename LBMScheme<Q>::Coefficients>([&]<typename coeff>(int iLB) {
+      eu = uii.x * coeff::ex + uii.y * coeff::ey + uii.z * coeff::ez;
+      f_(idx, iLB) = 1. * coeff::w * (1. + 3. * eu + 4.5 * eu * eu - 1.5 * u_squ);
+    });
+  }
+};
+}  // namespace hippoLBM
+
+namespace onika {
+namespace parallel {
+template <int Q, int DIM>
+struct ParallelForFunctorTraits<hippoLBM::InitCouetteFunc<Q, DIM>> {
+  static inline constexpr bool RequiresBlockSynchronousCall = false;
+  static inline constexpr bool CudaCompatible = true;
+};
+}  // namespace parallel
+}  // namespace onika
