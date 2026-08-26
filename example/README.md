@@ -1,3 +1,21 @@
+# Couette flow
+
+`lbm_couette.msp` and `lbm_prepro_couette.msp` both simulate a Couette flow (walls moving at opposite velocities): a `0.1 m x 0.1 m x 0.1 m` box discretized on a `100 x 100 x 100` grid, periodic in x/y (`periodic: [true, true, false]`), with the wall velocities imposed via a `neumann` condition on the top/bottom planes (`plan_xy_0`, `plan_xy_l`).
+
+- **`lbm_couette.msp`**: standard setup, driven purely by the moving-wall boundary conditions with the default `bgk` collision (`nuth: 1e-3`, `tau: 0.7`). Runs for 3,000 iterations, with the resulting velocity profile sampled along z at mid-channel (`plot_line_velocity`, checked by `plane_velocity_profile`), output in `CouetteTestDir/`.
+- **`lbm_prepro_couette.msp`**: same wall-driven setup (`nuth: 1e-2`), but on top of it the `couette` plugin's `bgk_couette_relax` / `macro_variables_couette_relax` operators add a body force that relaxes the local velocity towards a target linear profile between `U_inf` (k = 0) and `U_sup` (k = domain_size_z - 1), used as the `collision` and `compute_macro_variables` steps instead of the default `bgk` / `macro_variables`. Runs for 200 iterations, output in `PreProCouetteDir/`.
+
+## Run
+
+```bash
+./hippoLBM example/lbm_couette.msp --omp_num_threads 4
+./hippoLBM example/lbm_prepro_couette.msp
+```
+
+ParaView output is written every 100 iterations for `lbm_couette.msp`, and every 10 iterations for `lbm_prepro_couette.msp`.
+
+> **Note:** the `bgk_couette_relax`/`macro_variables_couette_relax` operators (used only by `lbm_prepro_couette.msp`) live in the optional `couette` plugin, built by default and toggled with the `ONIKA_BUILD_hippo_couette` CMake option (`-DONIKA_BUILD_hippo_couette=OFF` to disable it).
+
 # Eiffel Tower example
 
 `lbm_tour_eiffel_bcs_null.msp`, `lbm_tour_eiffel_bcs_periodic.msp` and `lbm_tour_eiffel_bcs_rho.msp` simulate a fluid flow around a scaled model of the Eiffel Tower, imported as an R-shaped obstacle from `stl_files/toureiffel.stl` (`register_rshape`), with `wall_bounce_back` applied on its surface.
