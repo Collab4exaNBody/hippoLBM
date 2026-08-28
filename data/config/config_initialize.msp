@@ -52,4 +52,6 @@ global:
    simulation_print_log_freq: 1
    simulation_end_iteration: 10
    display_paraview_first_timestep: false
+   display_last_output: false
+   do_set_distributions: true
 

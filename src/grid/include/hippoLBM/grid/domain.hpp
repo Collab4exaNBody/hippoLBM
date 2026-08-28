@@ -35,7 +35,7 @@ struct LBMDomain {
   onika::math::IJK MPI_grid_size_;  //< The size of the MPI grid in terms of the number of processes in each dimension.
   std::array<bool, 3> periodic_;    //< Periodicity flags along each axis.
 
-  LBMDomain() : domain_size_{0, 0, 0}, MPI_coord_{0, 0, 0}, MPI_grid_size_{1, 1, 1} {};
+  LBMDomain() : domain_size_{0, 0, 0}, MPI_coord_{0, 0, 0}, MPI_grid_size_{1, 1, 1}, periodic_{false, false, false} {};
 
   LBMDomain(LBMGhostManager<Q>& g, Box3D& b, LBMGrid& gr, onika::math::AABB& bd, int3d& ds, onika::math::IJK& mc,
             onika::math::IJK& mgs, std::array<bool, 3>& pr)
