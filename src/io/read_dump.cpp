@@ -58,6 +58,8 @@ class ReadDumpLBM : public OperatorNode {
            DocString{"The LBM parameters, overwritten from the checkpoint unless skip_params is set."});
   ADD_SLOT(long, timestep, INPUT_OUTPUT, 0, DocString{"Set to the checkpoint's timestep."});
   ADD_SLOT(double, physical_time, INPUT_OUTPUT, 0.0, DocString{"Set to the checkpoint's physical time."});
+  ADD_SLOT(double, dt, OUTPUT,
+           DocString{"Set to the checkpoint's LBM timestep (Params.dtLB_), unless skip_params is set."});
   ADD_SLOT(bool, do_set_distributions, OUTPUT,
            DocString{"Set to false: the checkpoint already provides f_, skip the default set_distributions."});
 
@@ -119,6 +121,7 @@ class ReadDumpLBM : public OperatorNode {
 
     if (!*skip_params) {
       *Params = header.params_;
+      *dt = header.params_.dtLB_;
     }
     *timestep = header.timestep_;
     *physical_time = header.physical_time_;

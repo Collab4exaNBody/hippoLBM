@@ -2,11 +2,6 @@ do_domain:
   - read_dump:
      filename: data/couette_0000003000.dump
 
-set_lbm_parameters:
-  - lbm_parameters:
-     Fext: [0,0,0]
-     nuth: 1e-3  # m2/s
-
 boundary_conditions:
   - neumann:
      U: [0.001,0,0]
