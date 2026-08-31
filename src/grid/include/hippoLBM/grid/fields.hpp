@@ -21,6 +21,7 @@ under the License.
 
 #include <onika/cuda/stl_adaptors.h>
 
+#include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/field_view.hpp>
 #include <hippoLBM/grid/scheme.hpp>
 #include <hippoLBM/grid/stencil.hpp>
@@ -51,4 +52,31 @@ struct LBMFields {
   int* obstacles() { return onika::cuda::vector_data(obst_); }
   const int* obstacles() const { return onika::cuda::vector_data(obst_); }
 };
+
+/** @brief (Re)sizes `fields`' vectors for `domain`'s local box. No-op if already the right size. */
+template <int Q>
+inline void resize_lbm_fields(LBMDomain<Q>& domain, LBMFields<Q>& fields) {
+  constexpr int Un = 5;
+  LBMGrid& Grid = domain.grid();
+  Box3D& Box = domain.box();
+  auto bx = Grid.template build_box<Area::Local, Traversal::All>();
+  int size_XYU = bx.get_length(0) * bx.get_length(1) * Un;
+  int size_YZU = bx.get_length(1) * bx.get_length(2) * Un;
+  int size_XZU = bx.get_length(0) * bx.get_length(2) * Un;
+  const size_t np = Box.number_of_points();
+
+  fields.grid_size_ = np;
+  if (fields.obst_.size() != np) {
+    fields.f_.resize(np * Q, 0);
+    fields.obst_.resize(np);
+    fields.m0_.resize(np, 0);
+    fields.m1_.resize(np * 3, 0);
+    fields.fi_x_0_.resize(size_YZU);
+    fields.fi_x_l_.resize(size_YZU);
+    fields.fi_y_0_.resize(size_XZU);
+    fields.fi_y_l_.resize(size_XZU);
+    fields.fi_z_0_.resize(size_XYU);
+    fields.fi_z_l_.resize(size_XYU);
+  }
+}
 }  // namespace hippoLBM

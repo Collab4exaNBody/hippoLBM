@@ -3,8 +3,19 @@ set_lbm_parameters: nop
 set_obstacles: nop
 set_distributions: nop
 
+set_default_distribution:
+  condition: do_set_distributions
+  body:
+    - set_distribution:
+       do_update: false
+
+init_obstacles_if_needed:
+  condition: do_set_distributions
+  body:
+    - init_obstacles
+
 setup_obstacles:
-  - init_obstacles
+  - init_obstacles_if_needed
   - set_obstacles
 
 default_grid: define_grid_3dq19
@@ -19,8 +30,7 @@ initialize:
   - build_traversal
   - grid_flavor
   - init_obst
-  - set_distribution: # default f_iLB = 1
-     do_update: false
+  - set_default_distribution
   - set_distributions
   - setup_obstacles
   - update_obstacles
@@ -37,8 +47,11 @@ global:
    physical_time: 0.
    compute_loop_continue: true
    simulation_paraview_freq: -1
+   simulation_dump_freq: -1
    simulation_analysis_freq: -1
    simulation_print_log_freq: 1
    simulation_end_iteration: 10
    display_paraview_first_timestep: false
+   display_last_output: false
+   do_set_distributions: true
 

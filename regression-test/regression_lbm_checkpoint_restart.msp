@@ -1,0 +1,24 @@
+do_domain:
+  - read_dump:
+     filename: data/couette_0000003000.dump
+
+boundary_conditions:
+  - neumann:
+     U: [0.001,0,0]
+     regions: [plan_xy_l]
+  - neumann:
+     U: [0,0,0]
+     regions: [plan_xy_0]
+
+checker_op:
+  - check_macro_quantities:
+     density: 1100  # 10x10x11
+     tol: 1e-8
+     vmin: 0.00
+     vmax: 1.0000e-03     
+
+global:
+   simulation_paraview_freq: -1
+   simulation_dump_freq: -1
+   simulation_end_iteration: 3100
+   simulation_print_log_freq: 1

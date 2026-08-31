@@ -18,7 +18,7 @@ struct LBMGrid {
   Box3D ext_;                  ///< Box covering the extended grid (includes ghost layers)
   Point3D offset_;             ///< Offset of the real grid (useful for global indexing)
   int ghost_layer_ = 2;        ///< Number of ghost layers (default 2 for DEM + LBM)
-  double dx_;                  ///< Distance between two grid points (spatial resolution)
+  double dx_ = 0.0;            ///< Distance between two grid points (spatial resolution)
   onika::math::Vec3d origin_;  ///< Origin of the domain (not the subdomain)
 
   LBMGrid() {};
