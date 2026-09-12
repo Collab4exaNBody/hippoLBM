@@ -4,15 +4,12 @@ do_domain:
      bounds: [[0,0,0],[0.1,0.1,0.1]]
      cell_dims: [ 30, 30, 30 ]
      periodic: [false, false, false]
+     bounce_back_planes: [plan_yz_0, plan_yz_l, plan_xz_0, plan_xz_l, plan_xy_0, plan_xy_l]
 
 set_lbm_parameters:
   - lbm_parameters:
      Fext: [0,0,0]
      nuth: 1e-4
-
-pre_stream_bcs:
-  - pre_bounce_back
-  - wall_bounce_back
 
 set_obstacles:
   - register_solid_wall:

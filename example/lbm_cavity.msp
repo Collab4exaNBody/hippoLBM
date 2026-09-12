@@ -3,6 +3,7 @@ do_domain:
      bounds:    [ [0 m, 0 m, 0 m],[0.1 m, 0.1 m, 0.1 m] ]
      cell_dims: [ 100 , 100 , 100 ]
      periodic:  [ false, false, false ]
+     bounce_back_planes: [plan_yz_0, plan_yz_l, plan_xz_0, plan_xz_l, plan_xy_0, plan_xy_l]
 
 set_lbm_parameters:
   - lbm_parameters:
@@ -13,9 +14,6 @@ pre_stream_bcs:
   - pre_bounce_back
   - cavity_z_l:
      U: [0.0, 0.1, 0]
-
-post_stream_bcs:
-  - post_bounce_back
 
 collision: mrt # default model
 

@@ -4,8 +4,20 @@ compute_loop_stop:
   body:
     - sim_continue
 
-pre_stream_bcs: nop
-post_stream_bcs: nop
+pre_bounce_back_if_needed:
+  condition: has_bounce_back
+  body:
+    - pre_bounce_back
+
+pre_stream_bcs:
+  - pre_bounce_back_if_needed
+  - wall_bounce_back
+
+post_stream_bcs:
+  condition: has_bounce_back
+  body:
+    - post_bounce_back
+
 boundary_conditions: nop
 start_iteration: nop
 

@@ -39,6 +39,7 @@ struct GridConfig {
   onika::math::IJK dims_;                               ///< Number of nodes in each direction (i,j,k).
   onika::math::AABB bounds_;                            ///< Physical bounding box of the grid domain.
   std::array<bool, hippoLBMGridConfig::dim> periodic_;  ///< Periodicity flags along each axis.
+  std::array<bool, 2 * DIM_MAX> bounce_back_planes_{};  ///< Named planes with a bounce-back wall boundary condition.
 
   /** @brief Display the grid configuration. */
   void display() const {
@@ -62,6 +63,7 @@ struct SubGridConfig {
   onika::math::Vec3d offset_;                           ///< Offset of the subgrid relative to the global origin.
   onika::math::GridBlock block_;                        ///< Local block of cells owned by this subgrid.
   std::array<bool, hippoLBMGridConfig::dim> periodic_;  ///< Periodicity flags along each axis.
+  std::array<bool, 2 * DIM_MAX> bounce_back_planes_{};  ///< Named planes with a bounce-back wall boundary condition.
 
   /** @brief Display the subgrid configuration. */
   void display() const {
@@ -257,9 +259,18 @@ LBMDomain<Q> make_domain(const GridConfig grid, const SubGridConfig& subgrid) {
   // manager.debug_print_comm();
   // write_comm(manager);
 
+  // ----------------------------
+  // Setup bounce-back manager
+  // ----------------------------
+  bounce_back_manager<Q> bb_manager;
+  auto local_all_box = g.build_box<Area::Local, Traversal::All>();
+  onika::math::IJK local_grid_size(local_all_box.get_length(0), local_all_box.get_length(1),
+                                   local_all_box.get_length(2));
+  bb_manager.resize_data(subgrid.bounce_back_planes_, local_grid_size, mpi_coords, mpi_grid_dims);
+
   auto bounds_cpy = grid.bounds_;
 
-  LBMDomain<Q> domain(manager, local_box, g, bounds_cpy, domain_size, mpi_coords, mpi_grid_dims, periodic);
+  LBMDomain<Q> domain(manager, bb_manager, local_box, g, bounds_cpy, domain_size, mpi_coords, mpi_grid_dims, periodic);
   return domain;
 }
 
@@ -281,7 +292,7 @@ inline bool equal_rel_tol(double a, double b, double rel_tol) {
 SubGridConfig load_balancing(const GridConfig& grid, MPI_Comm comm, bool use_periodic = true) {
   using onika::lout;
 
-  auto& [grid_size, bounds, periodic] = grid;
+  auto& [grid_size, bounds, periodic, bounce_back_planes] = grid;
   auto nb_intervals = [&](int dim, ssize_t n) { return periodic[dim] && use_periodic ? n : n - 1; };
   double GridDx = double(bounds.bmax.x - bounds.bmin.x) / double(nb_intervals(0, grid_size.i));
 
@@ -352,6 +363,7 @@ SubGridConfig load_balancing(const GridConfig& grid, MPI_Comm comm, bool use_per
   res.offset_ = offset;
   res.block_ = {inf, sup};
   res.periodic_ = periodic;
+  res.bounce_back_planes_ = bounce_back_planes;
   res.cart_comm_ = MPI_COMM_CART;
 
   return res;

@@ -30,7 +30,6 @@ under the License.
 #include <onika/scg/operator_slot.h>
 
 // hippoLBM
-#include <hippoLBM/bcs/bounce_back_manager.hpp>
 #include <hippoLBM/compute/parallel_for_core.hpp>
 #include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/comm.hpp>
@@ -55,7 +54,7 @@ class PostBounceBack : public OperatorNode {
            DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
   ADD_SLOT(LBMGridRegion, grid_region, INPUT, REQUIRED,
            DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
-  ADD_SLOT(bounce_back_manager<Q>, bbmanager, INPUT_OUTPUT);
+  ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED);
 
  public:
   inline std::string documentation() const final {
@@ -104,9 +103,7 @@ class PostBounceBack : public OperatorNode {
     auto& traversals = *grid_region;
 
     // storage
-    auto& bb = *bbmanager;
-
-    // define functors
+    auto& bb = domain->bb_manager();
 
     // get fields
     FieldView<Q> pf = data.distributions();

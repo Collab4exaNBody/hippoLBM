@@ -37,7 +37,6 @@ under the License.
 #include <hippoLBM/grid/make_variant_operator.hpp>
 
 // impl
-#include <hippoLBM/bcs/bounce_back_manager.hpp>
 #include <hippoLBM/bcs/cavity.hpp>
 
 namespace hippoLBM {
@@ -54,7 +53,6 @@ class Cavity : public OperatorNode {
            DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
   ADD_SLOT(readVec3, U, INPUT, REQUIRED,
            DocString{"Prescribed velocity at the boundary (z = lz), enforcing the Cavity condition."});
-  ADD_SLOT(bounce_back_manager<Q>, bbmanager, INPUT_OUTPUT, REQUIRED);
 
  public:
   inline std::string documentation() const final {
@@ -66,7 +64,7 @@ class Cavity : public OperatorNode {
 
   inline void execute() final {
     auto& data = *fields;
-    auto& bb = *bbmanager;
+    auto& bb = domain->bb_manager();
     auto [lx, ly, lz] = domain->domain_size_;
     auto [ux, uy, uz] = *U;
 
