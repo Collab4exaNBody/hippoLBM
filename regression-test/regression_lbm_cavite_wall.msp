@@ -16,8 +16,7 @@ set_obstacles:
      id: 0
      bounds: [[0.048,0,0],[0.052,0.1,0.08]]
 
-post_stream_bcs:
-  - post_bounce_back
++post_stream_bcs:
   - lid_driven_cavity:  ## need to be called after bounce back
      U: [0.1, 0.0, 0]
      regions: [plan_xy_l]
