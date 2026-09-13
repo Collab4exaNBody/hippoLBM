@@ -23,9 +23,10 @@ under the License.
 #include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/field_view.hpp>
 #include <hippoLBM/grid/grid.hpp>
+#include <stdexcept>
+#include <string>
 
 namespace hippoLBM {
-namespace bcs {
 
 /** @brief Helper function to calculate the index for a given dimension and side. */
 template <int dim, Side dir>
@@ -36,6 +37,21 @@ inline constexpr int helper_dim_idx() {
   else
     return dim * 2;
 }
+
+/** @brief Maps a named bounce-back plane (e.g. "plan_xy_0") to its index in the
+ * 2*DIM_MAX-sized plane arrays, matching helper_dim_idx's numbering. */
+inline int bounce_back_plane_index(const std::string& name) {
+  if (name == "plan_yz_0") return 0;
+  if (name == "plan_yz_l") return 1;
+  if (name == "plan_xz_0") return 2;
+  if (name == "plan_xz_l") return 3;
+  if (name == "plan_xy_0") return 4;
+  if (name == "plan_xy_l") return 5;
+  throw std::out_of_range("Unknown bounce-back plane name: " + name);
+}
+
+/** @brief Dimension (DIMX/DIMY/DIMZ) a bounce-back plane index belongs to. */
+inline int bounce_back_plane_dim(int index) { return index / 2; }
 
 /** @brief A manager for handling bounce-back boundary conditions. */
 template <int Q>
@@ -90,32 +106,27 @@ struct bounce_back_manager<19> {
     }
   }
 
-  /** @brief Resize the data for all dimensions and sides.
-   * @param periodic A vector indicating which dimensions are periodic.
+  /** @brief Resize the data for every plane that was explicitly requested and that this
+   * rank actually sits at the boundary of.
+   * @param active_planes Which of the 2*DIM_MAX named planes (indexed via
+   *        bounce_back_plane_index / helper_dim_idx) should get a bounce-back buffer.
    * @param lgs The local grid size.
    * @param MPI_coord The MPI coordinates.
    * @param MPI_grid_size The MPI grid size.
    */
-  void resize_data(const std::vector<bool>& periodic, const onika::math::IJK& lgs /* local grid size*/,
+  void resize_data(const std::array<bool, 2 * DIM_MAX>& active_planes, const onika::math::IJK& lgs,
                    const onika::math::IJK& MPI_coord, const onika::math::IJK& MPI_grid_size) {
-    if (periodic[DIMX] == false)  // not periodic
-    {
-      if (MPI_coord.i == 0) resize_data<DIMX, Left>(lgs);
-      if (MPI_coord.i == MPI_grid_size.i - 1) resize_data<DIMX, Right>(lgs);
-    }
+    if (active_planes[helper_dim_idx<DIMX, Left>()] && MPI_coord.i == 0) resize_data<DIMX, Left>(lgs);
+    if (active_planes[helper_dim_idx<DIMX, Right>()] && MPI_coord.i == MPI_grid_size.i - 1)
+      resize_data<DIMX, Right>(lgs);
 
-    if (periodic[DIMY] == false)  // not periodic
-    {
-      if (MPI_coord.j == 0) resize_data<DIMY, Left>(lgs);
-      if (MPI_coord.j == MPI_grid_size.j - 1) resize_data<DIMY, Right>(lgs);
-    }
+    if (active_planes[helper_dim_idx<DIMY, Left>()] && MPI_coord.j == 0) resize_data<DIMY, Left>(lgs);
+    if (active_planes[helper_dim_idx<DIMY, Right>()] && MPI_coord.j == MPI_grid_size.j - 1)
+      resize_data<DIMY, Right>(lgs);
 
-    if (periodic[DIMZ] == false)  // not periodic
-    {
-      if (MPI_coord.k == 0) resize_data<DIMZ, Left>(lgs);
-      if (MPI_coord.k == MPI_grid_size.k - 1) resize_data<DIMZ, Right>(lgs);
-    }
+    if (active_planes[helper_dim_idx<DIMZ, Left>()] && MPI_coord.k == 0) resize_data<DIMZ, Left>(lgs);
+    if (active_planes[helper_dim_idx<DIMZ, Right>()] && MPI_coord.k == MPI_grid_size.k - 1)
+      resize_data<DIMZ, Right>(lgs);
   }
 };
-}  // namespace bcs
 }  // namespace hippoLBM

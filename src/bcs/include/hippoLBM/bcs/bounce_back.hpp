@@ -156,34 +156,6 @@ struct post_bounce_back<Dim, S, 19> {
   }
 };
 
-//////////////////////// Wall streaming ///////////////////////////////
-
-template <int Q>
-struct wall_bounce_back {};
-
-template <>
-struct wall_bounce_back<19> {
-  LBMGrid g_;
-  const int* const obst_;
-  const FieldView<19> f_;
-  static constexpr int Q = 19;
-
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t coord) const {
-    const int idx = g_(coord.x, coord.y, coord.z);
-    if (obst_[idx] == WALL_) {
-      stencil::for_each<typename LBMScheme<19>::Coefficients, 1, Q>([&]<typename coeff>(int iLB) {
-        const int next_x = coord.x + coeff::ex;
-        const int next_y = coord.y + coeff::ey;
-        const int next_z = coord.z + coeff::ez;
-        if (g_.is_defined(next_x, next_y, next_z)) {
-          const int idx_next = g_(next_x, next_y, next_z);
-          if (obst_[idx_next] != WALL_)
-            f_(idx, iLB) = f_(idx_next, coeff::iopp);  // call this function before the stream step
-        }
-      });
-    }
-  }
-};
 }  // namespace bcs
 }  // namespace hippoLBM
 
@@ -197,12 +169,6 @@ struct ParallelForFunctorTraits<hippoLBM::bcs::pre_bounce_back<Dim, S, Q>> {
 
 template <int Dim, hippoLBM::Side S, int Q>
 struct ParallelForFunctorTraits<hippoLBM::bcs::post_bounce_back<Dim, S, Q>> {
-  static inline constexpr bool RequiresBlockSynchronousCall = false;
-  static inline constexpr bool CudaCompatible = true;
-};
-
-template <int Q>
-struct ParallelForFunctorTraits<hippoLBM::bcs::wall_bounce_back<Q>> {
   static inline constexpr bool RequiresBlockSynchronousCall = false;
   static inline constexpr bool CudaCompatible = true;
 };

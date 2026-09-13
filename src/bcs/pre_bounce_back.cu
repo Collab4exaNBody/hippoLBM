@@ -29,7 +29,6 @@ under the License.
 #include <onika/scg/operator_slot.h>
 
 // hippoLBM
-#include <hippoLBM/bcs/bounce_back_manager.hpp>
 #include <hippoLBM/compute/parallel_for_core.hpp>
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/domain.hpp>
@@ -46,7 +45,6 @@ using namespace scg;
 using namespace onika::cuda;
 using namespace onika::parallel;
 using namespace bcs;
-using BoolVector = std::vector<bool>;
 
 template <int Q>
 class PreBounceBack : public OperatorNode {
@@ -55,8 +53,7 @@ class PreBounceBack : public OperatorNode {
   ADD_SLOT(LBMGridRegion, grid_region, INPUT, REQUIRED,
            DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
   ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED);
-  ADD_SLOT(bounce_back_manager<Q>, bbmanager, INPUT_OUTPUT);
-  ADD_SLOT(BoolVector, periodic, INPUT, REQUIRED);
+  ADD_SLOT(bool, by_pass_check, INPUT, false, DocString{"Skip the check"});
 
  public:
   inline std::string documentation() const final {
@@ -87,21 +84,26 @@ class PreBounceBack : public OperatorNode {
     }
   }
 
+  void check_slots(bounce_back_manager<Q>& bb) {
+    if (*by_pass_check) return;
+    for (int i = 0; i < 2 * DIM_MAX; i++) {
+      if (bb.get_data(i).num_elements_ > 0) return;
+    }
+    lout << "[Error, pre_bounce_back], no bounce-back plane has any data to process on this rank: this operator "
+            "should not be running unless at least one plane was declared (domain: bounce_back_planes, or "
+            "add_bounce_back_bcs). If this rank is legitimately interior (touches no bounce-back boundary) in a "
+            "valid multi-rank setup, set by_pass_check: true."
+         << std::endl;
+    std::exit(EXIT_FAILURE);
+  }
+
   inline void execute() final {
     auto& data = *fields;
     auto& traversals = *grid_region;
-    LBMGrid& Grid = domain->grid();
-
-    // fill grid size;
-    constexpr Area L = Area::Local;
-    constexpr Traversal R = Traversal::All;
-    // constexpr Traversal R = Traversal::Real;
-    auto br = Grid.build_box<L, R>();
-    onika::math::IJK local_grid_size(br.get_length(0), br.get_length(1), br.get_length(2));
 
     // storage
-    auto& bb = *bbmanager;
-    bb.resize_data(*periodic, local_grid_size, domain->MPI_coord_, domain->MPI_grid_size_);
+    auto& bb = domain->bb_manager();
+    check_slots(bb);
 
     // get fields
     FieldView<Q> pf = data.distributions();

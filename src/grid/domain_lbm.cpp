@@ -51,6 +51,13 @@ class InitDomainLBM : public OperatorNode {
   ADD_SLOT(onika::math::AABB, bounds, INPUT_OUTPUT, REQUIRED, DocString{"Domain's bounds"});
   ADD_SLOT(double, tolerance, INPUT, 1e-6,
            DocString{"Relative tolerance used to check consistency between resolution, grid size, and bounds."});
+  ADD_SLOT(std::vector<std::string>, bounce_back_planes, INPUT, std::vector<std::string>{},
+           DocString{"Named planes (plan_xy_0, plan_xy_l, plan_xz_0, plan_xz_l, plan_yz_0, plan_yz_l) where a "
+                     "bounce-back wall boundary condition is applied. Each named plane's dimension must not be "
+                     "periodic."});
+  ADD_SLOT(bool, has_bounce_back, OUTPUT,
+           DocString{"True if at least one bounce_back_plane is declared. Used as a condition to skip "
+                     "pre_bounce_back/post_bounce_back entirely otherwise."});
 
   inline std::string documentation() const final {
     return R"EOF(
@@ -63,6 +70,9 @@ class InitDomainLBM : public OperatorNode {
 		- periodic [bool[3]] : Periodic boundary conditions for each dimension. Required.
 		- tolerance [double] : Relative tolerance used to check consistency between resolution,
 		  grid size, and bounds. Default: 1e-6.
+		- bounce_back_planes [string list] : Named planes (plan_xy_0, plan_xy_l, plan_xz_0, plan_xz_l,
+		  plan_yz_0, plan_yz_l) where a bounce-back wall boundary condition is applied. Each plane's
+		  dimension must not be periodic. Default: none.
 
 		YAML example:
 
@@ -71,7 +81,8 @@ class InitDomainLBM : public OperatorNode {
 		   bounds:
 			 bmin: [0.0, 0.0, 0.0]
 			 bmax: [1.0, 1.0, 1.0]
-		   periodic: [true, true, true]
+		   periodic: [true, true, false]
+		   bounce_back_planes: [plan_xy_0, plan_xy_l]
 		   tolerance: 1e-6
 		)EOF";
   }
@@ -83,6 +94,19 @@ class InitDomainLBM : public OperatorNode {
     grid.dims_.j = cell_dims->j + (grid.periodic_[1] ? 0 : 1);
     grid.dims_.k = cell_dims->k + (grid.periodic_[2] ? 0 : 1);
     grid.bounds_ = *bounds;
+
+    for (const std::string& name : *bounce_back_planes) {
+      const int plane_idx = bounce_back_plane_index(name);
+      const int dim = bounce_back_plane_dim(plane_idx);
+      if (grid.periodic_[dim]) {
+        lout << "[Error, domain], bounce_back_planes: \"" << name
+             << "\" is on a periodic dimension. A dimension can't be both periodic and have a bounce-back plane."
+             << std::endl;
+        std::exit(EXIT_FAILURE);
+      }
+      grid.bounce_back_planes_[plane_idx] = true;
+    }
+    *has_bounce_back = !bounce_back_planes->empty();
 
     onika::math::IJK grid_size = grid.dims_;
     auto [inf, sup] = grid.bounds_;

@@ -35,9 +35,10 @@ under the License.
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/grid_region.hpp>
 #include <hippoLBM/grid/make_variant_operator.hpp>
+#include <hippoLBM/obstacle/obstacles.hpp>
 
 // impl
-#include <hippoLBM/bcs/bounce_back.hpp>
+#include <hippoLBM/obstacle/bounce_back_obstacles.hpp>
 
 namespace hippoLBM {
 using namespace onika;
@@ -51,12 +52,17 @@ class WallBounceBack : public OperatorNode {
   ADD_SLOT(LBMFields<Q>, fields, INPUT_OUTPUT, REQUIRED,
            DocString{"Grid data for the LBM simulation, including distribution functions and macroscopic fields."});
   ADD_SLOT(LBMDomain<Q>, domain, INPUT, REQUIRED);
+  ADD_SLOT(Obstacles, obstacles, INPUT, REQUIRED, DocString{"List of Obstacles"});
 
   inline std::string documentation() const final {
     return R"EOF(  The WallBounceBack class is described as part of the Lattice Boltzmann Method (LBM) implementation, specifically the wall bounce back steps.)EOF";
   }
 
   inline void execute() final {
+    if (obstacles->size() == 0) {
+      return;
+    }
+
     auto& data = *fields;
     LBMGrid& Grid = domain->grid();
 

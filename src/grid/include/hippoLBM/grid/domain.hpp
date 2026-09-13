@@ -20,6 +20,7 @@ under the License.
 #pragma once
 
 #include <hippoLBM/core/box3d.hpp>
+#include <hippoLBM/grid/bounce_back_manager.hpp>
 #include <hippoLBM/grid/ghost_manager.hpp>
 #include <hippoLBM/grid/grid.hpp>
 
@@ -27,6 +28,7 @@ namespace hippoLBM {
 template <int Q>
 struct LBMDomain {
   LBMGhostManager<Q> ghost_manager_;  //< The ghost manager for handling ghost cell communication.
+  bounce_back_manager<Q> bounce_back_manager_;  //< The manager for wall bounce-back boundary conditions.
   Box3D box_;                         //< The computational box representing the local domain, including ghost layers.
   LBMGrid grid_;                      //< The LBM grid containing the distribution functions and macroscopic variables.
   onika::math::AABB bounds_;          //< The axis-aligned bounding box representing the physical domain boundaries.
@@ -37,9 +39,10 @@ struct LBMDomain {
 
   LBMDomain() : domain_size_{0, 0, 0}, MPI_coord_{0, 0, 0}, MPI_grid_size_{1, 1, 1}, periodic_{false, false, false} {};
 
-  LBMDomain(LBMGhostManager<Q>& g, Box3D& b, LBMGrid& gr, onika::math::AABB& bd, int3d& ds, onika::math::IJK& mc,
-            onika::math::IJK& mgs, std::array<bool, 3>& pr)
+  LBMDomain(LBMGhostManager<Q>& g, bounce_back_manager<Q>& bbm, Box3D& b, LBMGrid& gr, onika::math::AABB& bd,
+            int3d& ds, onika::math::IJK& mc, onika::math::IJK& mgs, std::array<bool, 3>& pr)
       : ghost_manager_(g),
+        bounce_back_manager_(bbm),
         box_(b),
         grid_(gr),
         bounds_(bd),
@@ -55,5 +58,6 @@ struct LBMDomain {
   Box3D& box() { return box_; }
   onika::math::AABB& bounds() { return bounds_; }
   LBMGhostManager<Q>& ghost_manager() { return ghost_manager_; }
+  bounce_back_manager<Q>& bb_manager() { return bounce_back_manager_; }
 };
 };  // namespace hippoLBM
