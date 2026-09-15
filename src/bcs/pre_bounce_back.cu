@@ -89,10 +89,15 @@ class PreBounceBack : public OperatorNode {
     for (int i = 0; i < 2 * DIM_MAX; i++) {
       if (bb.get_data(i).num_elements_ > 0) return;
     }
-    lout << "[Error, pre_bounce_back], no bounce-back plane has any data to process on this rank: this operator "
-            "should not be running unless at least one plane was declared (domain: bounce_back_planes, or "
-            "add_bounce_back_bcs). If this rank is legitimately interior (touches no bounce-back boundary) in a "
-            "valid multi-rank setup, set by_pass_check: true."
+    const auto& coord = domain->MPI_coord_;
+    const auto& ndims = domain->MPI_grid_size_;
+    const bool at_boundary = coord.i == 0 || coord.i == ndims.i - 1 || coord.j == 0 || coord.j == ndims.j - 1 ||
+                             coord.k == 0 || coord.k == ndims.k - 1;
+    if (!at_boundary) return;  // interior rank in a multi-rank run: nothing to do here, this is expected
+    lout << "[Error, pre_bounce_back], no bounce-back plane has any data to process on this rank, although it sits "
+            "on a domain boundary: this operator should not be running unless at least one plane was declared "
+            "(domain: bounce_back_planes, or add_bounce_back_bcs). If that boundary is intentionally handled by "
+            "another BC (neumann, rho, ...) instead of bounce-back, set by_pass_check: true."
          << std::endl;
     std::exit(EXIT_FAILURE);
   }
