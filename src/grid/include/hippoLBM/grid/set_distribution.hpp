@@ -37,13 +37,17 @@ struct SetDistributionFunc {
   }
 
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int i, int j, int k, const FieldView<Q>& f, const double value,
-                                                const LBMGrid& grid, const onika::math::Mat4d& quadric) const {
+                                                const LBMGrid& grid, const onika::math::Mat4d& quadric, bool inside = true) const {
     onika::math::Vec3d pos = grid.compute_position<Area::Global>(i, j, k);
-    if (onika::math::quadric_eval(quadric, pos) <= 0.0) {
+    if (onika::math::quadric_eval(quadric, pos) <= 0.0 && inside ) {
       const int idx = grid(i, j, k);
       stencil::for_each<typename LBMScheme<Q>::Coefficients>(
           [&]<typename coeff>(int iLB) { f(idx, iLB) = value * coeff::w; });
-    }
+    } else if (onika::math::quadric_eval(quadric, pos) > 0.0 && !inside ) {
+      const int idx = grid(i, j, k);
+      stencil::for_each<typename LBMScheme<Q>::Coefficients>(
+          [&]<typename coeff>(int iLB) { f(idx, iLB) = value * coeff::w; });
+    } 
   }
 };
 }  // namespace hippoLBM

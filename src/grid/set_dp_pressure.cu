@@ -56,6 +56,7 @@ class SetDPPressureLBM : public OperatorNode {
   ADD_SLOT(onika::math::AABB, bounds, INPUT, OPTIONAL, DocString{"Domain's bounds"});
   ADD_SLOT(onika::math::Mat4d, quadrics, INPUT, OPTIONAL, DocString{"Define area."});
   ADD_SLOT(onika::math::Mat4d, transform, INPUT, OPTIONAL, DocString{"Define area."});
+  ADD_SLOT(bool, inside, INPUT, true, DocString{"Define area."});
 
   ADD_SLOT(bool, verbosity, INPUT, false, DocString{"If true, print information about the operator execution."});
 
@@ -138,7 +139,7 @@ class SetDPPressureLBM : public OperatorNode {
         const auto M_inv = onika::math::inverse(*transform);
         quadric = onika::math::transpose(M_inv) * quadric * M_inv;
       }
-      parallel_for(wall_box, func, parallel_execution_context("set_dp_pressure"), pf, rho_lbm, Grid, quadric);
+      parallel_for(wall_box, func, parallel_execution_context("set_dp_pressure"), pf, rho_lbm, Grid, quadric, *inside);
     } else {
       parallel_for(wall_box, func, parallel_execution_context("set_dp_pressure"), pf, rho_lbm, Grid);
     }
