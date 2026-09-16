@@ -51,7 +51,8 @@ class SetDistributionsLBM : public OperatorNode {
 
   ADD_SLOT(double, value, INPUT, double(1), DocString{"The value to initialize the distribution function with."});
   ADD_SLOT(bool, do_update, INPUT, false, DocString{"Whether to update ghost cells after initialization."});
-  ADD_SLOT(onika::math::AABB, bounds, INPUT, OPTIONAL, DocString{"Domain's bounds"});
+  ADD_SLOT(onika::math::AABB, bounds, INPUT, OPTIONAL,
+           DocString{"Restrict initialization to this axis-aligned bounding box."});
   ADD_SLOT(onika::math::Mat4d, quadrics, INPUT, OPTIONAL, DocString{"Define area."});
   ADD_SLOT(onika::math::Mat4d, transform, INPUT, OPTIONAL, DocString{"Define area."});
 
@@ -105,11 +106,8 @@ class SetDistributionsLBM : public OperatorNode {
 
     if (use_bound) {
       auto& bound = *bounds;
-      onika::math::Vec3d min = bound.bmin;
-      onika::math::Vec3d max = bound.bmax;
-      double Dx = Grid.dx_;
-      Point3D _min = {int(min.x / Dx), int(min.y / Dx), int(min.z / Dx)};
-      Point3D _max = {int(max.x / Dx), int(max.y / Dx), int(max.z / Dx)};
+      Point3D _min = Grid.project_to_grid<Area::Global>(bound.bmin);
+      Point3D _max = Grid.project_to_grid<Area::Global>(bound.bmax);
 
       Box3D global_wall_box = {_min, _max};
 

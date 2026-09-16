@@ -357,6 +357,7 @@ struct LBMGrid {
     onika::math::Vec3d res = {double(x), double(y), double(z)};
     if constexpr (A == Area::Global) res += offset_;
     res = {res.x * dx_, res.y * dx_, res.z * dx_};  // add operator *=
+    res += origin_;
     return res;
   }
 
@@ -386,6 +387,7 @@ struct LBMGrid {
     onika::math::Vec3d res = onika::math::Vec3d(pt);
     if constexpr (A == Area::Global) res += offset_;
     res *= dx_;
+    res += origin_;
     return res;
   }
 
