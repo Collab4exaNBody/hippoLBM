@@ -41,11 +41,8 @@ void write_paraview_subbox(MPI_Comm comm, std::string filename, std::string base
   MPI_Comm_rank(comm, &rank);
 
   const LBMGrid& grid = domain.grid();
-  const double dx = grid.dx_;
-  Point3D pmin = {int(std::floor(bounds.bmin.x / dx)), int(std::floor(bounds.bmin.y / dx)),
-                  int(std::floor(bounds.bmin.z / dx))};
-  Point3D pmax = {int(std::floor(bounds.bmax.x / dx)), int(std::floor(bounds.bmax.y / dx)),
-                  int(std::floor(bounds.bmax.z / dx))};
+  Point3D pmin = grid.project_to_grid<Area::Global>(bounds.bmin);
+  Point3D pmax = grid.project_to_grid<Area::Global>(bounds.bmax);
   Box3D global_input_box = {pmin, pmax};
 
   // clip the requested box to the whole domain extent [0,lx-1]x[0,ly-1]x[0,lz-1] (NOT

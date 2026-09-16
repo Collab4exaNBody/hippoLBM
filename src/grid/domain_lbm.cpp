@@ -48,7 +48,7 @@ class InitDomainLBM : public OperatorNode {
   ADD_SLOT(BoolVector, periodic, INPUT_OUTPUT, REQUIRED, DocString{"Periodic boundary conditions for each dimension."});
   ADD_SLOT(onika::math::IJK, cell_dims, INPUT, REQUIRED,
            DocString{"Number of cells in each dimension. Grid dims: cells_dims+1."});
-  ADD_SLOT(onika::math::AABB, bounds, INPUT_OUTPUT, REQUIRED, DocString{"Domain's bounds"});
+  ADD_SLOT(onika::math::AABB, bounds, INPUT, REQUIRED, DocString{"Domain's bounds"});
   ADD_SLOT(double, tolerance, INPUT, 1e-6,
            DocString{"Relative tolerance used to check consistency between resolution, grid size, and bounds."});
   ADD_SLOT(std::vector<std::string>, bounce_back_planes, INPUT, std::vector<std::string>{},

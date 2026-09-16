@@ -120,11 +120,12 @@ struct ParaviewBuffers {
   /** @brief Convert simulation header data to stream
    * @param Box The bounding box for the simulation domain
    * @param dx The grid spacing
+   * @param origin The physical position of grid index (0,0,0)
    */
-  void sim_header_to_stream(Box3D& Box, double dx) {
-    for (int x = Box.start(0); x <= Box.end(0); x++) i_ << (double)(x * dx) << " ";
-    for (int y = Box.start(1); y <= Box.end(1); y++) j_ << (double)(y * dx) << " ";
-    for (int z = Box.start(2); z <= Box.end(2); z++) k_ << (double)(z * dx) << " ";
+  void sim_header_to_stream(Box3D& Box, double dx, const onika::math::Vec3d& origin) {
+    for (int x = Box.start(0); x <= Box.end(0); x++) i_ << (double)(origin.x + x * dx) << " ";
+    for (int y = Box.start(1); y <= Box.end(1); y++) j_ << (double)(origin.y + y * dx) << " ";
+    for (int z = Box.start(2); z <= Box.end(2); z++) k_ << (double)(origin.z + z * dx) << " ";
   }
 };
 
@@ -234,7 +235,7 @@ inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data,
   write_file writer_double = {pression};
 
   ParaviewBuffers paraview_streams;
-  paraview_streams.sim_header_to_stream(global_box, dx);
+  paraview_streams.sim_header_to_stream(global_box, dx, grid.origin_);
 
   outFile << "<VTKFile type=\"RectilinearGrid\">" << std::endl;
   outFile << " <RectilinearGrid WholeExtent=\" 0 " << lx - 1 << " 0 " << ly - 1 << " 0 " << lz - 1 << "\">"

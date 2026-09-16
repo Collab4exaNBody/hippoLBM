@@ -50,10 +50,8 @@ struct ApplyUpdateObstaclesFunc {
   inline void operator()(Obj& obj) const {
     // convert bounds in box
     onika::math::AABB bounds = obj.covered();
-    onika::math::Vec3d min = bounds.bmin;
-    onika::math::Vec3d max = bounds.bmax;
-    Point3D _min = {int(min.x / dx_), int(min.y / dx_), int(min.z / dx_)};
-    Point3D _max = {int(max.x / dx_), int(max.y / dx_), int(max.z / dx_)};
+    Point3D _min = grid_.project_to_grid<Area::Global>(bounds.bmin);
+    Point3D _max = grid_.project_to_grid<Area::Global>(bounds.bmax);
     Box3D global_box = {_min, _max};
 
     auto [is_inside_subdomain, local_box] = grid_.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_box);
@@ -82,8 +80,8 @@ struct ApplyRShapeToGridFunctor {
     const size_t f = coord.x;
     std::span<const onika::math::Vec3d> vertices(vertices_ + offset_[f], size_[f]);
     onika::math::AABB bounds = compute_aabb(vertices, minkowski_);
-    Point3D pmin = {int(bounds.bmin.x / grid_.dx_), int(bounds.bmin.y / grid_.dx_), int(bounds.bmin.z / grid_.dx_)};
-    Point3D pmax = {int(bounds.bmax.x / grid_.dx_), int(bounds.bmax.y / grid_.dx_), int(bounds.bmax.z / grid_.dx_)};
+    Point3D pmin = grid_.project_to_grid<Area::Global>(bounds.bmin);
+    Point3D pmax = grid_.project_to_grid<Area::Global>(bounds.bmax);
     Box3D global_box = {pmin, pmax};
 
     auto [is_inside_subdomain, local_box] = grid_.restrict_box_to_grid<Area::Local, Traversal::Extend>(global_box);
