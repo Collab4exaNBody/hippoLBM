@@ -158,7 +158,7 @@ inline std::array<bool, hippoLBMGridConfig::dim> convert(const std::vector<bool>
  */
 template <int Q>
 LBMDomain<Q> make_domain(const GridConfig grid, const SubGridConfig& subgrid) {
-  // grid.display(); -> useful for debuging
+  // grid.display(); -> useful for debugging
   // subgrid.display();
   constexpr int ghost_layer = hippoLBMGridConfig::ghost_layer;
 
@@ -242,9 +242,6 @@ LBMDomain<Q> make_domain(const GridConfig grid, const SubGridConfig& subgrid) {
       rtag = stag;
     } else {
       rtag = 2 - relative_position[0] - 1 + (2 - relative_position[1] - 1) * 3 + (2 - relative_position[2] - 1) * 9;
-      if (rtag > 27)
-        std::cout << "rtag: " << rtag << " " << relative_position[0] << " " << relative_position[1] << " "
-                  << relative_position[2] << std::endl;
     }
 
     hippoLBM::LBMComm<Q> send(neig, stag, send_box);

@@ -89,6 +89,9 @@ class LidDrivenCavityBCs : public OperatorNode {
     for (auto& traversal : trs) {
       const std::string traversal_names = *it++;
       std::string kernel_name = "cavity_apply_on_" + traversal_names;
+
+      if (traversal.size_ == 0) continue;  // No LBM point in this subdomain
+
       parallel_for_id(traversal.ptr_, traversal.size_, bcs, parallel_execution_context(kernel_name.c_str()));
     }
   }

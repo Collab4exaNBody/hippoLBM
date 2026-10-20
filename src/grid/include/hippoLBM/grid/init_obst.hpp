@@ -19,8 +19,7 @@ under the License.
 
 #pragma once
 
-// TODO: place this macro in a more general header file, as it is used in multiple places
-#define FLUIDE_ -1
+#include <hippoLBM/core/enum.hpp>
 
 namespace hippoLBM {
 /**
@@ -28,7 +27,7 @@ namespace hippoLBM {
  */
 struct init_obst {
   int* obst_;  // Pointer to the obstacle field to be initialized.
-  ONIKA_HOST_DEVICE_FUNC inline void operator()(const int idx) const { obst_[idx] = FLUIDE_; };
+  ONIKA_HOST_DEVICE_FUNC inline void operator()(const int idx) const { obst_[idx] = FLUID_CELL; };
 };
 }  // namespace hippoLBM
 

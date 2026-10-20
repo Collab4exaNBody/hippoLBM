@@ -19,10 +19,8 @@ under the License.
 
 #pragma once
 
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/field_view.hpp>
-
-// TODO: This file is a temporary place for the macro_variables functor. It should be moved to a more appropriate
-#define FLUIDE_ -1
 
 namespace hippoLBM {
 template <int Q>
@@ -178,7 +176,7 @@ struct mrt<19> {
    */
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const __restrict__ obst, const FieldView<19>& f,
                                                 double* const __restrict__ m0, const double tau) const {
-    if (obst[idx] == FLUIDE_) {
+    if (obst[idx] == FLUID_CELL) {
       const double rho = m0[idx];
 
       // step 1, fill f[iLB]

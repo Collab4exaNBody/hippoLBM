@@ -1,5 +1,4 @@
 #pragma once
-#include "stencil.hpp"
 
 namespace hippoLBM::stencil {
 

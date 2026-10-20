@@ -19,11 +19,8 @@ under the License.
 
 #pragma once
 
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/field_view.hpp>
-
-// TODO: This file is a temporary place for the macro_variables functor. It should be moved to a more appropriate
-// location in the future, such as a compute or utility directory, to better organize the codebase.
-#define FLUIDE_ -1
 
 namespace hippoLBM {
 /**
@@ -36,17 +33,14 @@ struct macro_variables {
 
   /** @brief Computes the macroscopic variables for a given lattice node.
    * @param idx The index of the lattice node.
-   * @param pm1 The field view for the macroscopic variables.
+   * @param pm1 The field view for the macroscopic variables (velocity).
    * @param pobst The obstacle field.
    * @param pf The distribution functions.
    * @param pm0 The density field.
-   * @param pex The x-components of the discrete velocity vectors.
-   * @param pey The y-components of the discrete velocity vectors.
-   * @param pez The z-components of the discrete velocity vectors.
    */
   ONIKA_HOST_DEVICE_FUNC inline void operator()(const int idx, const FieldView<3>& pm1, int* const pobst,
                                                 const FieldView<Q>& pf, double* const pm0) const {
-    if (pobst[idx] >= FLUIDE_) {
+    if (pobst[idx] >= FLUID_CELL) {
       double rho = 0.0;
       double ux = 0.0;
       double uy = 0.0;

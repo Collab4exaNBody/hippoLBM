@@ -103,7 +103,9 @@ class RhoOp : public OperatorNode {
     if (delta_ps.size() != region_names.size()) {
       lout << "[Error, bcs::rho] delta_p size (" << delta_ps.size() << ") does not match regions size ("
            << region_names.size() << ")" << std::endl;
-      std::exit(EXIT_FAILURE);
+      // MPI_Abort, not std::exit: std::exit() only kills this process, which can hang the
+      // other MPI ranks in a later collective call.
+      MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
     const std::vector<traversal_data> trs = get_traversal(traversals, region_names, allowed_tr);

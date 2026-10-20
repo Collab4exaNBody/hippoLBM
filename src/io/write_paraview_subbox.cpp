@@ -50,7 +50,7 @@ class WriteParaviewSubboxLBM : public OperatorNode {
   ADD_SLOT(std::string, output_directory, INPUT, "hippoLBMOutputDir",
            DocString{"The base directory for the Paraview output."});
   ADD_SLOT(long, timestep, INPUT, 0, DocString{"The current timestep."});
-  ADD_SLOT(bool, display_filename, true, DocString{"Print filename"});
+  ADD_SLOT(bool, display_filename, INPUT, true, DocString{"Print filename"});
 
   inline bool is_sink() const final { return true; }
 

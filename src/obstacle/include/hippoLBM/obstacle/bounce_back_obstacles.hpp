@@ -39,14 +39,14 @@ struct wall_bounce_back<19> {
 
   ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t coord) const {
     const int idx = g_(coord.x, coord.y, coord.z);
-    if (obst_[idx] == WALL_) {
+    if (obst_[idx] == WALL_CELL) {
       stencil::for_each<typename LBMScheme<19>::Coefficients, 1, Q>([&]<typename coeff>(int iLB) {
         const int next_x = coord.x + coeff::ex;
         const int next_y = coord.y + coeff::ey;
         const int next_z = coord.z + coeff::ez;
         if (g_.is_defined(next_x, next_y, next_z)) {
           const int idx_next = g_(next_x, next_y, next_z);
-          if (obst_[idx_next] != WALL_)
+          if (obst_[idx_next] != WALL_CELL)
             f_(idx, iLB) = f_(idx_next, coeff::iopp);  // call this function before the stream step
         }
       });

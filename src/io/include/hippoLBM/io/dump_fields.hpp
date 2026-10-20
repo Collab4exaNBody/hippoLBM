@@ -30,6 +30,7 @@ under the License.
 #include <hippoLBM/grid/lbm_parameters.hpp>
 #include <hippoLBM/io/dump_compression.hpp>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -48,7 +49,9 @@ struct DumpFieldDescriptor {
 
 struct DumpHeader {
   // comment: used to sanity-check the file on read
-  static constexpr int32_t MAGIC = 0x4d424c48;  ///< TODO I'm not sure of what it did , I keep it ...
+  /// Sanity-check value written at the start of every checkpoint file and verified on read
+  /// (see read_dump_header()). Its bytes spell "HLBM" (hippoLBM) in little-endian order.
+  static constexpr int32_t MAGIC = 0x4d424c48;
   static constexpr int32_t VERSION = 100;       ///< represent the current version of the dump file format, 1.0.0 = 100
   static constexpr int32_t MAX_FIELDS = 8;      ///< Warning: arbitrary limit, must be kept
 
@@ -132,10 +135,12 @@ inline DumpHeader write_dump_header(MPI_Comm comm, const std::string& filename, 
   header.params_ = params;
 
   if (sources.size() > static_cast<size_t>(DumpHeader::MAX_FIELDS)) {
-    std::cerr << "[dump_fields] Error: " << sources.size() << " fields requested, but only " << DumpHeader::MAX_FIELDS
-              << " are supported (DumpHeader::MAX_FIELDS)." << std::endl;
+    throw std::runtime_error("[dump_fields] Error: " + std::to_string(sources.size()) + " fields requested, but only " +
+                             std::to_string(DumpHeader::MAX_FIELDS) +
+                             " are supported (DumpHeader::MAX_FIELDS)."
+    );
   }
-  header.num_fields_ = std::min<int32_t>(static_cast<int32_t>(sources.size()), DumpHeader::MAX_FIELDS);
+  header.num_fields_ = static_cast<int32_t>(sources.size());
   for (int32_t i = 0; i < header.num_fields_; i++) {
     std::snprintf(header.fields_[i].name_, sizeof(header.fields_[i].name_), "%s", sources[i].name_.c_str());
     header.fields_[i].components_ = sources[i].components_;
@@ -165,8 +170,7 @@ inline DumpHeader read_dump_header(MPI_Comm comm, const std::string& filename) {
   MPI_File_close(&file);
 
   if (header.magic_ != DumpHeader::MAGIC) {
-    std::cerr << "[dump_fields] Warning: '" << filename << "' does not look like a hippoLBM checkpoint file."
-              << std::endl;
+    throw std::runtime_error("[dump_fields] Error: '" + filename + "' does not look like a hippoLBM checkpoint file.");
   }
   return header;
 }

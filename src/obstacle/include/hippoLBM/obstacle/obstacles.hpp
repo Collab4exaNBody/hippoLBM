@@ -99,12 +99,15 @@ struct Obstacles {
     static_assert(t != OBSTACLE_TYPE::UNDEFINED);
     // assert(type_index_.size() == data_.size());
     const int size = type_index_.size();
-    if (idx < size)  // reallocation
+    if (idx < size)  // overwrite an existing slot
     {
       OBSTACLE_TYPE current_type = type(idx);
       if (current_type != OBSTACLE_TYPE::UNDEFINED) {
-        ::onika::lout << "You are currently removing a obstacle at index " << idx << std::endl;
-        //	Obstacle.print();
+        // Note: this only overwrites what index `idx` points to; the obstacle previously at
+        // this index is not erased from its type vector (just no longer referenced), so it
+        // stays allocated for the lifetime of this Obstacles object.
+        ::onika::lout << "Replacing obstacle at index " << idx << " (previous obstacle of type "
+                      << int(current_type) << " is orphaned, not freed)" << std::endl;
       }
     } else  // allocate
     {

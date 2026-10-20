@@ -78,7 +78,7 @@ class PreBounceBack : public OperatorNode {
       ParallelForOptions opts;
       opts.omp_scheduling = OMP_SCHED_STATIC;
       pre_bounce_back<dim, dir, Q> kernel = {ptr};
-      auto params = make_tuple(pf, pfi);
+      auto params = std::make_tuple(pf, pfi);
       parallel_for_id_runner runner = {kernel, params};
       parallel_for(size, runner, parallel_execution_context(), opts);
     }
@@ -99,7 +99,10 @@ class PreBounceBack : public OperatorNode {
             "(domain: bounce_back_planes, or add_bounce_back_bcs). If that boundary is intentionally handled by "
             "another BC (neumann, rho, ...) instead of bounce-back, set by_pass_check: true."
          << std::endl;
-    std::exit(EXIT_FAILURE);
+    // MPI_Abort, not std::exit: this condition is evaluated per-rank (MPI_coord_, local bounce-back
+    // data), so it can be true on only some ranks. std::exit() would only kill those processes and
+    // leave the others running, hanging on the next collective call.
+    MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
   }
 
   inline void execute() final {

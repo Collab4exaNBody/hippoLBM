@@ -27,6 +27,7 @@ under the License.
 #include <cstdint>
 #include <fstream>
 #include <span>
+#include <stdexcept>
 #include <string>
 
 namespace hippoLBM {
@@ -115,7 +116,9 @@ struct RShape {
 
   void read_stl(const std::string& filename) {
     std::ifstream file(filename, std::ios::binary);
-    assert(file.is_open());
+    if (!file.is_open()) {
+      throw std::runtime_error("[RShape::read_stl] Error: could not open STL file '" + filename + "'.");
+    }
 
     file.seekg(0, std::ios::end);
     const std::streamoff file_size = file.tellg();
@@ -152,7 +155,9 @@ struct RShape {
 
     file.close();
     std::ifstream ascii(filename);
-    assert(ascii.is_open());
+    if (!ascii.is_open()) {
+      throw std::runtime_error("[RShape::read_stl] Error: could not reopen STL file '" + filename + "' as ASCII.");
+    }
     std::string token;
     onika::math::Vec3d tri[3];
     int count = 0;

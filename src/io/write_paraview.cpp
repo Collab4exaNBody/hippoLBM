@@ -50,7 +50,7 @@ class WriteParaviewLBM : public OperatorNode {
            DocString{"The base directory for the Paraview output."});
   ADD_SLOT(long, timestep, INPUT, 0, DocString{"The current timestep."});
   ADD_SLOT(bool, distributions, INPUT, false, DocString{"Whether to write distribution functions."});
-  ADD_SLOT(bool, display_filename, true, DocString{"Print filename"});
+  ADD_SLOT(bool, display_filename, INPUT, true, DocString{"Print filename"});
 
   inline bool is_sink() const final { return true; }
 

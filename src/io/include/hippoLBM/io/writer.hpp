@@ -42,7 +42,7 @@ struct UWriter {
   const int* const obst_;       ///< Pointer to the obstacle field.
   const double ratio_dx_dtLB_;  ///< The ratio of grid spacing to LBM time step.
   inline onika::math::Vec3d operator()(const int idx, const FieldView<3>& m1) const {
-    if (obst_[idx] == FLUIDE_) {
+    if (obst_[idx] == FLUID_CELL) {
       onika::math::Vec3d _m1 = {m1(idx, 0), m1(idx, 1), m1(idx, 2)};
       return ratio_dx_dtLB_ * _m1;
     }
@@ -55,7 +55,7 @@ struct PressionWriter {
   const int* const obst_;               ///< Pointer to the obstacle field.
   const double c_c_avg_rho_div_three_;  ///< A constant factor for pressure calculation.
   inline double operator()(const int idx, const double& m0) const {
-    if (obst_[idx] == FLUIDE_) {
+    if (obst_[idx] == FLUID_CELL) {
       return c_c_avg_rho_div_three_ * (m0 - 1);
     }
     return 0;

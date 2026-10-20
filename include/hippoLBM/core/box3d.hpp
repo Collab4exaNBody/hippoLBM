@@ -19,6 +19,8 @@ under the License.
 
 #pragma once
 
+#include <cstdint>
+
 #include <hippoLBM/core/point3d.hpp>
 
 namespace hippoLBM {
@@ -69,11 +71,16 @@ struct Box3D {
   /**
    * @brief Calculate the total number of points within the box.
    *
+   * Computed in 64 bits (not just returned as one): get_length() per axis is an int, and a
+   * local subdomain box large enough in all 3 dimensions can have a product that overflows
+   * 32 bits even though no single axis length does, so the multiplication itself must happen
+   * in 64 bits rather than being widened only after the fact.
+   *
    * @return The total number of points within the box.
    */
-  ONIKA_HOST_DEVICE_FUNC inline int number_of_points() const {
-    int res = 1;
-    for (int dim = 0; dim < DIM; dim++) res *= (this->get_length(dim));  // sup_ is included (+1)
+  ONIKA_HOST_DEVICE_FUNC inline uint64_t number_of_points() const {
+    uint64_t res = 1;
+    for (int dim = 0; dim < DIM; dim++) res *= uint64_t(this->get_length(dim));  // sup_ is included (+1)
     return res;
   }
 

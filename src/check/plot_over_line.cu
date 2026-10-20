@@ -204,7 +204,8 @@ class PlotLineVelocityOp : public OperatorNode {
              << '\n';
       buffer << std::setprecision(significant_digits);
 
-      for (int i = 0; i < global_line.number_of_points(); i++) {
+      const int line_points = static_cast<int>(global_line.number_of_points());  // a 1D line, always small
+      for (int i = 0; i < line_points; i++) {
         onika::math::Vec3d r = grid.compute_position<Area::AsIs>(global_line.get(i));
         buffer << std::setw(column_width) << r.x << std::setw(column_width) << r.y << std::setw(column_width) << r.z
                << std::setw(column_width) << points.ux(i) << std::setw(column_width) << points.uy(i)

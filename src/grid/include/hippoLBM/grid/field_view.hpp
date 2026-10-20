@@ -98,15 +98,6 @@ struct FieldView {
     return access(idx, component_index);
   }
 
-  /** @brief Assign the values from another field view.
-   * @param fv The field view to copy from.
-   */
-  ONIKA_HOST_DEVICE_FUNC
-  inline void operator=(FieldView<Components>& fv) {
-    this->data_ = fv.data_;
-    this->num_elements_ = fv.num_elements_;
-  }
-
   /** @brief Get the field value at the specified index as a 3D vector.
    * @param idx The index of the element.
    * @return The 3D vector representing the field value.

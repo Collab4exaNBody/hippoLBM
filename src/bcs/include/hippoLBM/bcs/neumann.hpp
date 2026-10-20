@@ -36,7 +36,7 @@ template <>
 struct Neumann<19, Traversal::Plan_yz_l> {
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double ux,
                                                 const double uy, const double uz) const {
-    if (obst[idx] == FLUIDE_) {
+    if (obst[idx] == FLUID_CELL) {
       const double rho = (f(idx, 3) + f(idx, 4) + f(idx, 5) + f(idx, 6) + f(idx, 15) + f(idx, 17) + f(idx, 18) +
                           f(idx, 16) + f(idx, 0) + 2. * (f(idx, 1) + f(idx, 7) + f(idx, 9) + f(idx, 11) + f(idx, 13))) /
                          (1. + ux);
@@ -58,7 +58,7 @@ template <>
 struct Neumann<19, Traversal::Plan_yz_0> {
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double ux,
                                                 const double uy, const double uz) const {
-    if (obst[idx] == FLUIDE_) {
+    if (obst[idx] == FLUID_CELL) {
       const double rho =
           (f(idx, 3) + f(idx, 4) + f(idx, 5) + f(idx, 6) + f(idx, 15) + f(idx, 17) + f(idx, 18) + f(idx, 16) +
            f(idx, 0) + 2. * (f(idx, 2) + f(idx, 10) + f(idx, 8) + f(idx, 14) + f(idx, 12))) /
@@ -81,7 +81,7 @@ template <>
 struct Neumann<19, Traversal::Plan_xz_l> {
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double ux,
                                                 const double uy, const double uz) const {
-    if (obst[idx] == FLUIDE_) {
+    if (obst[idx] == FLUID_CELL) {
       const double rho =
           (f(idx, 1) + f(idx, 2) + f(idx, 5) + f(idx, 6) + f(idx, 11) + f(idx, 13) + f(idx, 14) + f(idx, 12) +
            f(idx, 0) + 2. * (f(idx, 3) + f(idx, 7) + f(idx, 10) + f(idx, 15) + f(idx, 17))) /
@@ -104,7 +104,7 @@ template <>
 struct Neumann<19, Traversal::Plan_xz_0> {
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double ux,
                                                 const double uy, const double uz) const {
-    if (obst[idx] == FLUIDE_) {
+    if (obst[idx] == FLUID_CELL) {
       const double rho = (f(idx, 1) + f(idx, 2) + f(idx, 5) + f(idx, 6) + f(idx, 11) + f(idx, 13) + f(idx, 14) +
                           f(idx, 12) + f(idx, 0) + 2. * (f(idx, 4) + f(idx, 9) + f(idx, 8) + f(idx, 18) + f(idx, 16))) /
                          (1. - uy);
@@ -126,7 +126,7 @@ template <>
 struct Neumann<19, Traversal::Plan_xy_l> {
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double ux,
                                                 const double uy, const double uz) const {
-    if (obst[idx] == FLUIDE_) {
+    if (obst[idx] == FLUID_CELL) {
       const double rho =
           (f(idx, 0) + f(idx, 1) + f(idx, 2) + f(idx, 3) + f(idx, 4) + f(idx, 7) + f(idx, 9) + f(idx, 10) + f(idx, 8) +
            2. * (f(idx, 5) + f(idx, 11) + f(idx, 14) + f(idx, 15) + f(idx, 18))) /
@@ -150,7 +150,7 @@ template <>
 struct Neumann<19, Traversal::Plan_xy_0> {
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<19>& f, const double ux,
                                                 const double uy, const double uz) const {
-    if (obst[idx] == FLUIDE_) {
+    if (obst[idx] == FLUID_CELL) {
       const double rho =
           (f(idx, 0) + f(idx, 1) + f(idx, 2) + f(idx, 3) + f(idx, 4) + f(idx, 7) + f(idx, 9) + f(idx, 10) + f(idx, 8) +
            2. * (f(idx, 6) + f(idx, 13) + f(idx, 12) + f(idx, 17) + f(idx, 16))) /
