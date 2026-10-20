@@ -116,9 +116,6 @@ struct RShape {
 
   void read_stl(const std::string& filename) {
     std::ifstream file(filename, std::ios::binary);
-    // Not an assert: this validates a user-supplied path (YAML `filename` slot of
-    // register_rshape), and assert() is compiled out in Release builds (the project's
-    // default), which would otherwise silently produce an empty, obstacle-less shape.
     if (!file.is_open()) {
       throw std::runtime_error("[RShape::read_stl] Error: could not open STL file '" + filename + "'.");
     }
