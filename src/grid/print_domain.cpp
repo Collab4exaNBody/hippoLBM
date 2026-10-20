@@ -58,8 +58,6 @@ class PrintDomainLBM : public OperatorNode {
   }
 
   inline void execute() override final {
-    // Not rank-gated below would print one copy per rank, each wrongly labeled "Rank 0"
-    // (the label was never accurate for any rank beyond 0 in a multi-rank run).
     int rank;
     MPI_Comm_rank(*mpi, &rank);
     if (rank != 0) return;
