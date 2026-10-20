@@ -74,8 +74,6 @@ class CheckerMacroQuantitiesOp : public OperatorNode {
     int rank;
     MPI_Comm_rank(*mpi, &rank);
 
-    // simulation_statistics is MPI_Reduce'd onto rank 0 only (see SimulationState::execute()),
-    // so it is only meaningful there: the verdict can only be computed on rank 0.
     bool error_spotted = false;
     std::string msg = "Regression test checker [macro quantities]\n";
 
