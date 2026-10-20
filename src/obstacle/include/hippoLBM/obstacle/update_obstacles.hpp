@@ -28,12 +28,12 @@ struct SetObstacleFunc {
   Obj obj_;                       // The obstacle object to be applied.
   LBMGrid grid_;                  // Computes grid indices from (i,j,k) coordinates in the LBM domain.
   int* const __restrict__ obst_;  // Pointer to the obstacle field.
-  int value_ = WALL_;             // The value to set for obstacle cells in the obstacle field.
+  int value_ = WALL_CELL;             // The value to set for obstacle cells in the obstacle field.
 
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int i, int j, int k) const {
     if (obj_.solid(grid_.compute_position<hippoLBM::Area::Global>(i, j, k))) {
       const int idx = grid_(i, j, k);
-      obst_[idx] = value_;  // Mark the cell as an obstacle (e.g., WALL_)
+      obst_[idx] = value_;  // Mark the cell as an obstacle (e.g., WALL_CELL)
     }
   }
 };
@@ -44,7 +44,7 @@ struct ApplyUpdateObstaclesFunc {
   double dx_;                    // The grid spacing of the LBM simulation.
   int* const obst_;              // Pointer to the obstacle field in the LBM grid.
   ParExecCtxFunc par_exec_ctx_;  // Function to obtain the parallel execution context.
-  int value_ = WALL_;            // The value to set for obstacle cells in the obstacle field.
+  int value_ = WALL_CELL;            // The value to set for obstacle cells in the obstacle field.
 
   template <typename Obj>
   inline void operator()(Obj& obj) const {

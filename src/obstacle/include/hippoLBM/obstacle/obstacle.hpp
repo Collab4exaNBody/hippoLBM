@@ -45,9 +45,6 @@ enum OBSTACLE_TYPE {
   UNDEFINED = 4 /**< Undefined driver type. */
 };
 
-template <typename Object, typename Func, typename... Args>
-inline void apply(Object& obj, Func& func, Args... args) {}
-
 class Ball {
   onika::math::Vec3d center_;  // The center of the ball.
   double radius_;              // The radius of the ball.

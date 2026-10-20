@@ -19,10 +19,8 @@ under the License.
 
 #pragma once
 
+#include <hippoLBM/core/enum.hpp>
 #include <hippoLBM/grid/field_view.hpp>
-
-// TODO: consider to move this file to a more general location, since it is used by both grid and domain
-#define FLUIDE_ -1
 
 namespace hippoLBM {
 /**
@@ -45,7 +43,7 @@ struct bgk {
    * @brief Operator for performing collision operations at a given index.
    */
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx) const {
-    bool update = check_level<TR>(levels_[idx]) && (obst_[idx] == FLUIDE_);
+    bool update = check_level<TR>(levels_[idx]) && (obst_[idx] == FLUID_CELL);
     const double rho = m0_[idx];
     const double ux = m1_(idx, 0);
     const double uy = m1_(idx, 1);

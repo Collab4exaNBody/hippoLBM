@@ -24,6 +24,7 @@ under the License.
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+#include <stdexcept>
 #include <vector>
 
 namespace hippoLBM {
@@ -55,14 +56,19 @@ inline std::vector<uint8_t> zlib_compress(const void* src, uint64_t src_bytes, i
   return dst;
 }
 
-/** @brief Decompresses a buffer previously produced by zlib_compress() with is_compressed == true. */
+/** @brief Decompresses a buffer previously produced by zlib_compress() with is_compressed == true.
+ * @throw std::runtime_error if zlib reports an error, or the decompressed size doesn't match
+ * `uncompressed_size`: silently returning a short/garbage buffer here would let read_dump_fields()
+ * unpack corrupted data straight into the live simulation fields without anyone noticing. */
 inline std::vector<uint8_t> zlib_decompress(const void* src, uint64_t compressed_size, uint64_t uncompressed_size) {
   std::vector<uint8_t> dst(uncompressed_size);
   uLongf dst_len = static_cast<uLongf>(uncompressed_size);
   int ret = uncompress(reinterpret_cast<Bytef*>(dst.data()), &dst_len, reinterpret_cast<const Bytef*>(src),
                        static_cast<uLong>(compressed_size));
   if (ret != Z_OK || dst_len != uncompressed_size) {
-    std::cerr << "[dump_compression] zlib decompression failed (error code " << ret << ")." << std::endl;
+    throw std::runtime_error("[dump_compression] zlib decompression failed (error code " + std::to_string(ret) +
+                             ", got " + std::to_string(dst_len) + " bytes, expected " +
+                             std::to_string(uncompressed_size) + "). Checkpoint file is likely corrupted or truncated.");
   }
   return dst;
 }

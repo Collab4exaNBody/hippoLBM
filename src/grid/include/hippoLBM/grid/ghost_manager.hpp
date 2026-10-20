@@ -10,8 +10,23 @@
 #include <hippoLBM/grid/comm.hpp>
 #include <hippoLBM/grid/operator_ghost_manager.hpp>
 #include <hippoLBM/grid/packers.hpp>
+#include <iostream>
+#include <limits>
 
 namespace hippoLBM {
+
+/** @brief Casts a ghost communication's byte count to the `int` expected by MPI_Isend/Irecv's
+ * count parameter. Aborts with a clear message instead of silently truncating if a single
+ * message is larger than INT_MAX bytes (MPI_Isend/Irecv take `int count`, not `uint64_t`). */
+inline int ghost_comm_mpi_count(uint64_t nb_bytes) {
+  if (nb_bytes > uint64_t(std::numeric_limits<int>::max())) {
+    std::cerr << "[ghost_manager] Error: a single ghost communication is " << nb_bytes
+              << " bytes, which does not fit in MPI's int count (max " << std::numeric_limits<int>::max()
+              << "). Split it across more ranks or reduce the ghost layer / field components." << std::endl;
+    MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+  }
+  return static_cast<int>(nb_bytes);
+}
 
 /**
  * @brief A manager for ghost cell communication between processes.
@@ -86,8 +101,8 @@ struct LBMGhostManager {
       bool do_recv = !(recv.get_dest() == mpi_rank);
       if (do_recv)  // NOT (periodic case && himself)
       {
-        MPI_Irecv(recv.get_data(), nb_bytes, MPI_CHAR, recv.get_dest(), recv.get_tag(), MPI_COMM_WORLD,
-                  &(this->request_[count_request_++]));
+        MPI_Irecv(recv.get_data(), ghost_comm_mpi_count(nb_bytes), MPI_CHAR, recv.get_dest(), recv.get_tag(),
+                  MPI_COMM_WORLD, &(this->request_[count_request_++]));
       }
     }
   }
@@ -145,8 +160,8 @@ struct LBMGhostManager {
       {
         ONIKA_CU_MEMCPY(recv.get_data(), send.get_data(), nb_bytes);  // cudaMemcpyDefault, 0 /** default stream */);
       } else {
-        MPI_Isend(send.get_data(), nb_bytes, MPI_CHAR, send.get_dest(), send.get_tag(), MPI_COMM_WORLD,
-                  &(this->request_[count_request_++]));
+        MPI_Isend(send.get_data(), ghost_comm_mpi_count(nb_bytes), MPI_CHAR, send.get_dest(), send.get_tag(),
+                  MPI_COMM_WORLD, &(this->request_[count_request_++]));
       }
     }
   }

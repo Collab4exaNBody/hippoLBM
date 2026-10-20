@@ -48,6 +48,7 @@ class LogLBM : public OperatorNode {
   typedef std::chrono::time_point<std::chrono::steady_clock> time_point;
 
  public:
+  ADD_SLOT(MPI_Comm, mpi, INPUT, MPI_COMM_WORLD, DocString{"MPI communicator."});
   ADD_SLOT(LBMDomain<Q>, domain, INPUT_OUTPUT, LBMDomain<Q>{}, DocString{"The LBM domain containing the simulation data."});
   ADD_SLOT(SimulationStatistics, simulation_statistics, INPUT, REQUIRED,
            DocString{"Contains general information about the LBM grid, such as minimum and maximum fluid velocity."});
@@ -88,6 +89,14 @@ class LogLBM : public OperatorNode {
     }
     *previous_time = current_time;
     *previous_step = *timestep;
+
+    // simulation_statistics is MPI_Reduce'd onto rank 0 only (see SimulationState::execute()),
+    // so it is only meaningful there: printing it on every rank would show N-1 bogus copies
+    // (sum_density_ == 0, min/max_velocity_norm_ at their unreduced sentinel values).
+    int rank;
+    MPI_Comm_rank(*mpi, &rank);
+    if (rank != 0) return;
+
     const auto& ss = *simulation_statistics;
     const double min_velocity_phys = convert_velocity<PHYSICAL_UNITS>(ss.min_velocity_norm_, *Params);
     const double max_velocity_phys = convert_velocity<PHYSICAL_UNITS>(ss.max_velocity_norm_, *Params);

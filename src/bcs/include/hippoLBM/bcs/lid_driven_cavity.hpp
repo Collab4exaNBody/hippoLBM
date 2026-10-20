@@ -50,7 +50,7 @@ struct LidDrivenCavityBCsFunctor<19> {
    * @param fi The field view for the unknowns.
    */
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx) const {
-    if (obst_[idx] == FLUIDE_) {
+    if (obst_[idx] == FLUID_CELL) {
       const double rho = compute_rho(idx);
       const double u_squ = onika::math::dot(U_, U_);
 

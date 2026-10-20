@@ -17,6 +17,7 @@ specific language governing permissions and limitations
 under the License.
  */
 
+#include <mpi.h>
 #include <onika/log.h>
 #include <onika/scg/operator.h>
 #include <onika/scg/operator_factory.h>
@@ -64,7 +65,9 @@ class AddBounceBackBCs : public OperatorNode {
         lout << "[Error, add_bounce_back_bcs], bounce_back_planes: \"" << name
              << "\" is on a periodic dimension. A dimension can't be both periodic and have a bounce-back plane."
              << std::endl;
-        std::exit(EXIT_FAILURE);
+        // MPI_Abort, not std::exit: std::exit() only kills this process, leaving the other
+        // MPI ranks running (and potentially hanging in a later collective call).
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
       }
       active_planes[plane_idx] = true;
     }

@@ -80,7 +80,7 @@ class Cavity : public OperatorNode {
     bcs.compute_coeff(ux, uy, uz, lx, ly, lz);
 
     // run kernel
-    auto params = make_tuple(pobst, pfi);
+    auto params = std::make_tuple(pobst, pfi);
     parallel_for_id_runner runner = {bcs, params};
     onika::parallel::parallel_for(pfi.num_elements_, runner, parallel_execution_context(),
                                   onika::parallel::ParallelForOptions());

@@ -57,7 +57,7 @@ class UpdateObstacles : public OperatorNode {
     auto par_exec_ctx = [this](const char* exec_name) { return this->parallel_execution_context(exec_name); };
 
     ApplyUpdateObstaclesFunc func = {domain->grid(), domain->dx(), grid_data.obstacles(), par_exec_ctx,
-                                     hippoLBM::WALL_};
+                                     hippoLBM::WALL_CELL};
 
     for (size_t i = 0; i < obs.size(); i++) {
       obs.apply(i, func);

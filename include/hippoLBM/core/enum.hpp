@@ -55,7 +55,11 @@ constexpr int DIMY = 1;     ///< Y dimension index
 constexpr int DIMZ = 2;     ///< Z dimension index
 constexpr int DIM_MAX = 3;  ///< Total number of spatial dimensions
 
-// TODO: consider to move this file to a more general location
-constexpr int FLUIDE_ = -1;
-constexpr int WALL_ = -2;
+/**
+ * @brief Special sentinel values stored in the obstacle field to mark non-obstacle cells.
+ * Any value >= 0 identifies an actual obstacle (its id). These are intentionally kept in the
+ * central enum header so all components share the same meaning.
+ */
+constexpr int FLUID_CELL = -1;  ///< obstacle field value for a regular fluid cell (no obstacle)
+constexpr int WALL_CELL = -2;   ///< obstacle field value for a static wall cell
 }  // namespace hippoLBM

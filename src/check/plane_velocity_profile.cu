@@ -81,7 +81,7 @@ struct PlaneVelocityProfileFunctor {
   ONIKA_HOST_DEVICE_FUNC inline void operator()(onikaInt3_t coord) const {
     using namespace onika::math;
     const int idx = bx_(coord.x, coord.y, coord.z);
-    if (obst_[idx] == FLUIDE_) {
+    if (obst_[idx] == FLUID_CELL) {
       int out;
       if constexpr (DIM == DIMX) out = coord.x + offset_[0];
       if constexpr (DIM == DIMY) out = coord.y + offset_[1];
@@ -154,7 +154,7 @@ class PlaneVelocityProfile : public OperatorNode {
   ADD_SLOT(std::string, output_directory, INPUT, "hippoLBMOutputDir",
            DocString{"The base directory for the profile output."});
   ADD_SLOT(long, timestep, INPUT, 0, DocString{"The current timestep."});
-  ADD_SLOT(bool, display_filename, true, DocString{"Print filename"});
+  ADD_SLOT(bool, display_filename, INPUT, true, DocString{"Print filename"});
 
   // scratch
   ADD_SLOT(ProfileStatistics, scratch, PRIVATE,

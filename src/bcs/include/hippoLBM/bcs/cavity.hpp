@@ -56,9 +56,9 @@ struct cavity<Dim, S, 19> {
    * @param lz The local grid size in the z-dimension.
    */
   void compute_coeff(double ux, double uy, double uz, int lx, int ly, int lz) {
-    const cavity_coeff<DIMZ, S, Q> c_coeff;
+    const cavity_coeff<Dim, S, Q> c_coeff;
     double L = 0;
-    if constexpr (Dim == DIMZ) L = lx;
+    if constexpr (Dim == DIMX) L = lx;
     if constexpr (Dim == DIMY) L = ly;
     if constexpr (Dim == DIMZ) L = lz;
     const double uxx = ux * (1 + 0.5 / (L - 1));
@@ -80,7 +80,7 @@ struct cavity<Dim, S, 19> {
    * @param fi The field view for the unknowns.
    */
   ONIKA_HOST_DEVICE_FUNC inline void operator()(int idx, int* const obst, const FieldView<Un>& fi) const {
-    if (obst[idx] == FLUIDE_) {
+    if (obst[idx] == FLUID_CELL) {
       for (int i = 0; i < Un; i++) {
         fi(idx, i) += coeff_[i];
       }

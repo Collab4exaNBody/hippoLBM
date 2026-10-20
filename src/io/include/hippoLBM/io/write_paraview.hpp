@@ -90,32 +90,10 @@ struct ExternalParaviewFieldsNullOp {
 };
 
 struct ParaviewBuffers {
-  /** Buffers */
-  onika::memory::CudaMMVector<float> u_;   // velocity, scaled to float for paraview
-  onika::memory::CudaMMVector<float> p_;   // pressure
-  onika::memory::CudaMMVector<int> obst_;  // obstacle flag
-
   /** streams */
   std::stringstream i_;  // x-coordinates of the grid points
   std::stringstream j_;  // y-coordinates of the grid points
   std::stringstream k_;  // z-coordinates of the grid points
-
-  /** @brief Resize the buffers
-   * @param size The new size of the buffers
-   */
-  void resize(const int size) {
-    u_.resize(3 * size);  // Vec3d
-    p_.resize(size);
-    obst_.resize(size);
-  }
-
-  /** @brief Convert simulation data to stream
-   * @param Box The bounding box for the simulation domain
-   * @param dx The grid spacing
-   */
-  void sim_data_to_stream(Box3D& Box, double dx) {
-    // todo
-  }
 
   /** @brief Convert simulation header data to stream
    * @param Box The bounding box for the simulation domain

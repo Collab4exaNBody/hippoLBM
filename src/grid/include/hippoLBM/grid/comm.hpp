@@ -38,7 +38,7 @@ struct LBMComm {
   Box3D box_;
   vector_t<double> data_;  ///< The communication buffer.
 
-  // used for debuging
+  // used for debugging
   void debug_print_comm() {
     onika::lout << "Dest: " << dest_ << " Tag: " << tag_ << " Data Size: " << data_.size() << std::endl;
     onika::lout << "Box: " << std::endl;
@@ -115,7 +115,7 @@ struct LBMGhostComm {
    */
   LBMGhostComm(LBMComm<Components>& s, LBMComm<Components>& r) : send_(s), recv_(r) {}
 
-  // used for debuging
+  // used for debugging
   void debug_print_comm() {
     onika::lout << " Ghost Comm[Send]" << std::endl;
     send_.debug_print_comm();

@@ -102,7 +102,9 @@ class InitDomainLBM : public OperatorNode {
         lout << "[Error, domain], bounce_back_planes: \"" << name
              << "\" is on a periodic dimension. A dimension can't be both periodic and have a bounce-back plane."
              << std::endl;
-        std::exit(EXIT_FAILURE);
+        // MPI_Abort, not std::exit: std::exit() only kills this process, which can hang the
+        // other MPI ranks in a later collective call.
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
       }
       grid.bounce_back_planes_[plane_idx] = true;
     }
@@ -125,7 +127,9 @@ class InitDomainLBM : public OperatorNode {
         !equal_rel_tol(resolution_dims.x, resolution_dims.z, tol)) {
       lout << "[Error, domain], Dx is not the same for all dimension" << std::endl;
       lout << "Dx: [ " << resolution_dims << " ] " << std::endl;
-      std::exit(EXIT_FAILURE);
+      // MPI_Abort, not std::exit: std::exit() only kills this process, which can hang the
+      // other MPI ranks in a later collective call.
+      MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
     double reso = resolution_dims.x;
@@ -145,7 +149,9 @@ class InitDomainLBM : public OperatorNode {
       lout << "Bound sup:  " << sup << std::endl;
       lout << "Grid size:  " << grid_size << std::endl;
       lout << "Resolution: " << reso << std::endl;
-      std::exit(EXIT_FAILURE);
+      // MPI_Abort, not std::exit: std::exit() only kills this process, which can hang the
+      // other MPI ranks in a later collective call.
+      MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
     SubGridConfig sub_grid = load_balancing(grid, *mpi);

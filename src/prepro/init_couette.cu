@@ -122,7 +122,9 @@ class InitCouette : public OperatorNode {
       lout << "Prepro couette ending ... dim Z " << std::endl;
     } else {
       lout << "[init_couette] Please, select a valid dimension \"X\", \"Y\", or \"Z\"." << std::endl;
-      std::exit(EXIT_FAILURE);
+      // MPI_Abort, not std::exit: std::exit() only kills this process, which can hang the
+      // other MPI ranks in a later collective call.
+      MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
   }
 };

@@ -73,13 +73,13 @@ inline std::tuple<Box3D, Box3D> build_boxes(const int3d& shift, LBMGrid& g) {
     if (shift[dim] == -1) {
       send.sup_.set_val(dim, lower[dim] + ghost_layer - 1);
       recv.inf_.set_val(dim, lower[dim] - ghost_layer);
-      recv.sup_.set_val(dim, lower[dim] - ghost_layer + 1);
+      recv.sup_.set_val(dim, lower[dim] - 1);
       assert(recv.get_length(dim) == ghost_layer);
       assert(send.get_length(dim) == ghost_layer);
     }
     if (shift[dim] == 1) {
       send.inf_.set_val(dim, upper[dim] - ghost_layer + 1);
-      recv.inf_.set_val(dim, upper[dim] + ghost_layer - 1);
+      recv.inf_.set_val(dim, upper[dim] + 1);
       recv.sup_.set_val(dim, upper[dim] + ghost_layer);
       assert(recv.get_length(dim) == ghost_layer);
       assert(send.get_length(dim) == ghost_layer);

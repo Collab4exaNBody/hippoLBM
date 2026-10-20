@@ -79,6 +79,10 @@ class LBMParametersOp : public OperatorNode {
 
     if (*dt > 0.0 && tau.has_value()) {
       lout << "[lbm_parameters]: You can't define tau AND dt" << std::endl;
+      // MPI_Abort, not std::exit: std::exit() only kills this process, which can hang the
+      // other MPI ranks in a later collective call. This was previously just a warning that
+      // execution continued past, silently honoring dt and ignoring tau.
+      MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
     if (*dt > 0.0) {
