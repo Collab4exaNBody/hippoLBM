@@ -24,6 +24,8 @@ under the License.
 
 #include <hippoLBM/grid/field_view.hpp>
 #include <hippoLBM/grid/grid_helper.hpp>
+#include <hippoLBM/grid/scheme.hpp>
+#include <hippoLBM/grid/stencil.hpp>
 
 namespace hippoLBM {
 

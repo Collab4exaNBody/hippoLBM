@@ -17,6 +17,8 @@ specific language governing permissions and limitations
 under the License.
  */
 
+#pragma once
+
 #include <mpi.h>
 #include <onika/math/basic_types_yaml.h>
 
@@ -286,7 +288,7 @@ inline bool equal_rel_tol(double a, double b, double rel_tol) {
  *                     Use false if you will refined the grid after.
  * @return SubGridConfig Subdomain configuration for the current MPI rank.
  */
-SubGridConfig load_balancing(const GridConfig& grid, MPI_Comm comm, bool use_periodic = true) {
+inline SubGridConfig load_balancing(const GridConfig& grid, MPI_Comm comm, bool use_periodic = true) {
   using onika::lout;
 
   auto& [grid_size, bounds, periodic, bounce_back_planes] = grid;

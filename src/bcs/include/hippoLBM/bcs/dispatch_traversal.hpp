@@ -70,7 +70,7 @@ inline void dispatch_traversal(CtxFunc&& make_ctx, Traversal t, const std::strin
       break;
     }
     default:
-      lout << "[bcs] dispatch_traversal: ignoring unknown region" << std::endl;
+      onika::lout << "[bcs] dispatch_traversal: ignoring unknown region" << std::endl;
       break;
   }
 }

@@ -27,6 +27,7 @@ under the License.
 #include <hippoLBM/grid/domain.hpp>
 #include <hippoLBM/grid/fields.hpp>
 #include <hippoLBM/grid/lbm_parameters.hpp>
+#include <hippoLBM/grid/make_domain.hpp>
 #include <hippoLBM/io/writer.hpp>
 
 namespace hippoLBM {
@@ -143,11 +144,12 @@ inline void write_pvtr(std::string basedir, std::string basename, size_t number_
       return;
     }
 
-    outFile << " <VTKFile type=\"PRectilinearGrid\"> " << std::endl;
+    outFile << "<?xml version=\"1.0\"?>" << std::endl;
+    outFile << "<VTKFile type=\"PRectilinearGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl;
     outFile << "   <PRectilinearGrid WholeExtent=\"" << whole_extent.start(0) << " " << whole_extent.end(0) << " "
             << whole_extent.start(1) << " " << whole_extent.end(1) << " " << whole_extent.start(2) << " "
             << whole_extent.end(2) << "\"" << std::endl;
-    outFile << "                     GhostLevel=\"#\">" << std::endl;
+    outFile << "                     GhostLevel=\"" << hippoLBMGridConfig::ghost_layer << "\">" << std::endl;
     for (size_t i = 0; i < number_of_files; i++) {
       if (!piece_valid[i]) continue;  // this rank has no piece for this extraction
       std::string subfile = basename + "/%06d.vtr";
@@ -215,7 +217,8 @@ inline void write_vtr(std::string name, const LBMDomain& domain, LBMFieds& data,
   ParaviewBuffers paraview_streams;
   paraview_streams.sim_header_to_stream(global_box, dx, grid.origin_);
 
-  outFile << "<VTKFile type=\"RectilinearGrid\">" << std::endl;
+  outFile << "<?xml version=\"1.0\"?>" << std::endl;
+  outFile << "<VTKFile type=\"RectilinearGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl;
   outFile << " <RectilinearGrid WholeExtent=\" 0 " << lx - 1 << " 0 " << ly - 1 << " 0 " << lz - 1 << "\">"
           << std::endl;
   outFile << "      <Piece Extent=\"" << global_box.start(0) << " " << global_box.end(0) << " " << global_box.start(1)
