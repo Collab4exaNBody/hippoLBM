@@ -57,6 +57,7 @@ under the License.
 // implementation files
 #include <hippoLBM/amr/amr_coupling.hpp>
 #include <hippoLBM/amr/amr_level.hpp>
+#include <hippoLBM/amr/amr_mpi_coupling.hpp>
 #include <hippoLBM/amr/amr_refinement_indicator.hpp>
 #include <hippoLBM/amr/amr_test_diagnostics.hpp>
 #include <hippoLBM/amr/amr_test_init.hpp>
@@ -89,7 +90,10 @@ using AABBVector = std::vector<onika::math::AABB>;
 template <int Q>
 class AMRNLevel : public OperatorNode {
  public:
-  ADD_SLOT(MPI_Comm, mpi, INPUT, MPI_COMM_WORLD, DocString{"MPI communicator. Single rank only."});
+  ADD_SLOT(MPI_Comm, mpi, INPUT, MPI_COMM_WORLD,
+           DocString{"MPI communicator. Level 0 may be decomposed across any number of ranks (docs/AMR_PLAN.md "
+                     "Phase 4 v1); the single patch_bounds_list[0] patch (if any) is owned entirely by "
+                     "patch_owner_rank. Combining mpi_size>1 with remesh_freq>0 is refused (not yet supported)."});
 
   // level 0 (coarsest, the physical domain)
   ADD_SLOT(onika::math::IJK, cell_dims, INPUT, REQUIRED,
@@ -105,7 +109,13 @@ class AMRNLevel : public OperatorNode {
   ADD_SLOT(AABBVector, patch_bounds_list, INPUT, AABBVector{},
            DocString{"Ordered list of physical sub-boxes to refine, each nested inside and 2:1-aligned with the "
                      "previous level's grid. patch_bounds_list[i] turns level i into level i+1's parent. Empty "
-                     "(the default) means no refinement at all: level 0 alone."});
+                     "(the default) means no refinement at all: level 0 alone. When mpi_size>1 (docs/AMR_PLAN.md "
+                     "Phase 4 v1), at most one entry is supported."});
+  ADD_SLOT(int, patch_owner_rank, INPUT, 0,
+           DocString{"Phase 4 v1: when mpi_size>1, the single world rank that owns patch_bounds_list[0] entirely "
+                     "(builds its grid/fields, steps it, holds its data). Every other rank either contributes "
+                     "coarse donor data to it (if it owns part of the patch's C2F/F2C footprint) or isn't "
+                     "involved at all. Ignored when mpi_size==1."});
 
   // physical fluid parameters, shared by every level (same celerity => convective scaling,
   // see docs/AMR_PLAN.md §4: this alone reproduces the Filippova-Haenel tau rescaling at each
@@ -241,6 +251,31 @@ class AMRNLevel : public OperatorNode {
   std::vector<std::vector<double>> rho_prev_;
   std::vector<std::vector<double>> u_prev_;
 
+  // Phase 4 v1 (docs/AMR_PLAN.md): mpi_size_/world_rank_ cached once at init (every call
+  // thereafter needs them). is_mpi_coupled_ is true iff mpi_size_>1 AND there's a patch to
+  // couple (patch_bounds_list non-empty) -- when true, execute() drives the level-0/patch
+  // coupling through step_coarse_and_couple_mpi() instead of advance(0, ...), and `shadow_`/
+  // `shadow_coupling_`/`mpi_coupling_` are the only levels_[1]-equivalent state that exists
+  // (levels_ itself stays at size 1 on every rank in this mode, including the owner -- the
+  // owner's "child" is `shadow_`'s fine level, tracked separately, not pushed into `levels_`,
+  // since `levels_`/`level_cfg_`/`couplings_`'s existing single-rank-shaped bookkeeping -- and
+  // every diagnostic/Paraview loop that iterates them -- would otherwise need an MPI-aware
+  // branch of its own at every single call site).
+  bool is_mpi_coupled_ = false;
+  int mpi_size_ = 1;
+  int world_rank_ = 0;
+  // The REAL Cartesian communicator level 0's own decomposition uses (captured via
+  // build_level()'s out_subgrid parameter) -- AMRMPICoupling resolves node ownership against
+  // this exact communicator (MPI_Cart_rank), not a second, separately-built one or an assumed
+  // rank-numbering convention (docs/AMR_PLAN.md Phase 4 v1 "n>2 ranks" fix).
+  MPI_Comm level0_cart_comm_ = MPI_COMM_SELF;
+  std::unique_ptr<AMRLevel<Q>> fine_;              // the owner's actual patch level (nullptr elsewhere)
+  std::unique_ptr<AMRLevel<Q>> shadow_;             // owner-only: see amr_mpi_coupling.hpp
+  std::unique_ptr<AMRCoupling<Q>> shadow_coupling_;  // owner-only: ordinary AMRCoupling(shadow_, fine_)
+  std::unique_ptr<AMRMPICoupling<Q>> mpi_coupling_;  // built on every involved rank (owner or donor)
+  std::vector<double> shadow_rho_prev_;
+  std::vector<double> shadow_u_prev_;
+
   static constexpr int ratio_ = 2;
 
   LBMParameters make_params(double dx) {
@@ -271,11 +306,31 @@ class AMRNLevel : public OperatorNode {
   // edge between two now-"active" ghost nodes is just extra, harmless work (both will be
   // overwritten by the next apply_c2f() call anyway) -- it never double-processes, or
   // corrupts, the Real<->ghost edges this fix exists for.
+  // `comm`: the communicator load_balancing()/make_domain() decomposes `grid_cfg` across.
+  // Level 0's build passes `*mpi` unchanged (decomposed across every rank, as hippoLBM's
+  // standard pipeline already would). A patch's build (docs/AMR_PLAN.md Phase 4 v1) passes
+  // `*mpi` too when single-rank, but MPI_COMM_SELF on just the owner rank when mpi_size>1 --
+  // build_level() itself is otherwise unaware of the owner/donor distinction, it just builds
+  // whatever single-communicator grid it's asked for; see amr_mpi_coupling.hpp for how a
+  // not-locally-available coarse donor node reaches a patch built this way.
+  //
+  // `out_subgrid`: if non-null, filled with the SubGridConfig load_balancing() computed --
+  // in particular its `cart_comm_`, the REAL Cartesian communicator make_domain() built
+  // `level->domain_`'s ghost-exchange table against. level0's build in execute() passes this
+  // so AMRMPICoupling can resolve node ownership via a genuine MPI_Cart_rank call on that same
+  // communicator (amr_rank_owner.hpp), rather than assuming any particular rank-numbering
+  // convention -- calling load_balancing() a second, separate time would build a DIFFERENT
+  // Cartesian communicator object (a fresh MPI_Cart_create call, not guaranteed to number
+  // ranks identically to the first one), silently decoupling "who AMRMPICoupling thinks owns
+  // this node" from "who actually holds its data" -- exactly the bug this parameter exists to
+  // avoid (docs/AMR_PLAN.md Phase 4 v1 "n>2 ranks" status entry).
   template <typename ParExecCtxFunc>
   std::unique_ptr<AMRLevel<Q>> build_level(const GridConfig& grid_cfg, double dx, ParExecCtxFunc& par_exec_ctx,
-                                           bool is_amr_interface = false) {
+                                           MPI_Comm comm, bool is_amr_interface = false,
+                                           SubGridConfig* out_subgrid = nullptr) {
     auto level = std::make_unique<AMRLevel<Q>>();
-    SubGridConfig sub_grid = load_balancing(grid_cfg, *mpi, /*use_periodic=*/false);
+    SubGridConfig sub_grid = load_balancing(grid_cfg, comm, /*use_periodic=*/false);
+    if (out_subgrid) *out_subgrid = sub_grid;
     level->domain_ = make_domain<Q>(grid_cfg, sub_grid);
 
     if (is_amr_interface) {
@@ -362,6 +417,16 @@ class AMRNLevel : public OperatorNode {
       parallel_for_id<Area::Local, Traversal::All>(level->domain_.grid(), obst_func, parallel_execution_context());
       ONIKA_CU_DEVICE_SYNCHRONIZE();
       stamp_obstacle(*level);
+    }
+    // Phase 4 v1: in MPI mode the patch lives in `fine_`, not `levels_` (see is_mpi_coupled_'s
+    // own comment) -- re-stamp it too, on the owner rank only (elsewhere it's null). `shadow_`
+    // never needs this: it's a passive data host for apply_c2f/apply_f2c, never itself stepped
+    // (bgk/wall_bounce_back never run against it), so its obst_ is never read.
+    if (fine_) {
+      init_obst obst_func = {onika::cuda::vector_data(fine_->fields_.obst_)};
+      parallel_for_id<Area::Local, Traversal::All>(fine_->domain_.grid(), obst_func, parallel_execution_context());
+      ONIKA_CU_DEVICE_SYNCHRONIZE();
+      stamp_obstacle(*fine_);
     }
   }
 
@@ -660,7 +725,10 @@ class AMRNLevel : public OperatorNode {
         GridConfig new_child_cfg = build_patch_grid_config(level_cfg_[i], new_bounds, i);
         const double dx_child = dx_parent / double(ratio_);
 
-        auto new_child = build_level(new_child_cfg, dx_child, par_exec_ctx, /*is_amr_interface=*/true);
+        // remesh_if_needed() only ever runs when mpi_size==1 (execute()'s own guard refuses
+        // remesh_freq>0 together with mpi_size>1, docs/AMR_PLAN.md Phase 4 v1), so *mpi here
+        // is always a single-rank communicator -- no owner/donor distinction to make.
+        auto new_child = build_level(new_child_cfg, dx_child, par_exec_ctx, *mpi, /*is_amr_interface=*/true);
         stamp_obstacle(*new_child);
 
         // Fold the moving patch's fine detail back into its parent before discarding it (uses
@@ -699,6 +767,18 @@ class AMRNLevel : public OperatorNode {
     for (size_t i = 0; i < levels_.size(); i++) {
       names[i] = "level" + std::to_string(i) + "_%010ld";
       write_paraview(*mpi, names[i], basedir, ts, levels_[i]->fields_, levels_[i]->params_, levels_[i]->domain_,
+                     no_external_fields, *verbosity);
+    }
+
+    // Phase 4 v1: the patch lives in `fine_` (owner rank only), not `levels_`, in MPI mode --
+    // write it on MPI_COMM_SELF (a collective call on `*mpi` here would hang: non-owner ranks
+    // never reach this `if`). No combined .vtm manifest for it in this mode (see below, the
+    // `levels_.size() < 2` early-return already matches the Phase 4 v1 plan's "skip .vtm
+    // whenever mpi_size>1" decision as a side effect of `levels_` staying size 1 there) --
+    // each level's own .pvtr/.vtr stays independently correct and inspectable, a combined
+    // manifest aware of a multi-rank level 0 is deferred to Phase 5.
+    if (fine_) {
+      write_paraview(MPI_COMM_SELF, "patch_%010ld", basedir, ts, fine_->fields_, fine_->params_, fine_->domain_,
                      no_external_fields, *verbosity);
     }
 
@@ -799,19 +879,88 @@ class AMRNLevel : public OperatorNode {
     }
   }
 
- public:
-  inline void execute() final {
-    int mpi_size;
-    MPI_Comm_size(*mpi, &mpi_size);
-    if (mpi_size != 1) {
-      lout << "[amr_n_level] Error: this operator only supports a single MPI rank (got " << mpi_size << ")."
-           << std::endl;
-      MPI_Abort(*mpi, EXIT_FAILURE);
+  // Phase 4 v1 (docs/AMR_PLAN.md): the is_mpi_coupled_ equivalent of advance(0, ...), run
+  // identically (SPMD) on every rank. Level 0 steps exactly like advance()'s own has_child
+  // branch would (same compute_macro/snapshot_prev/step_level/compute_macro sequence). The
+  // owner rank then fills `shadow_` from local + MPI data, runs the same two Phase-2
+  // sub-cycling rounds against it through the ordinary, UNMODIFIED `shadow_coupling_`
+  // (AMRCoupling<Q>) and `fine_`'s own step_level() -- exactly the single-rank machinery,
+  // just pointed at `shadow_`/`fine_` instead of `levels_[level_idx]`/`levels_[level_idx+1]`
+  // -- then apply_f2c()s into `shadow_` and scatters the result back out. A donor rank (owns
+  // part of the patch's coarse footprint but isn't the owner) sends its contribution once and,
+  // after the owner's F2C, receives the result back; both calls are no-ops (via
+  // AMRMPICoupling's own is_owner_/is_donor_ guards) on every rank that isn't actually
+  // involved, so they're safe to make unconditionally here.
+  template <typename ParExecCtxFunc>
+  void step_coarse_and_couple_mpi(ParExecCtxFunc& par_exec_ctx) {
+    AMRLevel<Q>& level0 = *levels_[0];
+
+    compute_macro(level0);
+    snapshot_prev(0);
+
+    step_level(level0, par_exec_ctx, /*is_physical_boundary_level=*/true);
+
+    compute_macro(level0);  // level 0's (rho, u) at t=n+1, needed by every C2F call below
+
+    const double* rho_prev0 = rho_prev_[0].data();
+    FieldView<3> u_prev0_view{u_prev_[0].data(), level0.fields_.size()};
+
+    mpi_coupling_->donor_send_c2f(level0, rho_prev0, u_prev0_view);
+
+    if (mpi_coupling_->is_owner_) {
+      double* shadow_rho_prev_ptr = shadow_rho_prev_.data();
+      FieldView<3> shadow_u_prev_view{shadow_u_prev_.data(), shadow_->fields_.size()};
+
+      mpi_coupling_->owner_receive_c2f(level0, rho_prev0, u_prev0_view, *shadow_, shadow_rho_prev_ptr,
+                                       shadow_u_prev_view);
+
+      for (int sub = 1; sub <= ratio_; sub++) {
+        const double alpha = double(sub) / double(ratio_);
+        shadow_coupling_->apply_c2f(*shadow_, *fine_, shadow_rho_prev_ptr, shadow_u_prev_view, alpha);
+        step_level(*fine_, par_exec_ctx, /*is_physical_boundary_level=*/false);
+      }
+
+      shadow_coupling_->apply_f2c(*shadow_, *fine_);  // resolved f_ now in shadow_'s own fields_
+      mpi_coupling_->owner_send_f2c(*shadow_, level0);
     }
 
+    mpi_coupling_->donor_receive_f2c(level0);
+
+    // F2C just wrote directly into level0's own REAL distributions (owner's local copy or a
+    // donor's own received data) -- any GHOST copy of those same nodes held by a NEIGHBORING
+    // rank (for level0's own domain-decomposition halo, independent of patch ownership) is now
+    // stale until refreshed. Without this, a coarse node sitting both near a rank boundary and
+    // inside the patch's F2C footprint would feed next step's macro_variables/bgk a one-step-
+    // stale ghost value on whichever rank doesn't own it -- observed empirically as a tiny
+    // (~1e-5) but real level0 profile mismatch against the n=1 baseline, localized to exactly
+    // the patch region, before this fix (docs/AMR_PLAN.md Phase 4 v1).
+    FieldView<Q> pf0 = level0.fields_.distributions();
+    update_ghost(level0.domain_, pf0, par_exec_ctx);
+  }
+
+ public:
+  inline void execute() final {
     auto par_exec_ctx = [this](const char* exec_name) { return this->parallel_execution_context(exec_name); };
 
     if (!initialized_) {
+      MPI_Comm_size(*mpi, &mpi_size_);
+      MPI_Comm_rank(*mpi, &world_rank_);
+
+      if (mpi_size_ > 1 && *remesh_freq > 0) {
+        lout << "[amr_n_level] Error: mpi_size>1 together with remesh_freq>0 is not supported yet "
+                "(docs/AMR_PLAN.md Phase 4 v1: dynamic remeshing across rank ownership isn't implemented)."
+             << std::endl;
+        MPI_Abort(*mpi, EXIT_FAILURE);
+      }
+      if (mpi_size_ > 1 && patch_bounds_list->size() > 1) {
+        lout << "[amr_n_level] Error: mpi_size>1 only supports a single patch (patch_bounds_list with at most "
+                "1 entry) in this version (docs/AMR_PLAN.md Phase 4 v1)."
+             << std::endl;
+        MPI_Abort(*mpi, EXIT_FAILURE);
+      }
+
+      is_mpi_coupled_ = (mpi_size_ > 1 && !patch_bounds_list->empty());
+
       GridConfig cfg0;
       cfg0.periodic_ = convert<std::array<bool, 3>>(*periodic);
       cfg0.dims_.i = cell_dims->i + (cfg0.periodic_[0] ? 0 : 1);
@@ -820,32 +969,81 @@ class AMRNLevel : public OperatorNode {
       cfg0.bounds_ = *bounds;
       const double dx0 = (cfg0.bounds_.bmax.x - cfg0.bounds_.bmin.x) / double(cfg0.dims_.i - 1);
 
-      levels_.push_back(build_level(cfg0, dx0, par_exec_ctx, /*is_amr_interface=*/false));
+      // Level 0 is always decomposed across the FULL communicator, exactly as hippoLBM's
+      // standard (non-AMR) pipeline would -- no behavior change here versus before Phase 4,
+      // whether mpi_size_ is 1 or N. Capture the SubGridConfig load_balancing() computed for
+      // it (out_subgrid) so level0_cart_comm_ is the SAME Cartesian communicator
+      // make_domain() used to build level 0's own ghost-exchange table, not a second,
+      // separately-built one -- see build_level()'s own comment on out_subgrid.
+      SubGridConfig level0_subgrid;
+      levels_.push_back(build_level(cfg0, dx0, par_exec_ctx, *mpi, /*is_amr_interface=*/false, &level0_subgrid));
+      level0_cart_comm_ = level0_subgrid.cart_comm_;
       stamp_obstacle(*levels_[0]);
       level_cfg_.push_back(cfg0);
 
-      GridConfig parent_cfg = cfg0;
-      double parent_dx = dx0;
-      for (size_t i = 0; i < patch_bounds_list->size(); i++) {
-        GridConfig child_cfg = build_patch_grid_config(parent_cfg, (*patch_bounds_list)[i], i);
-        const double child_dx = parent_dx / double(ratio_);
+      if (is_mpi_coupled_) {
+        // Phase 4 v1 (docs/AMR_PLAN.md): exactly one patch, owned entirely by
+        // *patch_owner_rank. `levels_`/`level_cfg_`/`couplings_` stay at their level-0-only
+        // size on every rank (see is_mpi_coupled_'s own comment on the Phase4 members) --
+        // the patch itself lives in `fine_`, built with MPI_COMM_SELF on the owner only.
+        rho_prev_.emplace_back(levels_[0]->fields_.size());
+        u_prev_.emplace_back(levels_[0]->fields_.size() * 3);
 
-        levels_.push_back(build_level(child_cfg, child_dx, par_exec_ctx, /*is_amr_interface=*/true));
-        stamp_obstacle(*levels_[i + 1]);
-        level_cfg_.push_back(child_cfg);
-        couplings_.push_back(std::make_unique<AMRCoupling<Q>>(*levels_[i], *levels_[i + 1]));
+        const onika::math::AABB& patch_bounds = (*patch_bounds_list)[0];
+        const double dx_patch = dx0 / double(ratio_);
+        const bool is_owner = (world_rank_ == *patch_owner_rank);
 
-        if (couplings_.back()->f2c_.empty()) {
-          lout << "[amr_n_level] Error: patch_bounds_list[" << i
-               << "] has no node coincident with its parent level's Real region." << std::endl;
-          MPI_Abort(*mpi, EXIT_FAILURE);
+        if (is_owner) {
+          GridConfig patch_cfg = build_patch_grid_config(cfg0, patch_bounds, 0);
+          fine_ = build_level(patch_cfg, dx_patch, par_exec_ctx, MPI_COMM_SELF, /*is_amr_interface=*/true);
+          stamp_obstacle(*fine_);
+
+          onika::math::IJK shadow_lo, shadow_hi;
+          amr_shadow_box_global_range(cfg0, patch_bounds, shadow_lo, shadow_hi);
+          GridConfig shadow_cfg = amr_shadow_box_grid_config(cfg0, shadow_lo, shadow_hi);
+          shadow_ = build_level(shadow_cfg, dx0, par_exec_ctx, MPI_COMM_SELF, /*is_amr_interface=*/false);
+          shadow_coupling_ = std::make_unique<AMRCoupling<Q>>(*shadow_, *fine_);
+
+          if (shadow_coupling_->f2c_.empty()) {
+            lout << "[amr_n_level] Error: patch_bounds_list[0] has no node coincident with the shadow coarse "
+                    "box's Real region."
+                 << std::endl;
+            MPI_Abort(*mpi, EXIT_FAILURE);
+          }
+
+          shadow_rho_prev_.resize(shadow_->fields_.size());
+          shadow_u_prev_.resize(shadow_->fields_.size() * 3);
         }
 
-        rho_prev_.emplace_back(levels_[i]->fields_.size());
-        u_prev_.emplace_back(levels_[i]->fields_.size() * 3);
+        mpi_coupling_ = std::make_unique<AMRMPICoupling<Q>>(*patch_owner_rank, *mpi, level0_cart_comm_, cfg0,
+                                                            levels_[0]->domain_.MPI_grid_size_,
+                                                            levels_[0]->domain_.grid(),
+                                                            is_owner ? &shadow_->domain_.grid() : nullptr,
+                                                            patch_bounds);
+      } else {
+        GridConfig parent_cfg = cfg0;
+        double parent_dx = dx0;
+        for (size_t i = 0; i < patch_bounds_list->size(); i++) {
+          GridConfig child_cfg = build_patch_grid_config(parent_cfg, (*patch_bounds_list)[i], i);
+          const double child_dx = parent_dx / double(ratio_);
 
-        parent_cfg = child_cfg;
-        parent_dx = child_dx;
+          levels_.push_back(build_level(child_cfg, child_dx, par_exec_ctx, *mpi, /*is_amr_interface=*/true));
+          stamp_obstacle(*levels_[i + 1]);
+          level_cfg_.push_back(child_cfg);
+          couplings_.push_back(std::make_unique<AMRCoupling<Q>>(*levels_[i], *levels_[i + 1]));
+
+          if (couplings_.back()->f2c_.empty()) {
+            lout << "[amr_n_level] Error: patch_bounds_list[" << i
+                 << "] has no node coincident with its parent level's Real region." << std::endl;
+            MPI_Abort(*mpi, EXIT_FAILURE);
+          }
+
+          rho_prev_.emplace_back(levels_[i]->fields_.size());
+          u_prev_.emplace_back(levels_[i]->fields_.size() * 3);
+
+          parent_cfg = child_cfg;
+          parent_dx = child_dx;
+        }
       }
 
       if (*verbosity) {
@@ -853,14 +1051,22 @@ class AMRNLevel : public OperatorNode {
           lout << "[amr_n_level] level" << i << " params:" << std::endl;
           levels_[i]->params_.print();
         }
+        if (fine_) {
+          lout << "[amr_n_level] patch (owned by rank " << world_rank_ << ") params:" << std::endl;
+          fine_->params_.print();
+        }
       }
 
       initialized_ = true;
     }
 
     update_moving_obstacle();
-    advance(0, par_exec_ctx);
-    remesh_if_needed(par_exec_ctx);
+    if (is_mpi_coupled_) {
+      step_coarse_and_couple_mpi(par_exec_ctx);
+    } else {
+      advance(0, par_exec_ctx);
+    }
+    remesh_if_needed(par_exec_ctx);  // already refused at init whenever is_mpi_coupled_ (mpi_size_>1 && remesh_freq>0)
 
     if (*verbosity) {
       for (size_t i = 0; i < levels_.size(); i++) {
@@ -875,6 +1081,18 @@ class AMRNLevel : public OperatorNode {
         }
         if (*print_q_criterion) {
           print_q_profile(name.c_str(), *levels_[i], *perturb_center);
+        }
+      }
+      if (fine_) {  // Phase 4 v1: the patch, owner rank only -- not in `levels_` in MPI mode
+        print_level_diagnostics("patch", *fine_);
+        if (*apply_couette_bc) {
+          print_ux_profile_z<Q>("amr_n_level patch", fine_->domain_.grid(), fine_->fields_.distributions(),
+                                *perturb_center);
+        } else {
+          print_line_profile("patch", *fine_, *perturb_center);
+        }
+        if (*print_q_criterion) {
+          print_q_profile("patch", *fine_, *perturb_center);
         }
       }
     }

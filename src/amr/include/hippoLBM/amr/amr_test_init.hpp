@@ -19,10 +19,9 @@ under the License.
 
 #pragma once
 
-#include <cmath>
-
 #include <onika/parallel/parallel_for.h>
 
+#include <cmath>
 #include <hippoLBM/grid/field_view.hpp>
 #include <hippoLBM/grid/grid.hpp>
 #include <hippoLBM/grid/scheme.hpp>
@@ -30,13 +29,6 @@ under the License.
 
 namespace hippoLBM {
 
-/** @brief Equilibrium initialization at a localized Gaussian density bump (u=0 everywhere),
- * evaluated from compute_position() -- i.e. in physical space, so the SAME field is
- * reproduced regardless of a grid's resolution or offset. Used by both AMRTwoLevel's own
- * level setup and the standalone amr_init_gaussian_bump operator (for a plain, non-AMR
- * uniform-fine reference run used in quantitative convergence validation,
- * docs/AMR_PLAN.md): a uniform field can't exercise the C2F/F2C interpolation at all, and a
- * reference run needs the exact same initial condition to be comparable. */
 template <int Q>
 struct GaussianDensityInit {
   onika::math::Vec3d center_;
@@ -49,7 +41,8 @@ struct GaussianDensityInit {
     const onika::math::Vec3d d = pos - center_;
     const double r2 = d.x * d.x + d.y * d.y + d.z * d.z;
     const double rho = 1.0 + amplitude_ * std::exp(-r2 / (2.0 * sigma_ * sigma_));
-    stencil::for_each<typename LBMScheme<Q>::Coefficients>([&]<typename coeff>(int iLB) { f(idx, iLB) = rho * coeff::w; });
+    stencil::for_each<typename LBMScheme<Q>::Coefficients>(
+        [&]<typename coeff>(int iLB) { f(idx, iLB) = rho * coeff::w; });
   }
 };
 
