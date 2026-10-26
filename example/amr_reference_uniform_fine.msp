@@ -1,0 +1,48 @@
+# Quantitative AMR validation reference (docs/AMR_PLAN.md): a PLAIN (non-AMR) simulation,
+# uniform at the AMR fine patch's own resolution (dx = 1/62), over the WHOLE [0,1]^3 domain.
+# Same physical parameters and same initial condition (Gaussian density bump) as
+# example/amr_phase1_smoketest.msp's AMR run, so the two can be compared node-for-node:
+# the AMR run's fine patch spans physical [10/31, 20/31] = [20/62, 40/62] exactly, i.e. this
+# reference's nodes 20..40 (dx=1/62 both sides, by construction -- see the .msp comments
+# below), and the AMR coarse nodes k (dx=1/31) correspond to this reference's nodes 2k.
+#
+# Must run for 40 iterations (not 20): this reference's dtLB equals the AMR run's dtLB_fine
+# (same dx, same celerity), which is half of the AMR coarse dtLB -- so 40 steps here cover
+# the same physical time as 20 AMR outer iterations (each doing 1 coarse step + 2 fine
+# sub-steps, docs/AMR_PLAN.md Phase 2).
+
+do_domain:
+  - domain:
+     bounds: [[0,0,0],[1,1,1]]
+     cell_dims: [62, 62, 62]
+     periodic: [true, true, true]
+
+set_lbm_parameters:
+  - lbm_parameters:
+     Fext: [0,0,0]
+     nuth: 1e-4
+     celerity: 1.0
+
+set_distributions:
+  - amr_init_gaussian_bump:
+     center: [0.5, 0.5, 0.5]
+     sigma: 0.05
+     amplitude: 0.1
+
+compute_loop:
+  loop: true
+  name: ref_loop
+  condition: compute_loop_continue
+  body:
+    - macro_variables
+    - bgk
+    - streaming:
+       asynchrone: false
+    - amr_print_line_profile:
+       point: [0.5, 0.5, 0.5]
+       tag: "ref"
+    - next_time_step
+    - compute_loop_stop
+
+global:
+   simulation_end_iteration: 40

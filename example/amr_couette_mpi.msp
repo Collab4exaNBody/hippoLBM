@@ -1,0 +1,47 @@
+# Phase 4 v1 MPI validation (docs/AMR_PLAN.md): identical geometry to the already-validated
+# amr_couette.msp (2-level, ~0.46% max error against the analytical linear profile), but level
+# 0 is now decomposed across every rank (standard hippoLBM load_balancing/make_domain, reused
+# unchanged) and the patch (patch_bounds_list[0]) is owned entirely by patch_owner_rank: 0 --
+# C2F/F2C are point-to-point MPI instead of local array access (see amr_mpi_coupling.hpp).
+#
+# Straddle guarantee, worked out not assumed (see docs/AMR_PLAN.md Phase 4 v1 verification):
+# for mpi_size=2, MPI_Dims_create puts the factor 2 on exactly one axis (2 is prime); for 17
+# coarse nodes over 2 ranks the block-split lands at global index 8 (rank 0 owns [0,8), rank 1
+# owns [8,17)). The patch already spans coarse nodes [6,10] in BOTH x and z (full in y), so
+# whichever axis gets split, the patch's C2F/F2C footprint straddles the rank boundary by
+# construction -- this genuinely exercises cross-rank coupling, not an accidental same-rank
+# case. Run with: mpirun -n 2 <build>/bin/hippoLBM example/amr_couette_mpi.msp
+
+initialize:
+  - global
+
+compute_loop:
+  loop: true
+  name: amr_loop
+  condition: compute_loop_continue
+  body:
+    - amr_n_level:
+       cell_dims: [17, 17, 16]
+       bounds: [[0,0,0],[1,1,1]]
+       periodic: [true, true, false]
+       patch_bounds_list:
+         - [[0.375,0,0.375],[0.625,1.0,0.625]]
+       patch_owner_rank: 0
+       celerity: 1.0
+       nuth: 0.0625
+       apply_couette_bc: true
+       wall_velocity_bottom: [0, 0, 0]
+       wall_velocity_top: [0.05, 0, 0]
+       perturb_amplitude: 0.0
+       perturb_center: [0.5, 0.5, 0.5]
+       output_directory: "AMRCouetteMpiOutputDir"
+       paraview_freq: 20
+       verbosity: true
+    - next_time_step
+    - compute_loop_stop
+
+global:
+   timestep: 0
+   simulation_end_iteration: 200
+   dt: 1.0
+   physical_time: 0.0

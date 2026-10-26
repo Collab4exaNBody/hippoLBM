@@ -1,0 +1,41 @@
+# Couette validation (docs/AMR_PLAN.md): two walls at z=0 (U=0) and z=L (U=wall_velocity_top),
+# periodic in x/y. Known analytical steady profile: u_x(z) = U_bottom + (U_top-U_bottom)*z/L
+# (linear). Parameters chosen for FAST convergence (not physically realistic), purely to
+# validate AMRNLevel's physics against a known-correct target, not an ad-hoc comparison
+# between two simulations (see bug.txt / conversation history for why the earlier
+# Gaussian-bump comparison was hard to interpret).
+
+initialize:
+  - global
+
+compute_loop:
+  loop: true
+  name: amr_loop
+  condition: compute_loop_continue
+  body:
+    - amr_n_level:
+       cell_dims: [17, 17, 16]
+       bounds: [[0,0,0],[1,1,1]]
+       periodic: [true, true, false]
+       # level 0 dx = 1/16 (both x and z, by construction -- see file comments); patch spans
+       # level-0 nodes 6..10 in every axis.
+       patch_bounds_list:
+         - [[0.375,0,0.375],[0.625,1.0,0.625]]
+       celerity: 1.0
+       nuth: 0.0625
+       apply_couette_bc: true
+       wall_velocity_bottom: [0, 0, 0]
+       wall_velocity_top: [0.05, 0, 0]
+       perturb_amplitude: 0.0
+       perturb_center: [0.5, 0.5, 0.5]
+       output_directory: "AMRCouetteOutputDir"
+       paraview_freq: 20
+       verbosity: true
+    - next_time_step
+    - compute_loop_stop
+
+global:
+   timestep: 0
+   simulation_end_iteration: 200
+   dt: 1.0
+   physical_time: 0.0

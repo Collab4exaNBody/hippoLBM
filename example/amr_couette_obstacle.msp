@@ -1,0 +1,58 @@
+# AMR obstacle-in-patch validation (docs/AMR_PLAN.md): same Couette setup as amr_couette.msp
+# (already validated to ~0.5% against the analytical linear profile with the Filippova-Haenel
+# C2F correction), with a single Ball obstacle added inside the fine patch -- closer to the
+# project's actual target use case (refine near an obstacle) than the synthetic Couette/
+# Gaussian-bump cases. No analytical solution for flow past a sphere, so this is a
+# qualitative/sanity validation: no crash, no NaN, a visible wake/disturbance around the
+# sphere in the Paraview output, and the far-field profile (away from the sphere) still
+# tracking the background Couette shear.
+#
+# Obstacle placement: center at the domain/patch center [0.5,0.5,0.5], radius 0.08. The patch
+# spans x,z in [0.375,0.625] (half-width 0.125 from center) at coarse dx=1/16=0.0625, so the
+# sphere surface sits ~0.045 (~0.72 coarse cell) inside the patch boundary -- still fully
+# inside the fine patch (the hard constraint: radius < patch half-width), just with less
+# margin than the earlier radius=0.04 version. The patch's ghost shell sits entirely OUTSIDE
+# patch_bounds (is_amr_interface widens ext_ outward, not inward), so this margin doesn't
+# interact with the "at least one coarse cell away" constraint build_c2f() enforces for its
+# own ghost reconstruction -- that one is about the patch boundary vs. the coarse grid, not
+# about the obstacle.
+
+initialize:
+  - global
+
+compute_loop:
+  loop: true
+  name: amr_loop
+  condition: compute_loop_continue
+  body:
+    - amr_n_level:
+       cell_dims: [17, 17, 16]
+       bounds: [[0,0,0],[1,1,1]]
+       periodic: [true, true, false]
+       patch_bounds_list:
+         - [[0.375,0,0.375],[0.625,1.0,0.625]]
+       celerity: 1.0
+       nuth: 0.0625
+       apply_couette_bc: true
+       wall_velocity_bottom: [0, 0, 0]
+       wall_velocity_top: [0.05, 0, 0]
+       perturb_amplitude: 0.0
+       perturb_center: [0.5, 0.5, 0.5]
+       enable_obstacle: true
+       obstacle_center: [0.5, 0.5, 0.5]
+       obstacle_radius: 0.08
+       output_directory: "AMRCouetteObstacleOutputDir"
+       paraview_freq: 20
+       verbosity: true
+       # Phase 6 sub-problem 1 (docs/AMR_PLAN.md): Q-criterion flow-refinement indicator,
+       # diagnostic only so far. ~1e-5 (background Couette shear, analytically Q=0) far from
+       # the sphere, jumping 2-3 orders of magnitude (~5e-3 to ~5e-2) right around it.
+       print_q_criterion: true
+    - next_time_step
+    - compute_loop_stop
+
+global:
+   timestep: 0
+   simulation_end_iteration: 200
+   dt: 1.0
+   physical_time: 0.0

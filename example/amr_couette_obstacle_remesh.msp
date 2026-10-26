@@ -1,0 +1,48 @@
+# Dynamic remeshing validation (docs/AMR_PLAN.md Phase 6, sub-problem 2): same Couette +
+# obstacle case as amr_couette_obstacle.msp, but the fine patch starts DELIBERATELY off-center
+# ([0.3125,0.5625] instead of the obstacle-centered [0.375,0.625] -- the sphere at [0.5,0.5,0.5]
+# radius 0.08 is only partially inside this starting patch), to exercise the remeshing machinery
+# itself rather than just confirm a static patch already placed on the feature works.
+#
+# remesh_freq: 20 re-evaluates the peak-|Q| position every 20 coarse steps; with verbosity on,
+# each actual move is logged ("remesh: level1 recentered ..."). Expected: the patch should
+# migrate toward the obstacle (where |Q| peaks, see amr_couette_obstacle.msp's Q-criterion
+# validation) over the first few remesh events, then stop moving once centered on it.
+
+initialize:
+  - global
+
+compute_loop:
+  loop: true
+  name: amr_loop
+  condition: compute_loop_continue
+  body:
+    - amr_n_level:
+       cell_dims: [17, 17, 16]
+       bounds: [[0,0,0],[1,1,1]]
+       periodic: [true, true, false]
+       patch_bounds_list:
+         - [[0.3125,0,0.3125],[0.5625,1.0,0.5625]]
+       celerity: 1.0
+       nuth: 0.0625
+       apply_couette_bc: true
+       wall_velocity_bottom: [0, 0, 0]
+       wall_velocity_top: [0.05, 0, 0]
+       perturb_amplitude: 0.0
+       perturb_center: [0.5, 0.5, 0.5]
+       enable_obstacle: true
+       obstacle_center: [0.5, 0.5, 0.5]
+       obstacle_radius: 0.08
+       remesh_freq: 20
+       remesh_search_margin: 2
+       output_directory: "AMRCouetteObstacleRemeshOutputDir"
+       paraview_freq: 20
+       verbosity: true
+    - next_time_step
+    - compute_loop_stop
+
+global:
+   timestep: 0
+   simulation_end_iteration: 200
+   dt: 1.0
+   physical_time: 0.0

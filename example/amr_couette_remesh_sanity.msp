@@ -1,0 +1,45 @@
+# Remeshing sanity check (docs/AMR_PLAN.md Phase 6, sub-problem 2): same Couette setup as
+# amr_couette.msp (no obstacle, already validated to ~0.5% against the analytical linear
+# profile), but with remesh_freq enabled. There is no genuine flow feature to track here (pure
+# background shear), so this is a "should do nothing" test: an early version of
+# remesh_if_needed's weight_sum-only guard let the |Q|-weighted centroid still drift on pure
+# numerical noise (Q~1e-5 everywhere, never exactly 0), wandering the patch from the domain
+# center toward z=0.75 over 200 iterations with no real signal to justify it. Fixed by adding
+# remesh_q_threshold (peak |Q| in the search window must clear it before any move is
+# considered, not just "weight_sum nonzero"). With the fix: zero remesh events over 200
+# iterations, final profile identical to the bit with amr_couette.msp (no remeshing at all).
+
+initialize:
+  - global
+
+compute_loop:
+  loop: true
+  name: amr_loop
+  condition: compute_loop_continue
+  body:
+    - amr_n_level:
+       cell_dims: [17, 17, 16]
+       bounds: [[0,0,0],[1,1,1]]
+       periodic: [true, true, false]
+       patch_bounds_list:
+         - [[0.375,0,0.375],[0.625,1.0,0.625]]
+       celerity: 1.0
+       nuth: 0.0625
+       apply_couette_bc: true
+       wall_velocity_bottom: [0, 0, 0]
+       wall_velocity_top: [0.05, 0, 0]
+       perturb_amplitude: 0.0
+       perturb_center: [0.5, 0.5, 0.5]
+       remesh_freq: 20
+       remesh_search_margin: 2
+       output_directory: "AMRCouetteRemeshSanityOutputDir"
+       paraview_freq: 20
+       verbosity: true
+    - next_time_step
+    - compute_loop_stop
+
+global:
+   timestep: 0
+   simulation_end_iteration: 200
+   dt: 1.0
+   physical_time: 0.0

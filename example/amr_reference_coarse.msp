@@ -1,0 +1,42 @@
+# Isolation test (docs/AMR_PLAN.md debugging): plain, uniform simulation at the AMR coarse
+# level's OWN resolution (dx = 1/31), standard periodic convention (cell_dims=31). Compares
+# directly against amr_two_level's coarse-level line profile, to check whether the basic
+# per-level physics (independent of any coupling to a fine patch) already matches a reference
+# at the same resolution and same number of steps -- isolates whether a mismatch is in the
+# coupling or in the base level setup.
+
+do_domain:
+  - domain:
+     bounds: [[0,0,0],[1,1,1]]
+     cell_dims: [31, 31, 31]
+     periodic: [true, true, true]
+
+set_lbm_parameters:
+  - lbm_parameters:
+     Fext: [0,0,0]
+     nuth: 1e-4
+     celerity: 1.0
+
+set_distributions:
+  - amr_init_gaussian_bump:
+     center: [0.5, 0.5, 0.5]
+     sigma: 0.05
+     amplitude: 0.1
+
+compute_loop:
+  loop: true
+  name: ref_loop
+  condition: compute_loop_continue
+  body:
+    - macro_variables
+    - bgk
+    - streaming:
+       asynchrone: false
+    - amr_print_line_profile:
+       point: [0.5, 0.5, 0.5]
+       tag: "ref_coarse"
+    - next_time_step
+    - compute_loop_stop
+
+global:
+   simulation_end_iteration: 21

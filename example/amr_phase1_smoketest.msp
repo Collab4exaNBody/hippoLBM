@@ -1,0 +1,35 @@
+initialize:
+  - global
+
+compute_loop:
+  loop: true
+  name: amr_loop
+  condition: compute_loop_continue
+  body:
+    - amr_n_level:
+       cell_dims: [32, 32, 32]
+       bounds: [[0,0,0],[1,1,1]]
+       periodic: [true, true, true]
+       # level-0 dx = 1/(32-1) (non-periodic node convention forced for refinement); patch
+       # spans level-0 nodes 10..20 exactly: bmin=10*dx, bmax=20*dx.
+       patch_bounds_list:
+         - [[0.3225806451612903,0.3225806451612903,0.3225806451612903],[0.6451612903225806,0.6451612903225806,0.6451612903225806]]
+       celerity: 1.0
+       nuth: 1e-4
+       avg_rho: 1000.0
+       verbosity: true
+       # Non-trivial initial condition (docs/AMR_PLAN.md Phase 1 status): a localized bump
+       # centered inside the fine patch, well away from the coarse/fine interface at first.
+       perturb_amplitude: 0.1
+       perturb_center: [0.5, 0.5, 0.5]
+       perturb_sigma: 0.05
+       paraview_freq: 5
+       output_directory: "AMROutputDir"
+    - next_time_step
+    - compute_loop_stop
+
+global:
+   timestep: 0
+   simulation_end_iteration: 20
+   dt: 1.0
+   physical_time: 0.0

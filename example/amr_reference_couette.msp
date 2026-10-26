@@ -1,0 +1,46 @@
+# Couette validation reference (docs/AMR_PLAN.md): plain (non-AMR) simulation at the SAME
+# resolution (dx=1/16) and SAME physical parameters as example/amr_couette.msp's coarse
+# level, for direct comparison of amr_two_level's output against the standard,
+# already-reviewed pipeline (not a hand-derived analytical formula, to remove any risk of an
+# error in deriving that formula myself) -- and the analytical linear profile is itself
+# printed by amr_print_ux_profile_z's caller for a three-way check.
+
+do_domain:
+  - domain:
+     bounds: [[0,0,0],[1,1,1]]
+     # cell_dims.i/.j periodic -> dims=16, dx=1/16; cell_dims.k non-periodic -> dims=17,
+     # dx=1/(17-1)=1/16: matches amr_couette.msp's coarse level dx exactly (see its comments
+     # for why that one needs different cell_dims to land on the same dx, given
+     # amr_two_level's forced non-periodic dx convention for refinement, docs/AMR_PLAN.md).
+     cell_dims: [16, 16, 16]
+     periodic: [true, true, false]
+
+set_lbm_parameters:
+  - lbm_parameters:
+     Fext: [0,0,0]
+     nuth: 0.0625
+     celerity: 1.0
+
+compute_loop:
+  loop: true
+  name: ref_loop
+  condition: compute_loop_continue
+  body:
+    - macro_variables
+    - bgk
+    - streaming:
+       asynchrone: false
+    - neumann:
+       U: [0.05, 0, 0]
+       regions: [plan_xy_l]
+    - neumann:
+       U: [0, 0, 0]
+       regions: [plan_xy_0]
+    - amr_print_ux_profile_z:
+       point: [0.5, 0.5, 0.5]
+       tag: "ref_couette"
+    - next_time_step
+    - compute_loop_stop
+
+global:
+   simulation_end_iteration: 200

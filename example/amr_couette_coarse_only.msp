@@ -1,0 +1,38 @@
+# Couette validation (docs/AMR_PLAN.md): same as amr_couette.msp but with an empty
+# patch_bounds_list, i.e. the amr_n_level operator runs its level-0 grid alone (no refinement,
+# no C2F/F2C coupling). Isolates whether a discrepancy between the AMR coarse level and the
+# plain reference (example/amr_reference_couette.msp) comes from the AMR coupling itself or
+# is intrinsic to this operator's own level-0 step_level() implementation (as opposed to the
+# production bgk/streaming/neumann pipeline the reference uses).
+
+initialize:
+  - global
+
+compute_loop:
+  loop: true
+  name: amr_loop
+  condition: compute_loop_continue
+  body:
+    - amr_n_level:
+       cell_dims: [17, 17, 16]
+       bounds: [[0,0,0],[1,1,1]]
+       periodic: [true, true, false]
+       # patch_bounds_list omitted (defaults to empty): no refinement, level 0 alone.
+       celerity: 1.0
+       nuth: 0.0625
+       apply_couette_bc: true
+       wall_velocity_bottom: [0, 0, 0]
+       wall_velocity_top: [0.05, 0, 0]
+       perturb_amplitude: 0.0
+       perturb_center: [0.5, 0.5, 0.5]
+       output_directory: "AMRCouetteCoarseOnlyOutputDir"
+       paraview_freq: 20
+       verbosity: true
+    - next_time_step
+    - compute_loop_stop
+
+global:
+   timestep: 0
+   simulation_end_iteration: 200
+   dt: 1.0
+   physical_time: 0.0

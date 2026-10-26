@@ -1,0 +1,51 @@
+# Moving-obstacle tracking validation (docs/AMR_PLAN.md Phase 6, sub-problem 2): the Ball
+# obstacle now MOVES (obstacle_velocity), unlike amr_couette_obstacle_remesh.msp where the
+# patch converged once onto a STATIC target and then stayed put -- this is the direct test of
+# "dynamic AMR": does the patch genuinely FOLLOW a moving feature, not just settle on a fixed
+# one.
+#
+# Obstacle: starts at x=0.5 (centered in the patch, matching amr_couette_obstacle.msp exactly)
+# and drifts along x at 0.00075/step -> x=0.65 by iteration 200, i.e. its [x-r,x+r] footprint
+# (r=0.08) ends at [0.57,0.73], clearly outside the patch's own starting bounds [0.375,0.625]
+# (upper edge 0.625) -- real pressure for the patch to move, not a token displacement.
+# remesh_freq: 20 re-evaluates the patch's position every 20 steps (displacement per interval
+# ~0.015, about a quarter of a coarse cell -- smooth enough to track, not a discontinuous jump).
+
+initialize:
+  - global
+
+compute_loop:
+  loop: true
+  name: amr_loop
+  condition: compute_loop_continue
+  body:
+    - amr_n_level:
+       cell_dims: [17, 17, 16]
+       bounds: [[0,0,0],[1,1,1]]
+       periodic: [true, true, false]
+       patch_bounds_list:
+         - [[0.375,0,0.375],[0.625,1.0,0.625]]
+       celerity: 1.0
+       nuth: 0.0625
+       apply_couette_bc: true
+       wall_velocity_bottom: [0, 0, 0]
+       wall_velocity_top: [0.05, 0, 0]
+       perturb_amplitude: 0.0
+       perturb_center: [0.5, 0.5, 0.5]
+       enable_obstacle: true
+       obstacle_center: [0.5, 0.5, 0.5]
+       obstacle_radius: 0.08
+       obstacle_velocity: [0.00075, 0, 0]
+       remesh_freq: 20
+       remesh_search_margin: 2
+       output_directory: "AMRCouetteObstacleMovingOutputDir"
+       paraview_freq: 20
+       verbosity: true
+    - next_time_step
+    - compute_loop_stop
+
+global:
+   timestep: 0
+   simulation_end_iteration: 200
+   dt: 1.0
+   physical_time: 0.0

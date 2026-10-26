@@ -1,0 +1,42 @@
+# 3-level Couette validation (docs/AMR_PLAN.md Phase 3): level1 here is EXACTLY the
+# already-validated 2-level patch geometry ([0.375,0.625] in x,z, same as amr_couette.msp,
+# ~0.46% max error), with a small level2 ([0.4375,0.5625]) nested inside it. Deliberately
+# controlled this way -- keeping level1 identical to the validated 2-level case -- after a
+# first attempt that also enlarged the outer patch ([0.25,0.75]) confounded "cost of a third
+# level" with "cost of a bigger outer patch" and showed ~1.9% error; isolating the variable
+# properly shows a third level only costs ~0.1-0.15% on top of the 2-level baseline (see
+# docs/AMR_PLAN.md Phase 3 status for the full before/after).
+
+initialize:
+  - global
+
+compute_loop:
+  loop: true
+  name: amr_loop
+  condition: compute_loop_continue
+  body:
+    - amr_n_level:
+       cell_dims: [17, 17, 16]
+       bounds: [[0,0,0],[1,1,1]]
+       periodic: [true, true, false]
+       patch_bounds_list:
+         - [[0.375,0,0.375],[0.625,1.0,0.625]]
+         - [[0.4375,0,0.4375],[0.5625,1.0,0.5625]]
+       celerity: 1.0
+       nuth: 0.0625
+       apply_couette_bc: true
+       wall_velocity_bottom: [0, 0, 0]
+       wall_velocity_top: [0.05, 0, 0]
+       perturb_amplitude: 0.0
+       perturb_center: [0.5, 0.5, 0.5]
+       output_directory: "AMRCouette3LevelOutputDir"
+       paraview_freq: 20
+       verbosity: true
+    - next_time_step
+    - compute_loop_stop
+
+global:
+   timestep: 0
+   simulation_end_iteration: 200
+   dt: 1.0
+   physical_time: 0.0
