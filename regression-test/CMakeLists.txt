@@ -13,6 +13,8 @@ endfunction()
 
 run_test(regression_lbm_poiseuille)
 run_test(regression_lbm_couette)
+run_test(regression_lbm_couette_mrt)
+run_test(regression_lbm_couette_mrt_bgk_equiv)
 run_test(regression_lbm_checkpoint_restart)
 run_test(regression_lbm_cavite)
 run_test(regression_lbm_cavite_wall)

@@ -25,12 +25,26 @@ under the License.
 namespace hippoLBM {
 template <int Q>
 struct mrt {};
+
+/**
+ * @brief Relaxation rates of the non-hydrodynamic moments (D'Humieres et al. 2002).
+ * The rates of the stress moments (3pxx, pww, pxy, pyz, pxz) are not listed here: they are set to 1/tau, which fixes
+ * the viscosity nu = (tau - 1/2) / 3.
+ */
+struct MRTRates {
+  double s_e = 1.19;    // energy
+  double s_eps = 1.4;   // energy square
+  double s_q = 1.2;     // energy flux
+  double s_pi = 1.4;    // stress square (3pixx, piww)
+  double s_m = 1.98;    // third order (mx, my, mz)
+};
 /**
  * @brief A functor for collision operations in the lattice Boltzmann method.
  */
 template <>
 struct mrt<19> {
   const onika::math::Vec3d Fext_;  // External force term, used in the computation of macroscopic variables.
+  const MRTRates rates_;           // Relaxation rates of the non-hydrodynamic moments.
 
   /** @brief Computes the MRT collision operator for a given lattice node.
    * @param f The field view for the distribution functions.
@@ -38,15 +52,13 @@ struct mrt<19> {
    * @param tau The relaxation time.
    */
   ONIKA_HOST_DEVICE_FUNC void mrt_core(const FieldView<19>& f, const size_t idx, double tau) const {
+    // Stress moments relax with 1/tau (viscosity), the others with the user-defined rates.
     const double s9 = 1 / tau, s13 = s9;
-    // D'humiéres et al parametrization
-    const double s1 = 1.19, s2 = 1.4, s4 = 1.2, s10 = s2, s16 = 1.98;
-    // const double weps = 3, wepsj = -475. / 63., wxx = 0;
-    const double weps = 0, wepsj = -475. / 63., wxx = 0;
-    // LBGK parametrization
-    // const double s1 = s9, s2 = s9, s4 = s9, s10 = s2, s16 = s9;
-    // const double weps = 3., wepsj = -11./2, wxx = -1./2;
-    double rho0, jj, jx2, jy2, jz2;
+    const double s1 = rates_.s_e, s2 = rates_.s_eps, s4 = rates_.s_q, s10 = rates_.s_pi, s16 = rates_.s_m;
+    // The equilibrium moments are the moments of the BGK equilibrium (rho-dependent j.j / rho term). Hence the rest
+    // state and the BGK equilibrium are fixed points of the collision, and MRT with all rates = 1/tau is exactly BGK.
+    const double weps = 3, wepsj = -11. / 2, wxx = -1. / 2;
+    double jj, jx2, jy2, jz2;
     double rho, e, eps, jx, qx, jy, qy, jz, qz, pxx3, pixx3, pww, piww, pxy, pyz, pxz, mx, my, mz;
     double eO, epsO, qxO, qyO, qzO, pxx3O, pixx3O, pwwO, piwwO, pxyO, pyzO, pxzO, mxO, myO, mzO;
     double e_eq, eps_eq, pxx3_eq, pww_eq, pxy_eq, pyz_eq, pxz_eq;
@@ -91,33 +103,32 @@ struct mrt<19> {
     my = -f(idx, 7) + f(idx, 8) + f(idx, 9) - f(idx, 10) + f(idx, 15) - f(idx, 16) + f(idx, 17) - f(idx, 18);
     mz = +f(idx, 11) - f(idx, 12) - f(idx, 13) + f(idx, 14) - f(idx, 15) + f(idx, 16) + f(idx, 17) - f(idx, 18);
 
-    rho0 = 1.;
     jx2 = jx * jx;
     jy2 = jy * jy;
     jz2 = jz * jz;
     jj = (jx2 + jy2 + jz2);
 
     // Calculate MRT collision parameters
-    e_eq = -11 * rho + 19 / rho0 * jj;
+    e_eq = -11 * rho + 19 * jj / rho;
     eO = e - s1 * (e - e_eq);
-    eps_eq = weps * rho + wepsj / rho0 * jj;
+    eps_eq = weps * rho + wepsj * jj / rho;
     epsO = eps - s2 * (eps - eps_eq);
 
     qxO = qx - s4 * (qx + 2. / 3. * jx);
     qyO = qy - s4 * (qy + 2. / 3. * jy);
     qzO = qz - s4 * (qz + 2. / 3. * jz);
-    pxx3_eq = 1 / (rho0) * (2 * jx2 - (jy2 + jz2));
+    pxx3_eq = 1 / rho * (2 * jx2 - (jy2 + jz2));
     pxx3O = pxx3 - s9 * (pxx3 - pxx3_eq);
     pixx3O = pixx3 - s10 * (pixx3 - wxx * pxx3_eq);
 
-    pww_eq = 1 / rho0 * (jy2 - jz2);
+    pww_eq = 1 / rho * (jy2 - jz2);
     pwwO = pww - s9 * (pww - pww_eq);
     piwwO = piww - s10 * (piww - wxx * pww_eq);
-    pxy_eq = 1 / rho0 * jx * jy;
+    pxy_eq = 1 / rho * jx * jy;
     pxyO = pxy - s13 * (pxy - pxy_eq);
-    pyz_eq = 1 / rho0 * jy * jz;
+    pyz_eq = 1 / rho * jy * jz;
     pyzO = pyz - s13 * (pyz - pyz_eq);
-    pxz_eq = 1 / rho0 * jx * jz;
+    pxz_eq = 1 / rho * jx * jz;
     pxzO = pxz - s13 * (pxz - pxz_eq);
     mxO = mx - s16 * mx;
     myO = my - s16 * my;
