@@ -57,14 +57,23 @@ class CollisionMRT : public OperatorNode {
   ADD_SLOT(LBMGridRegion, grid_region, INPUT, REQUIRED,
            DocString{"It contains different sets of indexes categorizing the grid points into Real, Edge, or All."});
   ADD_SLOT(LBMParameters, Params, INPUT, REQUIRED, DocString{"Contains global LBM simulation parameters"});
+  ADD_SLOT(double, s_e, INPUT, MRTRates{}.s_e, DocString{"Relaxation rate of the energy moment."});
+  ADD_SLOT(double, s_eps, INPUT, MRTRates{}.s_eps, DocString{"Relaxation rate of the energy square moment."});
+  ADD_SLOT(double, s_q, INPUT, MRTRates{}.s_q, DocString{"Relaxation rate of the energy flux moments."});
+  ADD_SLOT(double, s_pi, INPUT, MRTRates{}.s_pi, DocString{"Relaxation rate of the stress square moments."});
+  ADD_SLOT(double, s_m, INPUT, MRTRates{}.s_m, DocString{"Relaxation rate of the third order moments."});
 
   inline std::string documentation() const final {
     return R"EOF( The `CollisionMRT` operator implements the MRT collision model for the Lattice Boltzmann Method (LBM).
-    This model assumes a single relaxation time approach  to approximate the collision process, driving the distribution functions toward equilibrium.
+    Moments of the distribution functions relax towards the moments of the BGK equilibrium. The stress moments relax with
+    1/tau (so the viscosity is the same as BGK), the others with the rates s_e, s_eps, s_q, s_pi and s_m
+    (default: D'Humieres et al. 2002). With all rates equal to 1/tau, the operator is equivalent to BGK.
 
     YAML example:
 
-      - mrt 
+      - mrt:
+          s_e: 1.19
+          s_eps: 1.4
     )EOF";
   }
 
@@ -74,7 +83,8 @@ class CollisionMRT : public OperatorNode {
     auto& params = *Params;
 
     // define functor
-    mrt<Q> func = {params.Fext_};
+    const MRTRates rates = {*s_e, *s_eps, *s_q, *s_pi, *s_m};
+    mrt<Q> func = {params.Fext_, rates};
 
     // get fields
     int* const pobst = data.obstacles();

@@ -1,0 +1,33 @@
+do_domain:
+  - domain:
+     bounds: [[0,0,0],[0.1,0.1,0.1]]
+     cell_dims: [ 30, 30, 30 ]
+     periodic: [true, true, false]
+
+set_lbm_parameters:
+  - lbm_parameters:
+     Fext: [0,0,0]
+     nuth: 1e-2
+
+boundary_conditions:
+  - neumann:
+     U: [0.001,0,0]
+     regions: [plan_xy_l]
+  - neumann:
+     U: [0,0,0]
+     regions: [plan_xy_0]     
+
+collision: mrt
+
+checker_op:
+  - check_macro_quantities:
+     density: 27900  # 30x30x31
+     tol: 1e-3  # d'Humieres rates: non-hydrodynamic moments slightly perturb the mass at the walls
+     vmin: 0.00
+     vmax: 1.00001e-03
+
+global:
+   timestep: 0
+   physical_time: 0.
+   simulation_paraview_freq: -1
+   simulation_end_iteration: 100
